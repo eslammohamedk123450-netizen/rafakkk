@@ -39,8 +39,14 @@ class OAuthService {
   }
 
   private decodeState(state: string): string {
-    const redirectUri = atob(state);
-    return redirectUri;
+    const decoded = Buffer.from(state, "base64").toString("utf8");
+    try {
+      const payload = JSON.parse(decoded) as { redirectUri?: unknown };
+      if (typeof payload.redirectUri === "string") return payload.redirectUri;
+    } catch {
+      // Support state values issued by the existing native flow.
+    }
+    return decoded;
   }
 
   async getTokenByCode(code: string, state: string): Promise<ExchangeTokenResponse> {

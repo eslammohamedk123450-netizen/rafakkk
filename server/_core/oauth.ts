@@ -1,11 +1,44 @@
 import { ONE_YEAR_MS } from "../../shared/const.js";
 import type { Express, Request, Response } from "express";
+import { randomBytes } from "node:crypto";
+import { parse as parseCookieHeader } from "cookie";
 import { getUserByOpenId, upsertUser } from "../db";
 import {
   getSessionCookieName,
   getSessionCookieOptions,
 } from "./cookies";
 import { sdk } from "./sdk";
+import { ENV } from "./env";
+
+const OAUTH_NONCE_COOKIE = "suly_oauth_nonce";
+const OAUTH_NONCE_TTL_MS = 5 * 60 * 1000;
+
+function getRequestOrigin(req: Request) {
+  const header = req.headers["x-forwarded-proto"];
+  const forwarded = Array.isArray(header) ? header[0] : typeof header === "string" ? header.split(",")[0] : undefined;
+  const protocol = forwarded?.trim() || req.protocol;
+  return `${protocol}://${req.get("host")}`;
+}
+
+function encodeState(payload: { redirectUri: string; nonce: string }) {
+  return Buffer.from(JSON.stringify(payload), "utf8").toString("base64");
+}
+
+function decodeStatePayload(state: string) {
+  try {
+    const decoded = Buffer.from(state, "base64").toString("utf8");
+    const payload = JSON.parse(decoded) as { redirectUri?: unknown; nonce?: unknown };
+    if (typeof payload.redirectUri === "string" && typeof payload.nonce === "string") return payload;
+  } catch {
+    // The web callback intentionally rejects legacy states without a nonce.
+  }
+  return null;
+}
+
+function oauthNonceCookieOptions(req: Request) {
+  const secure = getRequestOrigin(req).startsWith("https://");
+  return { httpOnly: true, secure, sameSite: secure ? "none" as const : "lax" as const, path: "/", maxAge: OAUTH_NONCE_TTL_MS };
+}
 
 function getQueryParam(req: Request, key: string): string | undefined {
   const value = req.query[key];
@@ -60,17 +93,45 @@ function buildUserResponse(
     name: user?.name ?? null,
     email: user?.email ?? null,
     loginMethod: user?.loginMethod ?? null,
+    role: (user as any)?.role ?? "user",
     lastSignedIn: (user?.lastSignedIn ?? new Date()).toISOString(),
   };
 }
 
 export function registerOAuthRoutes(app: Express) {
+  app.get("/api/oauth/start", (req: Request, res: Response) => {
+    if (!ENV.appId || !ENV.oAuthPortalUrl) {
+      res.status(503).json({ error: "OAuth login is not configured" });
+      return;
+    }
+    const nonce = randomBytes(32).toString("base64url");
+    const redirectUri = `${getRequestOrigin(req)}/api/oauth/callback`;
+    const loginUrl = new URL("/app-auth", ENV.oAuthPortalUrl);
+    loginUrl.searchParams.set("appId", ENV.appId);
+    loginUrl.searchParams.set("redirectUri", redirectUri);
+    loginUrl.searchParams.set("state", encodeState({ redirectUri, nonce }));
+    loginUrl.searchParams.set("responseType", "code");
+    loginUrl.searchParams.set("type", "signIn");
+    res.cookie(OAUTH_NONCE_COOKIE, nonce, oauthNonceCookieOptions(req));
+    res.redirect(302, loginUrl.toString());
+  });
+
   app.get("/api/oauth/callback", async (req: Request, res: Response) => {
     const code = getQueryParam(req, "code");
     const state = getQueryParam(req, "state");
 
     if (!code || !state) {
       res.status(400).json({ error: "code and state are required" });
+      return;
+    }
+
+    const statePayload = decodeStatePayload(state);
+    const nonceCookie = req.headers.cookie ? parseCookieHeader(req.headers.cookie)[OAUTH_NONCE_COOKIE] : undefined;
+    const nonceOptions = oauthNonceCookieOptions(req);
+    res.clearCookie(OAUTH_NONCE_COOKIE, { httpOnly: true, secure: nonceOptions.secure, sameSite: nonceOptions.sameSite, path: "/" });
+    const expectedRedirectUri = `${getRequestOrigin(req)}/api/oauth/callback`;
+    if (!statePayload || !nonceCookie || statePayload.nonce !== nonceCookie || statePayload.redirectUri !== expectedRedirectUri) {
+      res.status(403).json({ error: "OAuth state validation failed" });
       return;
     }
 
@@ -95,7 +156,7 @@ export function registerOAuthRoutes(app: Express) {
         process.env.EXPO_WEB_PREVIEW_URL ||
         process.env.EXPO_PACKAGER_PROXY_URL ||
         "http://localhost:8081";
-      res.redirect(302, frontendUrl);
+      res.redirect(302, new URL("/admin", frontendUrl).toString());
     } catch {
       console.error("[OAuth] Callback failed");
       res.status(500).json({ error: "OAuth callback failed" });

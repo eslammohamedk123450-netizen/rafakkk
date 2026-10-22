@@ -6,6 +6,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, Text } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { validateOAuthState } from "@/constants/oauth";
 
 export default function OAuthCallback() {
   const router = useRouter();
@@ -150,6 +151,12 @@ export default function OAuthCallback() {
           console.error("[OAuth] Missing code or state parameter");
           setStatus("error");
           setErrorMessage("Missing code or state parameter");
+          return;
+        }
+
+        if (!(await validateOAuthState(state))) {
+          setStatus("error");
+          setErrorMessage("OAuth state validation failed. Please start sign-in again.");
           return;
         }
 

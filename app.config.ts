@@ -30,9 +30,9 @@ const env = {
   // App branding - update these values directly (do not use env vars)
   appName: "Suly — رفيقك نحو الالتزام",
   appSlug: "suly",
-  // S3 URL of the app logo - set this to the URL returned by generate_image when creating custom logo
+  // Public CDN URL used as the WebDev project logo; native image files remain bundled below.
   // Leave empty to use the default icon from assets/images/icon.png
-  logoUrl: "",
+  logoUrl: "https://files.manuscdn.com/user_upload_by_module/session_file/310519664037900359/ZMWEOfyGXWmViKEE.png",
   scheme: schemeFromBundleId,
   iosBundleId: bundleId,
   androidPackage: bundleId,
@@ -77,7 +77,7 @@ const config: ExpoConfig = {
   },
   android: {
     adaptiveIcon: {
-      backgroundColor: "#E6F4FE",
+      backgroundColor: "#213D33",
       foregroundImage: "./assets/images/android-icon-foreground.png",
       backgroundImage: "./assets/images/android-icon-background.png",
       monochromeImage: "./assets/images/android-icon-monochrome.png",
@@ -107,17 +107,12 @@ const config: ExpoConfig = {
   plugins: [
     "expo-asset",
     "expo-router",
+    "expo-sqlite",
+    "expo-notifications",
     [
-      "expo-audio",
+      "expo-location",
       {
-        microphonePermission: "Allow $(PRODUCT_NAME) to access your microphone.",
-      },
-    ],
-    [
-      "expo-video",
-      {
-        supportsBackgroundPlayback: true,
-        supportsPictureInPicture: true,
+        locationWhenInUsePermission: "نحتاج إلى موقعك لحساب مواقيت الصلاة في مدينتك.",
       },
     ],
     [

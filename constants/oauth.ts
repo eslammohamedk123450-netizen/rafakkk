@@ -1,6 +1,8 @@
 import * as Linking from "expo-linking";
 import Constants from "expo-constants";
 import * as ReactNative from "react-native";
+import * as SecureStore from "expo-secure-store";
+import * as Crypto from "expo-crypto";
 
 // Extract scheme from bundle ID (last segment timestamp, prefixed with "manus")
 // e.g., "space.manus.my.app.t20240115103045" -> "manus20240115103045"
@@ -26,112 +28,87 @@ export const APP_ID = env.appId;
 export const OWNER_OPEN_ID = env.ownerId;
 export const OWNER_NAME = env.ownerName;
 export const API_BASE_URL = env.apiBaseUrl;
+export const SESSION_TOKEN_KEY = "app_session_token";
+export const USER_INFO_KEY = "manus-runtime-user-info";
+const NATIVE_OAUTH_NONCE_KEY = "suly_native_oauth_nonce";
 
 /**
- * Get the API base URL, deriving from current hostname if not set.
- * Metro runs on 8081, API server runs on 3000.
- * URL pattern: https://PORT-sandboxid.region.domain
+ * Get the API base URL, deriving from the current Preview hostname if it is not set.
+ * Metro runs on 8081 while the project API runs on 3000.
  */
 export function getApiBaseUrl(): string {
-  // If API_BASE_URL is set, use it
-  if (API_BASE_URL) {
-    return API_BASE_URL.replace(/\/$/, "");
-  }
-
-  // On web, derive from current hostname by replacing port 8081 with 3000
+  if (API_BASE_URL) return API_BASE_URL.replace(/\/$/, "");
   if (ReactNative.Platform.OS === "web" && typeof window !== "undefined" && window.location) {
     const { protocol, hostname } = window.location;
-    // Pattern: 8081-sandboxid.region.domain -> 3000-sandboxid.region.domain
     const apiHostname = hostname.replace(/^8081-/, "3000-");
-    if (apiHostname !== hostname) {
-      return `${protocol}//${apiHostname}`;
-    }
+    if (apiHostname !== hostname) return `${protocol}//${apiHostname}`;
   }
-
-  // Fallback to empty (will use relative URL)
   return "";
 }
 
-export const SESSION_TOKEN_KEY = "app_session_token";
-export const USER_INFO_KEY = "manus-runtime-user-info";
+/** Get the OAuth callback URI for this runtime. */
+export const getRedirectUri = () => {
+  if (ReactNative.Platform.OS === "web") return `${getApiBaseUrl()}/api/oauth/callback`;
+  return Linking.createURL("/oauth/callback", { scheme: env.deepLinkScheme });
+};
 
 const encodeState = (value: string) => {
-  if (typeof globalThis.btoa === "function") {
-    return globalThis.btoa(value);
-  }
+  if (typeof globalThis.btoa === "function") return globalThis.btoa(value);
   const BufferImpl = (globalThis as Record<string, any>).Buffer;
-  if (BufferImpl) {
-    return BufferImpl.from(value, "utf-8").toString("base64");
-  }
-  return value;
+  if (BufferImpl) return BufferImpl.from(value, "utf-8").toString("base64");
+  throw new Error("OAuth state encoding is unavailable");
 };
 
-/**
- * Get the redirect URI for OAuth callback.
- * - Web: uses API server callback endpoint
- * - Native: uses deep link scheme
- */
-export const getRedirectUri = () => {
-  if (ReactNative.Platform.OS === "web") {
-    return `${getApiBaseUrl()}/api/oauth/callback`;
-  } else {
-    return Linking.createURL("/oauth/callback", {
-      scheme: env.deepLinkScheme,
-    });
-  }
-};
+function decodeState(value: string) {
+  if (typeof globalThis.atob === "function") return globalThis.atob(value);
+  const BufferImpl = (globalThis as Record<string, any>).Buffer;
+  if (BufferImpl) return BufferImpl.from(value, "base64").toString("utf-8");
+  throw new Error("OAuth state decoding is unavailable");
+}
 
-export const getLoginUrl = () => {
-  if (!OAUTH_PORTAL_URL || !APP_ID) {
-    throw new Error("Manus login configuration is unavailable");
-  }
+export async function getLoginUrl(): Promise<string> {
+  if (!OAUTH_PORTAL_URL || !APP_ID) throw new Error("Manus login configuration is unavailable");
   const redirectUri = getRedirectUri();
-  const state = encodeState(redirectUri);
-
-  const url = new URL(`${OAUTH_PORTAL_URL}/app-auth`);
+  let state: string;
+  if (ReactNative.Platform.OS === "web") {
+    state = encodeState(redirectUri);
+  } else {
+    const nonce = Crypto.randomUUID();
+    await SecureStore.setItemAsync(NATIVE_OAUTH_NONCE_KEY, nonce);
+    state = encodeState(JSON.stringify({ redirectUri, nonce }));
+  }
+  const url = new URL("/app-auth", OAUTH_PORTAL_URL);
   url.searchParams.set("appId", APP_ID);
   url.searchParams.set("redirectUri", redirectUri);
   url.searchParams.set("state", state);
   url.searchParams.set("type", "signIn");
-
   return url.toString();
-};
+}
 
-/**
- * Start OAuth login flow.
- *
- * On native platforms (iOS/Android), open the system browser directly so
- * the OAuth callback returns via deep link to the app.
- *
- * On web, this simply redirects to the login URL.
- *
- * @returns Always null, the callback is handled via deep link.
- */
-export async function startOAuthLogin(): Promise<string | null> {
-  const loginUrl = getLoginUrl();
-
-  if (ReactNative.Platform.OS === "web") {
-    // On web, just redirect
-    if (typeof window !== "undefined") {
-      window.location.href = loginUrl;
-    }
-    return null;
-  }
-
-  const supported = await Linking.canOpenURL(loginUrl);
-  if (!supported) {
-    console.warn("[OAuth] Cannot open login URL: URL scheme not supported");
-    // 可考虑抛出错误或返回错误状态，让调用方处理
-    return null;
-  }
-
+/** Validate and consume the one-time nonce for native callbacks. */
+export async function validateOAuthState(state: string): Promise<boolean> {
+  if (ReactNative.Platform.OS === "web") return true;
+  let storedNonce: string | null = null;
   try {
-    await Linking.openURL(loginUrl);
+    storedNonce = await SecureStore.getItemAsync(NATIVE_OAUTH_NONCE_KEY);
+    await SecureStore.deleteItemAsync(NATIVE_OAUTH_NONCE_KEY);
+    if (!storedNonce) return false;
+    const payload = JSON.parse(decodeState(state)) as { redirectUri?: unknown; nonce?: unknown };
+    return payload.redirectUri === getRedirectUri() && payload.nonce === storedNonce;
   } catch {
-    console.error("[OAuth] Failed to open login URL");
-    // 可考虑抛出错误让调用方处理
+    return false;
   }
+}
 
-  // The OAuth callback will reopen the app via deep link.
+/** Open the provider in the system browser; native returns through the registered deep link. */
+export async function startOAuthLogin(): Promise<string | null> {
+  const loginUrl = await getLoginUrl();
+  if (ReactNative.Platform.OS === "web") {
+    if (typeof window !== "undefined") window.location.href = loginUrl;
+    return null;
+  }
+  const supported = await Linking.canOpenURL(loginUrl);
+  if (!supported) throw new Error("Cannot open the Manus login URL");
+  await Linking.openURL(loginUrl);
   return null;
 }
