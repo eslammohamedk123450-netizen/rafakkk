@@ -205,7 +205,6 @@ export default function SettingsScreen() {
       </SulyCard>
 
       <SulyCard style={{ backgroundColor: colors.card }}><Text style={{ color: colors.text, fontWeight: "700", textAlign: "right" }}>الأذونات والخصوصية</Text><Text style={{ color: colors.muted, textAlign: "right", lineHeight: 21 }}>لا نرفع سجلات الصلاة أو الورد أو الأذكار إلى خادم. الموقع يُستخدم محليًا لحساب المواقيت. يمكنك تغيير أذونات الموقع والإشعارات من إعدادات هاتفك.</Text><SulyButton title="فتح إعدادات الهاتف" secondary onPress={() => Linking.openSettings()} /></SulyCard>
-      <SulyCard><Text style={{ color: colors.text, fontWeight: "700", textAlign: "right" }}>إدارة مكتبة التطبيق</Text><Text style={{ color: colors.muted, textAlign: "right", lineHeight: 21 }}>هذه الواجهة للمشرف فقط؛ يحدد الخادم صلاحية الدخول والنشر. التحديثات المنشورة لا تغيّر سجلاتك الشخصية على الجهاز.</Text><SulyButton title="فتح لوحة الإدارة" secondary onPress={() => router.push("/admin")} /></SulyCard>
     </AppScreen>
   );
 }
