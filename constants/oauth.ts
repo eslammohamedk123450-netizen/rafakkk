@@ -34,15 +34,17 @@ const NATIVE_OAUTH_NONCE_KEY = "suly_native_oauth_nonce";
 
 /**
  * Get the API base URL, deriving from the current Preview hostname if it is not set.
- * Metro runs on 8081 while the project API runs on 3000.
+ * Metro/web Preview use 8081/8328 while the project API runs on 3000.
  */
 export function getApiBaseUrl(): string {
-  if (API_BASE_URL) return API_BASE_URL.replace(/\/$/, "");
   if (ReactNative.Platform.OS === "web" && typeof window !== "undefined" && window.location) {
+    if (process.env.NODE_ENV === "production") return window.location.origin;
+    if (API_BASE_URL) return API_BASE_URL.replace(/\/$/, "");
     const { protocol, hostname } = window.location;
-    const apiHostname = hostname.replace(/^8081-/, "3000-");
+    const apiHostname = hostname.replace(/^(?:8081|8328)-/, "3000-");
     if (apiHostname !== hostname) return `${protocol}//${apiHostname}`;
   }
+  if (API_BASE_URL) return API_BASE_URL.replace(/\/$/, "");
   return "";
 }
 

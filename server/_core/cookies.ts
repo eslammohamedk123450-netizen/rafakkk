@@ -6,14 +6,7 @@ import {
 } from "../../shared/const.js";
 
 function isSecureRequest(req: Request) {
-  if (req.protocol === "https") return true;
-
-  const forwardedProto = req.headers["x-forwarded-proto"];
-  if (!forwardedProto) return false;
-
-  const protoList = Array.isArray(forwardedProto) ? forwardedProto : forwardedProto.split(",");
-
-  return protoList.some((proto) => proto.trim().toLowerCase() === "https");
+  return req.secure || req.protocol === "https";
 }
 
 export function getSessionCookieOptions(
@@ -33,7 +26,7 @@ function configuredApiHostname(): string | null {
   if (!packager) return null;
   try {
     const url = new URL(packager);
-    const hostname = url.hostname.replace(/^8081-/, "3000-");
+    const hostname = url.hostname.replace(/^(?:8081|8328)-/, "3000-");
     return hostname === url.hostname ? null : hostname;
   } catch {
     return null;

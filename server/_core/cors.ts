@@ -36,6 +36,8 @@ export function trustedExpoWebOrigins(): Set<string> {
   for (const configured of [packager, preview]) {
     if (configured && !originHasLoopbackHostname(configured)) origins.add(configured);
   }
+  const productionOrigin = configuredProductionOrigin();
+  if (productionOrigin) origins.add(productionOrigin);
   // Backward-compatible production fallback while every runtime starts injecting the explicit
   // 8328 origin. Localhost cannot use hostname prefix derivation and is handled only by exact env.
   if (packager && !originHasLoopbackHostname(packager)) {
@@ -67,6 +69,19 @@ function originHasLoopbackHostname(origin: string): boolean {
   }
 }
 
+function configuredProductionOrigin(): string | null {
+  const value = process.env.SULY_PUBLIC_ORIGIN?.trim();
+  if (!value) return null;
+  try {
+    const url = new URL(value);
+    return url.protocol === "https:" && url.origin === value && !originHasLoopbackHostname(value)
+      ? value
+      : null;
+  } catch {
+    return null;
+  }
+}
+
 function configuredLocalExpoWebOrigins(): Set<string> {
   const origins = new Set<string>();
   for (const name of ["EXPO_PACKAGER_PROXY_URL", "EXPO_WEB_PREVIEW_URL"] as const) {
@@ -76,6 +91,11 @@ function configuredLocalExpoWebOrigins(): Set<string> {
     if (url.protocol === "http:" && isLoopbackApiHost(url.hostname)) origins.add(origin);
   }
   return origins;
+}
+
+export function isTrustedWebOrigin(origin: string): boolean {
+  if (trustedExpoWebOrigins().has(origin)) return true;
+  return configuredLocalExpoWebOrigins().has(origin);
 }
 
 export function createCorsMiddleware(

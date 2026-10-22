@@ -56,13 +56,16 @@ const publicRuntime = {
     process.env.VITE_APP_ID ??
     process.env.EXPO_PUBLIC_APP_ID ??
     "",
-  apiBaseUrl: process.env.EXPO_PUBLIC_API_BASE_URL ?? "",
+  apiBaseUrl:
+    process.env.NODE_ENV === "development"
+      ? process.env.EXPO_PUBLIC_API_BASE_URL ?? ""
+      : process.env.SULY_PUBLIC_ORIGIN ?? "https://suly-ky79x.manus.space",
 };
 
 const config: ExpoConfig = {
   name: env.appName,
   slug: env.appSlug,
-  version: "1.0.1",
+  version: "1.0.2",
   extra: publicRuntime,
   orientation: "portrait",
   icon: "./assets/images/icon.png",
@@ -76,7 +79,7 @@ const config: ExpoConfig = {
       }
   },
   android: {
-    versionCode: 2,
+    versionCode: 3,
     adaptiveIcon: {
       backgroundColor: "#213D33",
       foregroundImage: "./assets/images/android-icon-foreground.png",

@@ -9,15 +9,44 @@ import {
 } from "./cookies";
 import { sdk } from "./sdk";
 import { ENV } from "./env";
+import { isTrustedWebOrigin } from "./cors";
 
 const OAUTH_NONCE_COOKIE = "suly_oauth_nonce";
+const OAUTH_RETURN_ORIGIN_COOKIE = "suly_oauth_return_origin";
+const OAUTH_CALLBACK_ORIGIN_COOKIE = "suly_oauth_callback_origin";
 const OAUTH_NONCE_TTL_MS = 5 * 60 * 1000;
 
-function getRequestOrigin(req: Request) {
-  const header = req.headers["x-forwarded-proto"];
-  const forwarded = Array.isArray(header) ? header[0] : typeof header === "string" ? header.split(",")[0] : undefined;
-  const protocol = forwarded?.trim() || req.protocol;
-  return `${protocol}://${req.get("host")}`;
+function parseOrigin(value: unknown): string | null {
+  if (typeof value !== "string") return null;
+  try {
+    const url = new URL(value);
+    return (url.protocol === "https:" || url.protocol === "http:") && url.origin === value
+      ? value
+      : null;
+  } catch {
+    return null;
+  }
+}
+
+function configuredApiOrigin(): string | null {
+  const explicit = parseOrigin(process.env.EXPO_PUBLIC_API_BASE_URL);
+  if (explicit) return explicit;
+  const packager = parseOrigin(process.env.EXPO_PACKAGER_PROXY_URL);
+  if (!packager) return null;
+  const url = new URL(packager);
+  const apiHostname = url.hostname.replace(/^8081-/, "3000-");
+  if (apiHostname === url.hostname) return null;
+  url.hostname = apiHostname;
+  return url.origin;
+}
+
+function isExpectedApiOrigin(apiOrigin: string, frontendOrigin: string): boolean {
+  if (process.env.NODE_ENV === "production") {
+    return Boolean(process.env.SULY_PUBLIC_ORIGIN) &&
+      apiOrigin === frontendOrigin &&
+      frontendOrigin === process.env.SULY_PUBLIC_ORIGIN;
+  }
+  return apiOrigin === configuredApiOrigin();
 }
 
 function encodeState(payload: { redirectUri: string; nonce: string }) {
@@ -36,7 +65,7 @@ function decodeStatePayload(state: string) {
 }
 
 function oauthNonceCookieOptions(req: Request) {
-  const secure = getRequestOrigin(req).startsWith("https://");
+  const secure = req.secure || req.protocol === "https";
   return { httpOnly: true, secure, sameSite: secure ? "none" as const : "lax" as const, path: "/", maxAge: OAUTH_NONCE_TTL_MS };
 }
 
@@ -99,21 +128,37 @@ function buildUserResponse(
 }
 
 export function registerOAuthRoutes(app: Express) {
-  app.get("/api/oauth/start", (req: Request, res: Response) => {
+  app.post("/api/oauth/start", (req: Request, res: Response) => {
     if (!ENV.appId || !ENV.oAuthPortalUrl) {
       res.status(503).json({ error: "OAuth login is not configured" });
       return;
     }
+    const frontendOrigin = parseOrigin(req.body?.frontendOrigin);
+    const apiOrigin = parseOrigin(req.body?.apiOrigin);
+    const requestOrigin = typeof req.headers.origin === "string" ? req.headers.origin : "";
+    if (
+      !frontendOrigin ||
+      frontendOrigin !== requestOrigin ||
+      !apiOrigin ||
+      !isTrustedWebOrigin(frontendOrigin) ||
+      !isExpectedApiOrigin(apiOrigin, frontendOrigin)
+    ) {
+      res.status(403).json({ error: "OAuth origin validation failed" });
+      return;
+    }
     const nonce = randomBytes(32).toString("base64url");
-    const redirectUri = `${getRequestOrigin(req)}/api/oauth/callback`;
+    const redirectUri = `${apiOrigin}/api/oauth/callback`;
     const loginUrl = new URL("/app-auth", ENV.oAuthPortalUrl);
     loginUrl.searchParams.set("appId", ENV.appId);
     loginUrl.searchParams.set("redirectUri", redirectUri);
     loginUrl.searchParams.set("state", encodeState({ redirectUri, nonce }));
     loginUrl.searchParams.set("responseType", "code");
     loginUrl.searchParams.set("type", "signIn");
-    res.cookie(OAUTH_NONCE_COOKIE, nonce, oauthNonceCookieOptions(req));
-    res.redirect(302, loginUrl.toString());
+    const cookieOptions = oauthNonceCookieOptions(req);
+    res.cookie(OAUTH_NONCE_COOKIE, nonce, cookieOptions);
+    res.cookie(OAUTH_RETURN_ORIGIN_COOKIE, frontendOrigin, cookieOptions);
+    res.cookie(OAUTH_CALLBACK_ORIGIN_COOKIE, apiOrigin, cookieOptions);
+    res.json({ loginUrl: loginUrl.toString() });
   });
 
   app.get("/api/oauth/callback", async (req: Request, res: Response) => {
@@ -126,11 +171,26 @@ export function registerOAuthRoutes(app: Express) {
     }
 
     const statePayload = decodeStatePayload(state);
-    const nonceCookie = req.headers.cookie ? parseCookieHeader(req.headers.cookie)[OAUTH_NONCE_COOKIE] : undefined;
+    const cookies = req.headers.cookie ? parseCookieHeader(req.headers.cookie) : {};
+    const nonceCookie = cookies[OAUTH_NONCE_COOKIE];
+    const returnOriginCookie = parseOrigin(cookies[OAUTH_RETURN_ORIGIN_COOKIE]);
+    const callbackOriginCookie = parseOrigin(cookies[OAUTH_CALLBACK_ORIGIN_COOKIE]);
     const nonceOptions = oauthNonceCookieOptions(req);
-    res.clearCookie(OAUTH_NONCE_COOKIE, { httpOnly: true, secure: nonceOptions.secure, sameSite: nonceOptions.sameSite, path: "/" });
-    const expectedRedirectUri = `${getRequestOrigin(req)}/api/oauth/callback`;
-    if (!statePayload || !nonceCookie || statePayload.nonce !== nonceCookie || statePayload.redirectUri !== expectedRedirectUri) {
+    const clearOptions = { httpOnly: true, secure: nonceOptions.secure, sameSite: nonceOptions.sameSite, path: "/" };
+    res.clearCookie(OAUTH_NONCE_COOKIE, clearOptions);
+    res.clearCookie(OAUTH_RETURN_ORIGIN_COOKIE, clearOptions);
+    res.clearCookie(OAUTH_CALLBACK_ORIGIN_COOKIE, clearOptions);
+    const expectedRedirectUri = callbackOriginCookie ? `${callbackOriginCookie}/api/oauth/callback` : "";
+    if (
+      !statePayload ||
+      !nonceCookie ||
+      statePayload.nonce !== nonceCookie ||
+      statePayload.redirectUri !== expectedRedirectUri ||
+      !returnOriginCookie ||
+      !callbackOriginCookie ||
+      !isTrustedWebOrigin(returnOriginCookie) ||
+      !isExpectedApiOrigin(callbackOriginCookie, returnOriginCookie)
+    ) {
       res.status(403).json({ error: "OAuth state validation failed" });
       return;
     }
@@ -150,13 +210,7 @@ export function registerOAuthRoutes(app: Express) {
         maxAge: ONE_YEAR_MS,
       });
 
-      // Redirect to the paired Expo web origin. The session cookie remains host-only on
-      // the API origin and is sent back by credentialed API requests.
-      const frontendUrl =
-        process.env.EXPO_WEB_PREVIEW_URL ||
-        process.env.EXPO_PACKAGER_PROXY_URL ||
-        "http://localhost:8081";
-      res.redirect(302, new URL("/admin", frontendUrl).toString());
+      res.redirect(302, new URL("/admin", returnOriginCookie).toString());
     } catch {
       console.error("[OAuth] Callback failed");
       res.status(500).json({ error: "OAuth callback failed" });

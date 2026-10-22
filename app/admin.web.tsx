@@ -1,10 +1,10 @@
 import { useState } from "react";
-import { Linking, Platform, Pressable, Text, View } from "react-native";
+import { Linking, Pressable, Text, View } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { AppScreen, ScreenHeading, SulyButton, SulyCard, SulyInput, TinyTag, useSulyTheme } from "@/components/suly-ui";
 import { CONTENT_CATEGORIES } from "@/lib/content/categories";
-import { getApiBaseUrl, startOAuthLogin } from "@/constants/oauth";
+import { getApiBaseUrl } from "@/constants/oauth";
 import { trpc } from "@/lib/trpc";
 
 type CategoryId = (typeof CONTENT_CATEGORIES)[number]["id"];
@@ -29,12 +29,18 @@ export default function AdminScreen() {
 
   const beginLogin = async () => {
     setNotice("");
-    if (Platform.OS === "web" && typeof window !== "undefined") {
-      window.location.assign(`${getApiBaseUrl()}/api/oauth/start`);
-      return;
-    }
     try {
-      await startOAuthLogin();
+      if (typeof window === "undefined") throw new Error("Browser is unavailable");
+      const apiOrigin = getApiBaseUrl();
+      const response = await fetch(`${apiOrigin}/api/oauth/start`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ apiOrigin, frontendOrigin: window.location.origin }),
+      });
+      const result = (await response.json()) as { loginUrl?: unknown };
+      if (!response.ok || typeof result.loginUrl !== "string") throw new Error("OAuth start failed");
+      window.location.assign(result.loginUrl);
     } catch {
       setNotice("تعذر بدء تسجيل الدخول. تحقق من إعدادات Manus OAuth.");
     }
