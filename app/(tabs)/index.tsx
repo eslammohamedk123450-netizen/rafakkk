@@ -6,6 +6,7 @@ import { AppScreen, ScreenHeading, SectionTitle, SulyButton, SulyCard, useSulyTh
 import { localDateKey, useAppStore, type PrayerId } from "@/lib/app-store";
 import { calculatePrayerTimes, formatPrayerTime, getNextPrayer, PRAYER_LABELS } from "@/lib/prayer/calculations";
 import { dateFromKey, shiftDateKey } from "@/lib/prayer/dates";
+import { calculateQuranDayProgress } from "@/lib/quran/progress";
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -14,7 +15,12 @@ export default function HomeScreen() {
   const today = localDateKey(new Date(), store.location?.timeZone);
   const todayLog = store.prayerLogs[today] ?? {};
   const completedPrayers = Object.values(todayLog).filter((status) => status === "completed").length;
-  const quranDone = store.quranHistory[today] ?? 0;
+  const quranDone = calculateQuranDayProgress({
+    mode: store.quranPlan.mode,
+    savedProgress: store.quranHistory[today],
+    savedMode: store.quranHistoryModes[today],
+    pagesReadToday: store.quranReader.pagesReadByDate[today]?.length ?? 0,
+  });
   const tasbeehCount = store.tasbeehCounts[today] ?? 0;
   const dhikrCount = Object.values(store.dhikrCounts[today] ?? {}).reduce((sum, count) => sum + count, 0);
   const totalDhikr = tasbeehCount + dhikrCount;

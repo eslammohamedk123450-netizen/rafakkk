@@ -92,6 +92,7 @@ export default function RootLayout() {
             <Stack screenOptions={{ headerShown: false }}>
               <Stack.Screen name="(tabs)" />
               <Stack.Screen name="settings" />
+              <Stack.Screen name="quran-reader" />
               <Stack.Screen name="admin" />
               <Stack.Screen name="oauth/callback" />
             </Stack>

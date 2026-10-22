@@ -4,6 +4,7 @@ import { AppScreen, ScreenHeading, SulyCard, TinyTag, useSulyTheme, ProgressBar,
 import { localDateKey, useAppStore } from "@/lib/app-store";
 import { shiftDateKey } from "@/lib/prayer/dates";
 import { calculateAchievementSummary } from "@/lib/achievement-metrics";
+import { getQuranProgressHistory } from "@/lib/quran/progress";
 
 const periods = [
   { id: "day", label: "اليوم", days: 1 },
@@ -20,17 +21,23 @@ export default function AchievementsScreen() {
   const [tasbeehGoalDraft, setTasbeehGoalDraft] = useState(store.tasbeehGoal ? `${store.tasbeehGoal}` : "");
   const range = periods.find((item) => item.id === period) ?? periods[0];
   const days = Array.from({ length: range.days }, (_, index) => shiftDateKey(today, -index));
+  const quranHistory = useMemo(() => getQuranProgressHistory(
+    store.quranPlan.mode,
+    store.quranHistory,
+    store.quranHistoryModes,
+    store.quranReader.pagesReadByDate,
+  ), [store.quranPlan.mode, store.quranHistory, store.quranHistoryModes, store.quranReader.pagesReadByDate]);
 
   const summary = useMemo(() => calculateAchievementSummary({
     days,
     prayerLogs: store.prayerLogs,
-    quranHistory: store.quranHistory,
+    quranHistory,
     tasbeehCounts: store.tasbeehCounts,
     dhikrCounts: store.dhikrCounts,
     quranTarget: store.quranPlan.target,
     dhikrGoal: store.dhikrGoal,
     tasbeehGoal: store.tasbeehGoal,
-  }), [days, store.prayerLogs, store.quranHistory, store.tasbeehCounts, store.dhikrCounts, store.quranPlan.target, store.dhikrGoal, store.tasbeehGoal]);
+  }), [days, store.prayerLogs, quranHistory, store.tasbeehCounts, store.dhikrCounts, store.quranPlan.target, store.dhikrGoal, store.tasbeehGoal]);
 
   const saveGoals = () => {
     const dhikrGoal = Number.parseInt(dhikrGoalDraft, 10);

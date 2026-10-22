@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { Pressable, Text, View } from "react-native";
-import { useRouter } from "expo-router";
+import { useRouter, type Href } from "expo-router";
 import { AppScreen, ScreenHeading, SulyButton, SulyCard, SulyInput, TinyTag, useSulyTheme, ProgressBar } from "@/components/suly-ui";
 import { localDateKey, useAppStore } from "@/lib/app-store";
+import { calculateQuranDayProgress } from "@/lib/quran/progress";
 
 const modes = [
   { id: "pages", label: "صفحات", unit: "صفحة" },
@@ -16,7 +17,14 @@ export default function QuranScreen() {
   const { store, updateStore } = useAppStore();
   const { colors } = useSulyTheme();
   const today = localDateKey(new Date(), store.location?.timeZone);
-  const progress = store.quranHistory[today] ?? 0;
+  const pagesReadToday = store.quranReader.pagesReadByDate[today]?.length ?? 0;
+  const progress = calculateQuranDayProgress({
+    mode: store.quranPlan.mode,
+    savedProgress: store.quranHistory[today],
+    savedMode: store.quranHistoryModes[today],
+    pagesReadToday,
+  });
+  const lastPage = store.quranReader.lastPage || 1;
   const [mode, setMode] = useState(store.quranPlan.mode);
   const [target, setTarget] = useState(`${store.quranPlan.target}`);
   const [sessions, setSessions] = useState(`${store.quranPlan.sessionsPerDay}`);
@@ -44,8 +52,21 @@ export default function QuranScreen() {
     setSessions(`${sessionCount}`);
   };
   const addProgress = (delta: number) => {
-    const next = Math.max(0, progress + delta);
-    updateStore((current) => ({ ...current, quranHistory: { ...current.quranHistory, [today]: next } }));
+    updateStore((current) => {
+      const currentMode = current.quranPlan.mode;
+      const currentProgress = calculateQuranDayProgress({
+        mode: currentMode,
+        savedProgress: current.quranHistory[today],
+        savedMode: current.quranHistoryModes[today],
+        pagesReadToday: current.quranReader.pagesReadByDate[today]?.length ?? 0,
+      });
+      const next = Math.max(0, currentProgress + delta);
+      return {
+        ...current,
+        quranHistory: { ...current.quranHistory, [today]: next },
+        quranHistoryModes: { ...current.quranHistoryModes, [today]: currentMode },
+      };
+    });
   };
   const goalCaption = store.quranPlan.mode === "surah" ? `${store.quranPlan.surahName || "المقطع المحدد"}${store.quranPlan.passage ? ` · ${store.quranPlan.passage}` : ""}` : `هدفك اليومي ${store.quranPlan.target} ${selectedMode.unit}`;
 
@@ -57,8 +78,10 @@ export default function QuranScreen() {
         <Text style={{ color: colors.text, textAlign: "right", fontSize: 19, fontWeight: "700" }}>{goalCaption}</Text>
         <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}><Text style={{ color: colors.muted }}>متبقي {remaining} {selectedMode.unit}</Text><Text style={{ color: colors.text, fontSize: 27, fontWeight: "800" }}>{progress} / {store.quranPlan.target}</Text></View>
         <ProgressBar value={progress} max={store.quranPlan.target} color={colors.gold} />
+        <SulyButton title={`افتح المصحف · الصفحة ${lastPage}`} secondary onPress={() => router.push("/quran-reader" as Href)} />
+        <Text style={{ color: colors.muted, textAlign: "right", fontSize: 12 }}>الصفحات التي سجّلت قراءتها اليوم: {pagesReadToday}</Text>
         {store.quranPlan.targetEndDate ? <Text style={{ color: colors.muted, textAlign: "right" }}>موعد هدف الختم: {store.quranPlan.targetEndDate}{endDateDays !== null ? endDateDays >= 0 ? ` · متبقٍ ${endDateDays} يومًا` : " · تجاوز الموعد المحدد" : ""}</Text> : null}
-        <View style={{ flexDirection: "row", gap: 10 }}><SulyButton title={`أتممت ${store.quranPlan.mode === "minutes" ? "10 دقائق" : "وحدة واحدة"}`} onPress={() => addProgress(store.quranPlan.mode === "minutes" ? 10 : 1)} /><View style={{ width: 92 }}><SulyButton title="تراجع" secondary onPress={() => addProgress(store.quranPlan.mode === "minutes" ? -10 : -1)} /></View></View>
+        {store.quranPlan.mode === "pages" ? <Text style={{ color: colors.muted, textAlign: "right", fontSize: 12 }}>يُحدّث تقدم الصفحات تلقائيًا عند تسجيل قراءة الصفحة في المصحف.</Text> : <View style={{ flexDirection: "row", gap: 10 }}><SulyButton title={`أتممت ${store.quranPlan.mode === "minutes" ? "10 دقائق" : "وحدة واحدة"}`} onPress={() => addProgress(store.quranPlan.mode === "minutes" ? 10 : 1)} /><View style={{ width: 92 }}><SulyButton title="تراجع" secondary onPress={() => addProgress(store.quranPlan.mode === "minutes" ? -10 : -1)} /></View></View>}
         <Text style={{ color: colors.muted, textAlign: "right", fontSize: 12 }}>التقدم محفوظ على هذا الجهاز، ويمكن تعديله في أي وقت.</Text>
       </SulyCard>
 

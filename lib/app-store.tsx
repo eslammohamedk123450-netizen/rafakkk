@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { initializeLocalDatabase, installBuiltinContent, readLocalState, writeLocalState } from "@/lib/local-db";
 import { BUILTIN_CONTENT } from "@/lib/content/seed";
+import type { QuranPlanMode } from "@/lib/quran/progress";
 
 export type ThemeChoice = "system" | "light" | "dark";
 export type PrayerId = "fajr" | "dhuhr" | "asr" | "maghrib" | "isha";
@@ -14,7 +15,7 @@ export type AppStore = {
   prayerLogs: Record<string, Partial<Record<PrayerId, PrayerStatus>>>;
   naflLogs: Record<string, string[]>;
   quranPlan: {
-    mode: "pages" | "juz" | "minutes" | "surah";
+    mode: QuranPlanMode;
     target: number;
     completed: number;
     sessionsPerDay: number;
@@ -24,6 +25,12 @@ export type AppStore = {
     targetEndDate?: string;
   };
   quranHistory: Record<string, number>;
+  quranHistoryModes: Record<string, QuranPlanMode>;
+  quranReader: {
+    lastPage: number;
+    bookmarkPage: number | null;
+    pagesReadByDate: Record<string, number[]>;
+  };
   dhikrCounts: Record<string, Record<string, number>>;
   tasbeehCounts: Record<string, number>;
   favorites: string[];
@@ -66,6 +73,8 @@ const defaultStore: AppStore = {
     passage: "",
   },
   quranHistory: {},
+  quranHistoryModes: {},
+  quranReader: { lastPage: 1, bookmarkPage: null, pagesReadByDate: {} },
   dhikrCounts: {},
   tasbeehCounts: {},
   favorites: [],
