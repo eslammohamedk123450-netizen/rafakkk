@@ -46,6 +46,7 @@ export type AppStore = {
   }>;
   dhikrGoal: number | null;
   tasbeehGoal: number | null;
+  adhanPrefs: { enabled: boolean; region: "egyptian" | "turkish" | "indonesian"; voiceId: string; mode: "full" | "takbir"; prayers: Record<PrayerId, boolean> };
   notificationPrefs: {
     enabled: boolean;
     prayers: Record<PrayerId, { enabled: boolean; atTime: boolean; beforeMinutes: number; followupMinutes: number; silent: boolean }>;
@@ -85,6 +86,7 @@ const defaultStore: AppStore = {
   customDhikr: [],
   dhikrGoal: null,
   tasbeehGoal: null,
+  adhanPrefs: { enabled: false, region: "egyptian", voiceId: "egypt-classic", mode: "full", prayers: { fajr: true, dhuhr: true, asr: true, maghrib: true, isha: true } },
   notificationPrefs: {
     enabled: false,
     prayers: {
@@ -130,6 +132,11 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
           quranPlan: { ...defaultStore.quranPlan, ...(saved.quranPlan ?? {}) },
           storyProgress: saved.storyProgress ?? defaultStore.storyProgress,
           quranReader: { ...defaultStore.quranReader, ...(saved.quranReader ?? {}), khatmaPages: saved.quranReader?.khatmaPages ?? defaultStore.quranReader.khatmaPages, fontSize: saved.quranReader?.fontSize ?? defaultStore.quranReader.fontSize },
+          adhanPrefs: {
+            ...defaultStore.adhanPrefs,
+            ...(saved.adhanPrefs ?? {}),
+            prayers: { ...defaultStore.adhanPrefs.prayers, ...(saved.adhanPrefs?.prayers ?? {}) },
+          },
           notificationPrefs: {
             ...defaultStore.notificationPrefs,
             ...(saved.notificationPrefs ?? {}),
