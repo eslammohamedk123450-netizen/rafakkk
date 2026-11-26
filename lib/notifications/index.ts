@@ -5,7 +5,8 @@ import { PRAYER_LABELS, type DailyPrayerTimes } from "@/lib/prayer/calculations"
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
-    shouldShowAlert: true,
+    shouldShowBanner: true,
+    shouldShowList: true,
     shouldPlaySound: true,
     shouldSetBadge: false,
   }),
