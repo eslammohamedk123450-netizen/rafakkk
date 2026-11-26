@@ -58,7 +58,7 @@ export async function requestAdhanPermissions() {
   if (Platform.OS === "android") {
     if (Number(Platform.Version) >= 31) {
       try {
-        await Linking.sendIntent("android.settings.REQUEST_SCHEDULE_EXACT_ALARM");
+        await Linking.openSettings();
       } catch {
         return false;
       }
