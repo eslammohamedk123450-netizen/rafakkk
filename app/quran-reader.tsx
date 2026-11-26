@@ -28,6 +28,7 @@ function QuranAudioBar({ surahId, surahName }: { surahId: number; surahName: str
   const [reciters, setReciters] = useState<ReaderReciter[]>([]);
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [pickerOpen, setPickerOpen] = useState(false);
+  const [expanded, setExpanded] = useState(false);
   const [loading, setLoading] = useState(true);
   const [notice, setNotice] = useState("");
 
@@ -65,15 +66,22 @@ function QuranAudioBar({ surahId, surahName }: { surahId: number; surahName: str
   };
 
   return (
-    <SulyCard style={{ gap: 10, borderColor: colors.gold + "66" }}>
-      <View style={{ flexDirection: "row-reverse", alignItems: "center", gap: 8 }}>
-        <MaterialCommunityIcons name="headphones" size={24} color={colors.gold} />
-        <View style={{ flex: 1, alignItems: "flex-end" }}>
-          <Text style={{ color: colors.text, fontWeight: "900", fontSize: 16 }}>الاستماع مع القراءة</Text>
-          <Text style={{ color: colors.muted, fontSize: 11 }}>استمع للسورة الحالية وأنت تقرأ المصحف</Text>
+    <SulyCard style={{ gap: 9, borderColor: colors.gold + "66", paddingVertical: 12 }}>
+      <Pressable onPress={() => setExpanded((value) => !value)} accessibilityRole="button" accessibilityState={{ expanded }} style={{ flexDirection: "row-reverse", alignItems: "center", gap: 9 }}>
+        <View style={{ width: 38, height: 38, borderRadius: 12, backgroundColor: colors.card, alignItems: "center", justifyContent: "center" }}>
+          <MaterialCommunityIcons name="headphones" size={22} color={colors.gold} />
         </View>
-      </View>
-      <Pressable onPress={() => setPickerOpen(true)} style={{ padding: 12, borderRadius: 12, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, flexDirection: "row-reverse", justifyContent: "space-between" }}>
+        <View style={{ flex: 1, alignItems: "flex-end", gap: 2 }}>
+          <Text style={{ color: colors.text, fontWeight: "900", fontSize: 15 }}>الاستماع مع القراءة</Text>
+          <Text numberOfLines={1} style={{ color: colors.muted, fontSize: 11 }}>{selected?.name ?? (loading ? "جارٍ تحميل القراء..." : "اختر قارئك المفضل")}</Text>
+        </View>
+        <MaterialCommunityIcons name={expanded ? "chevron-up" : "chevron-down"} size={21} color={colors.muted} />
+        <Pressable onPress={(event) => { event.stopPropagation(); status.playing ? player.pause() : playCurrentSurah(); }} accessibilityRole="button" accessibilityLabel={status.playing ? "إيقاف التلاوة مؤقتًا" : "تشغيل السورة"} style={{ width: 40, height: 40, borderRadius: 13, backgroundColor: colors.gold, alignItems: "center", justifyContent: "center" }}>
+          <MaterialCommunityIcons name={status.playing ? "pause" : "play"} size={22} color="#17392F" />
+        </Pressable>
+      </Pressable>
+      {expanded ? <>
+      <Pressable onPress={() => setPickerOpen(true)} style={{ padding: 11, borderRadius: 12, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, flexDirection: "row-reverse", justifyContent: "space-between" }}>
         <Text style={{ color: colors.text, fontWeight: "700" }}>{selected?.name ?? "اختيار القارئ"}</Text>
         <Text style={{ color: colors.gold }}>تغيير القارئ</Text>
       </Pressable>
@@ -84,6 +92,7 @@ function QuranAudioBar({ surahId, surahName }: { surahId: number; surahName: str
       {loading ? <ActivityIndicator color={colors.gold} /> : null}
       {status.isBuffering ? <Text style={{ color: colors.muted, textAlign: "right", fontSize: 11 }}>جارٍ تحميل التلاوة...</Text> : null}
       {notice ? <Text style={{ color: colors.muted, textAlign: "right", fontSize: 11 }}>{notice}</Text> : null}
+      </> : null}
       <Modal visible={pickerOpen} transparent animationType="slide" onRequestClose={() => setPickerOpen(false)}>
         <View style={{ flex: 1, justifyContent: "flex-end", backgroundColor: "rgba(0,0,0,0.6)", padding: 12 }}>
           <View style={{ backgroundColor: colors.surface, borderRadius: 20, maxHeight: "75%", padding: 15 }}>
@@ -124,6 +133,11 @@ export default function QuranReaderScreen() {
   const [searchQuery, setSearchQuery] = useState("");
   const searchResults = useMemo(() => searchQuran(searchQuery, 10), [searchQuery]);
   const [surahPickerVisible, setSurahPickerVisible] = useState(false);
+  const [surahSearch, setSurahSearch] = useState("");
+  const filteredSurahs = useMemo(() => {
+    const query = surahSearch.trim().replace(/[أإآٱ]/g, "ا").replace(/ى/g, "ي");
+    return query ? QURAN_SURAHS.filter((surah) => surah.name.replace(/[أإآٱ]/g, "ا").replace(/ى/g, "ي").includes(query)) : QURAN_SURAHS;
+  }, [surahSearch]);
   const [pagePickerVisible, setPagePickerVisible] = useState(false);
   const [readerMenuVisible, setReaderMenuVisible] = useState(false);
   const [currentPosition, setCurrentPosition] = useState<{ surah: number; ayah: number } | null>(() => store.quranReader.bookmarkPage === page && store.quranReader.bookmarkSurah && store.quranReader.bookmarkAyah ? { surah: store.quranReader.bookmarkSurah, ayah: store.quranReader.bookmarkAyah } : null);
@@ -249,6 +263,26 @@ export default function QuranReaderScreen() {
 
 
 
+      <View style={{ gap: 9, paddingHorizontal: 2, paddingBottom: 6 }}>
+        <View style={{ height: 5, borderRadius: 99, backgroundColor: colors.border, overflow: "hidden", alignItems: "flex-end" }}>
+          <View style={{ width: `${(page / QURAN_PAGE_COUNT) * 100}%`, height: "100%", backgroundColor: colors.gold, borderRadius: 99 }} />
+        </View>
+        <View style={{ flexDirection: "row-reverse", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+          <Pressable onPress={() => goToPage(page + 1)} disabled={page >= QURAN_PAGE_COUNT} accessibilityRole="button" accessibilityLabel="الصفحة التالية" style={{ minWidth: 94, minHeight: 42, borderRadius: 13, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface, flexDirection: "row-reverse", alignItems: "center", justifyContent: "center", gap: 5, opacity: page >= QURAN_PAGE_COUNT ? 0.35 : 1 }}>
+            <MaterialCommunityIcons name="chevron-right" size={20} color={colors.gold} />
+            <Text style={{ color: colors.text, fontWeight: "700", fontSize: 13 }}>التالي</Text>
+          </Pressable>
+          <View style={{ alignItems: "center", gap: 2 }}>
+            <Text style={{ color: colors.text, fontWeight: "900", fontSize: 14 }}>{arabicNumber(page)} / {arabicNumber(QURAN_PAGE_COUNT)}</Text>
+            <Text style={{ color: colors.muted, fontSize: 10 }}>تقدمك في المصحف</Text>
+          </View>
+          <Pressable onPress={() => goToPage(page - 1)} disabled={page <= 1} accessibilityRole="button" accessibilityLabel="الصفحة السابقة" style={{ minWidth: 94, minHeight: 42, borderRadius: 13, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface, flexDirection: "row-reverse", alignItems: "center", justifyContent: "center", gap: 5, opacity: page <= 1 ? 0.35 : 1 }}>
+            <MaterialCommunityIcons name="chevron-left" size={20} color={colors.gold} />
+            <Text style={{ color: colors.text, fontWeight: "700", fontSize: 13 }}>السابق</Text>
+          </Pressable>
+        </View>
+      </View>
+
       <Modal visible={readerMenuVisible} transparent animationType="fade" onRequestClose={() => setReaderMenuVisible(false)}>
         <Pressable onPress={() => setReaderMenuVisible(false)} style={{ flex: 1, justifyContent: "flex-start", backgroundColor: "rgba(0,0,0,0.55)", padding: 18, paddingTop: 95 }}>
           <Pressable onPress={() => undefined} style={{ backgroundColor: colors.surface, borderRadius: 18, borderWidth: 1, borderColor: colors.border, padding: 8, gap: 3 }}>
@@ -286,17 +320,25 @@ export default function QuranReaderScreen() {
               <Text style={{ color: colors.text, fontWeight: "800", fontSize: 18 }}>اختر سورة</Text>
               <Pressable onPress={() => setSurahPickerVisible(false)}><Text style={{ color: colors.gold, fontWeight: "700" }}>إغلاق</Text></Pressable>
             </View>
+            <View style={{ paddingHorizontal: 14, paddingTop: 12 }}>
+              <View style={{ minHeight: 42, borderRadius: 12, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.background, flexDirection: "row-reverse", alignItems: "center", paddingHorizontal: 10, gap: 7 }}>
+                <MaterialCommunityIcons name="magnify" size={18} color={colors.gold} />
+                <TextInput value={surahSearch} onChangeText={setSurahSearch} placeholder="ابحث باسم السورة..." placeholderTextColor={colors.muted} style={{ flex: 1, color: colors.text, textAlign: "right", minHeight: 40, fontSize: 13 }} />
+                {surahSearch ? <Pressable onPress={() => setSurahSearch("")}><MaterialCommunityIcons name="close-circle" size={18} color={colors.muted} /></Pressable> : null}
+              </View>
+            </View>
             <ScrollView keyboardShouldPersistTaps="handled">
-              {QURAN_SURAHS.map((surah) => (
+              {filteredSurahs.map((surah) => (
                 <Pressable
                   key={surah.id}
-                  onPress={() => openSurah(surah.id)}
+                  onPress={() => { openSurah(surah.id); setSurahSearch(""); }}
                   style={{ paddingHorizontal: 18, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: colors.border, flexDirection: "row-reverse", justifyContent: "space-between", alignItems: "center" }}
                 >
                   <Text style={{ color: colors.text, fontSize: 16, fontWeight: "700" }}>{arabicNumber(surah.id)}. {surah.name}</Text>
                   <Text style={{ color: colors.muted, fontSize: 12 }}>{arabicNumber(surah.verseCount)} آية · صفحة {arabicNumber(surah.startPage)}</Text>
                 </Pressable>
               ))}
+              {!filteredSurahs.length ? <Text style={{ color: colors.muted, textAlign: "center", padding: 20 }}>لا توجد سورة بهذا الاسم.</Text> : null}
             </ScrollView>
           </View>
         </View>
