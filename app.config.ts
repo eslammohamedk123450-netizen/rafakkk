@@ -144,6 +144,7 @@ const config: ExpoConfig = {
   experiments: {
     typedRoutes: true,
     reactCompiler: true,
+    baseUrl: "/rafakkk",
   },
 };
 
