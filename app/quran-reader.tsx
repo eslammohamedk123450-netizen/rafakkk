@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Modal, Platform, Pressable, ScrollView, Text, View } from "react-native";
+import { Modal, Platform, Pressable, ScrollView, Text, TextInput, View } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useEffect } from "react";
@@ -14,6 +14,7 @@ import {
   QURAN_ATTRIBUTION,
   QURAN_PAGE_COUNT,
   QURAN_SURAHS,
+  searchQuran,
 } from "@/lib/quran";
 import { getTafsirAyah, tafsirDisplayText, TAFSIR_SOURCE } from "@/lib/quran/tafsir";
 
@@ -122,6 +123,8 @@ export default function QuranReaderScreen() {
   const page = clampPage(requestedPage ?? store.quranReader.lastPage ?? 1);
   useEffect(() => { if (requestedPage) goToPage(requestedPage); }, [params.surah, params.ayah]);
   const [pageDraft, setPageDraft] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const searchResults = useMemo(() => searchQuran(searchQuery, 10), [searchQuery]);
   const [surahPickerVisible, setSurahPickerVisible] = useState(false);
   const fontSize = store.quranReader.fontSize ?? 27;
   const [notice, setNotice] = useState("");
@@ -221,7 +224,25 @@ export default function QuranReaderScreen() {
         action={<Pressable onPress={() => router.back()} style={{ padding: 8 }}><Text style={{ color: colors.gold, fontWeight: "700" }}>الورد</Text></Pressable>}
       />
 
-      <SulyCard>
+      <View style={{ gap: 6 }}>
+        <View style={{ minHeight: 44, borderWidth: 1, borderColor: colors.border, borderRadius: 13, backgroundColor: colors.surface, flexDirection: "row-reverse", alignItems: "center", paddingHorizontal: 11, gap: 8 }}>
+          <MaterialCommunityIcons name="magnify" size={20} color={colors.gold} />
+          <TextInput value={searchQuery} onChangeText={setSearchQuery} placeholder="ابحث في السور والآيات..." placeholderTextColor={colors.muted} returnKeyType="search" style={{ flex: 1, minHeight: 42, color: colors.text, textAlign: "right", fontSize: 14, paddingVertical: 4 }} accessibilityLabel="البحث في القرآن الكريم" />
+          {searchQuery ? <Pressable onPress={() => setSearchQuery("")} accessibilityRole="button" accessibilityLabel="مسح البحث"><MaterialCommunityIcons name="close-circle" size={19} color={colors.muted} /></Pressable> : null}
+        </View>
+        {searchQuery.trim().length >= 2 ? (
+          <View style={{ backgroundColor: colors.surface, borderRadius: 13, borderWidth: 1, borderColor: colors.border, overflow: "hidden" }}>
+            {searchResults.length ? searchResults.map((result) => (
+              <Pressable key={`${result.surah}:${result.ayah}`} onPress={() => { goToPage(result.page); setSearchQuery(""); }} style={{ paddingHorizontal: 12, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: colors.border, gap: 3 }}>
+                <Text style={{ color: colors.gold, textAlign: "right", fontSize: 12, fontWeight: "800" }}>{result.surahName} · الآية {arabicNumber(result.ayah)} · صفحة {arabicNumber(result.page)}</Text>
+                <Text numberOfLines={2} style={{ color: colors.text, textAlign: "right", fontSize: 14, lineHeight: 24 }}>{result.text}</Text>
+              </Pressable>
+            )) : <Text style={{ color: colors.muted, textAlign: "right", padding: 12, fontSize: 13 }}>لا توجد نتائج مطابقة. جرّب اسم السورة أو جزءًا من الآية.</Text>}
+          </View>
+        ) : searchQuery.trim().length === 1 ? <Text style={{ color: colors.muted, textAlign: "right", fontSize: 11 }}>اكتب حرفًا آخر لبدء البحث.</Text> : null}
+      </View>
+
+      <SulyCard style={{ paddingHorizontal: 10, paddingVertical: 12, gap: 10 }}>
         <View style={{ flexDirection: "row-reverse", justifyContent: "space-between", alignItems: "center" }}>
           <Text style={{ color: colors.text, fontWeight: "800", fontSize: 18 }}>{currentSurah?.name ?? "سورة"}</Text>
           <Text style={{ color: colors.muted }}>الصفحة {arabicNumber(page)} من {arabicNumber(QURAN_PAGE_COUNT)}</Text>
@@ -246,15 +267,13 @@ export default function QuranReaderScreen() {
         {notice ? <Text style={{ color: colors.gold, textAlign: "right" }}>{notice}</Text> : null}
       </SulyCard>
 
-      <QuranAudioBar surahId={currentSurah?.id ?? 1} surahName={currentSurah?.name ?? "الفاتحة"} />
-
-      <SulyCard style={{ backgroundColor: colors.surface, borderColor: colors.gold + "99", borderWidth: 2, borderRadius: 12, paddingHorizontal: 20, paddingVertical: 22, gap: 14 }}>
+      <View style={{ marginHorizontal: -10, backgroundColor: colors.surface, borderColor: colors.gold + "99", borderWidth: 2, borderRadius: 9, paddingHorizontal: 10, paddingVertical: 14, gap: 10 }}>
         <View style={{ alignItems: "center", marginBottom: 4, gap: 6, paddingBottom: 12, borderBottomWidth: 1, borderBottomColor: colors.gold + "66" }}>
           <Text style={{ color: colors.gold, fontSize: 12, fontWeight: "700" }}>۞ ۞ ۞</Text>
           <Text style={{ color: colors.text, fontWeight: "800", fontSize: 21, letterSpacing: 0.2 }}>{currentSurah?.name ?? ""}</Text>
           <Text style={{ color: colors.muted, fontSize: 12 }}>الجزء من المصحف · صفحة {arabicNumber(page)}</Text>
         </View>
-        <View style={{ borderWidth: 1, borderColor: colors.border, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 16, backgroundColor: colors.card + "55" }}>
+        <View style={{ paddingHorizontal: 2, paddingVertical: 6, width: "100%" }}>
         <Text
           style={{
             color: colors.text,
@@ -281,7 +300,9 @@ export default function QuranReaderScreen() {
           <Text style={{ color: colors.muted }}>حجم الخط</Text>
           <Pressable onPress={() => updateStore((current) => ({ ...current, quranReader: { ...current.quranReader, fontSize: Math.min(36, (current.quranReader.fontSize ?? 27) + 2) } }))} accessibilityRole="button" style={{ padding: 8 }}><Text style={{ color: colors.gold, fontWeight: "700" }}>أكبر</Text></Pressable>
         </View>
-      </SulyCard>
+      </View>
+
+      <QuranAudioBar surahId={currentSurah?.id ?? 1} surahName={currentSurah?.name ?? "الفاتحة"} />
 
       <View style={{ alignItems: "center", gap: 4, paddingHorizontal: 8, paddingBottom: 12 }}>
         <Text style={{ color: colors.muted, textAlign: "center", fontSize: 11, lineHeight: 18 }}>{QURAN_ATTRIBUTION}</Text>
