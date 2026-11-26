@@ -155,19 +155,17 @@ export async function installBuiltinContent(entries: ContentRecord[]) {
   await initializeLocalDatabase();
   if (Platform.OS === "web") {
     const existing = await getContentEntries();
-    if (existing.length === 0 && entries.length > 0) {
-      await AsyncStorage.setItem(
-        WEB_CONTENT_KEY,
-        JSON.stringify(entries.map((entry) => ({ ...entry, origin: "builtin" }))),
-      );
+    const knownIds = new Set(existing.map((entry) => entry.id));
+    const additions = entries
+      .filter((entry) => !knownIds.has(entry.id))
+      .map((entry) => ({ ...entry, origin: "builtin" as const }));
+    if (additions.length > 0) {
+      await AsyncStorage.setItem(WEB_CONTENT_KEY, JSON.stringify([...existing, ...additions]));
     }
     return;
   }
   const db = await getDatabase();
-  const count = await db.getFirstAsync<{ count: number }>(
-    "SELECT COUNT(*) as count FROM content_entries WHERE origin = 'builtin'",
-  );
-  if ((count?.count ?? 0) > 0 || entries.length === 0) return;
+  if (entries.length === 0) return;
   await db.withTransactionAsync(async () => {
     for (const entry of entries) {
       await db.runAsync(
