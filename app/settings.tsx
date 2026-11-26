@@ -220,11 +220,7 @@ export default function SettingsScreen() {
         <Text style={{ color: colors.muted, textAlign: "right", lineHeight: 21 }}>اختر أحد التسجيلات الثلاثة واستمع إليه قبل اعتماده. أسماء التسجيلات معروضة بأرقام فقط.</Text>
         <View style={{ flexDirection: "row-reverse", flexWrap: "wrap", gap: 7 }}>{ADHAN_VOICES.map((voice) => <TinyTag key={voice.id} title={voice.label} selected={store.adhanPrefs.voiceId === voice.id} onPress={() => updateStore((current) => ({ ...current, adhanPrefs: { ...current.adhanPrefs, region: "indonesian", voiceId: voice.id } }))} />)}</View>
         <SulyButton title="استمع للتسجيلات الثلاثة واختر الأذان" secondary onPress={() => router.push("/adhan-indonesian")} />
-        <Text style={{ color: colors.text, fontWeight: "700", textAlign: "right" }}>نوع الأذان</Text>
-        <View style={{ flexDirection: "row-reverse", flexWrap: "wrap", gap: 7 }}>
-          <TinyTag title="الأذان كامل" selected={store.adhanPrefs.mode === "full"} onPress={() => updateStore((current) => ({ ...current, adhanPrefs: { ...current.adhanPrefs, mode: "full" } }))} />
-          <TinyTag title="تكبيرات مختصرة" selected={store.adhanPrefs.mode === "takbir"} onPress={() => updateStore((current) => ({ ...current, adhanPrefs: { ...current.adhanPrefs, mode: "takbir" } }))} />
-        </View>
+        <Text style={{ color: colors.muted, textAlign: "right", lineHeight: 21 }}>التسجيلات المتاحة حاليًا هي الأذان الكامل كما تم رفعه. خيار التكبيرات المختصرة سيُضاف عند توفير تسجيل قصير مستقل، حتى لا يظهر اختيار لا يغيّر الصوت فعليًا.</Text>
         <Text style={{ color: colors.text, fontWeight: "700", textAlign: "right" }}>الصلاة التي يشغّل عندها الأذان</Text>
         <View style={{ flexDirection: "row-reverse", flexWrap: "wrap", gap: 7 }}>{(Object.keys(PRAYER_LABELS) as PrayerId[]).map((id) => <TinyTag key={id} title={PRAYER_LABELS[id]} selected={store.adhanPrefs.prayers[id]} onPress={() => updateStore((current) => ({ ...current, adhanPrefs: { ...current.adhanPrefs, prayers: { ...current.adhanPrefs.prayers, [id]: !current.adhanPrefs.prayers[id] } } }))} />)}</View>
         <Text style={{ color: colors.muted, textAlign: "right", fontSize: 12 }}>يُجدول الأذان محليًا على أندرويد للأيام القادمة، ويُعاد تحديثه عند تغيير الموقع أو طريقة الحساب أو الصوت. يلزم إذن الإشعارات وإذن المنبهات الدقيقة. قد تختلف الدقة حسب إصدار أندرويد وسياسات الشركة المصنّعة.</Text>

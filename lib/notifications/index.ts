@@ -37,7 +37,7 @@ export async function prepareNotificationChannel() {
     }),
     Notifications.setNotificationChannelAsync("suly-gentle", {
       name: "رسائل رفيقك الهادئة",
-      importance: Notifications.AndroidImportance.DEFAULT,
+      importance: Notifications.AndroidImportance.LOW,
       vibrationPattern: [],
       sound: null,
     }),

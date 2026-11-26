@@ -36,7 +36,7 @@
 
 `pnpm install --frozen-lockfile` ثم `pnpm dev:metro` لتشغيل معاينة التطبيق. أدوات لوحة الويب الاختيارية فقط تستخدم أوامر الخادم في `package.json`. لا تحتاج وظائف التطبيق المحلية إلى تشغيل خادم API.
 
-`pnpm check` و`pnpm test` و`pnpm exec expo export --platform web --output-dir /tmp/suly-web-export` هي أوامر الفحص والتصدير.
+`pnpm check` و`pnpm test` وتصدير Expo لمنصتي الويب وAndroid تفحص الأنواع والاختبارات وحزم التطبيق. تصدير حزمة Android لا يعني إنشاء APK أو اختبار الأذان على جهاز فعلي.
 
 ## المصحف والمصادر
 
