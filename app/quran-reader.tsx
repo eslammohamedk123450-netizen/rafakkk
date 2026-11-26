@@ -67,19 +67,21 @@ function QuranAudioBar({ surahId, surahName }: { surahId: number; surahName: str
 
   return (
     <SulyCard style={{ gap: 9, borderColor: colors.gold + "66", paddingVertical: 12 }}>
-      <Pressable onPress={() => setExpanded((value) => !value)} accessibilityRole="button" accessibilityState={{ expanded }} style={{ flexDirection: "row-reverse", alignItems: "center", gap: 9 }}>
+      <View style={{ flexDirection: "row-reverse", alignItems: "center", gap: 9 }}>
         <View style={{ width: 38, height: 38, borderRadius: 12, backgroundColor: colors.card, alignItems: "center", justifyContent: "center" }}>
           <MaterialCommunityIcons name="headphones" size={22} color={colors.gold} />
         </View>
-        <View style={{ flex: 1, alignItems: "flex-end", gap: 2 }}>
-          <Text style={{ color: colors.text, fontWeight: "900", fontSize: 15 }}>الاستماع مع القراءة</Text>
-          <Text numberOfLines={1} style={{ color: colors.muted, fontSize: 11 }}>{selected?.name ?? (loading ? "جارٍ تحميل القراء..." : "اختر قارئك المفضل")}</Text>
-        </View>
-        <MaterialCommunityIcons name={expanded ? "chevron-up" : "chevron-down"} size={21} color={colors.muted} />
-        <Pressable onPress={(event) => { event.stopPropagation(); status.playing ? player.pause() : playCurrentSurah(); }} accessibilityRole="button" accessibilityLabel={status.playing ? "إيقاف التلاوة مؤقتًا" : "تشغيل السورة"} style={{ width: 40, height: 40, borderRadius: 13, backgroundColor: colors.gold, alignItems: "center", justifyContent: "center" }}>
+        <Pressable onPress={() => setExpanded((value) => !value)} accessibilityRole="button" accessibilityState={{ expanded }} style={{ flex: 1, flexDirection: "row-reverse", alignItems: "center", gap: 7 }}>
+          <View style={{ flex: 1, alignItems: "flex-end", gap: 2 }}>
+            <Text style={{ color: colors.text, fontWeight: "900", fontSize: 15 }}>الاستماع مع القراءة</Text>
+            <Text numberOfLines={1} style={{ color: colors.muted, fontSize: 11 }}>{selected?.name ?? (loading ? "جارٍ تحميل القراء..." : "اختر قارئك المفضل")}</Text>
+          </View>
+          <MaterialCommunityIcons name={expanded ? "chevron-up" : "chevron-down"} size={21} color={colors.muted} />
+        </Pressable>
+        <Pressable onPress={() => status.playing ? player.pause() : playCurrentSurah()} accessibilityRole="button" accessibilityLabel={status.playing ? "إيقاف التلاوة مؤقتًا" : "تشغيل السورة"} style={{ width: 40, height: 40, borderRadius: 13, backgroundColor: colors.gold, alignItems: "center", justifyContent: "center" }}>
           <MaterialCommunityIcons name={status.playing ? "pause" : "play"} size={22} color="#17392F" />
         </Pressable>
-      </Pressable>
+      </View>
       {expanded ? <>
       <Pressable onPress={() => setPickerOpen(true)} style={{ padding: 11, borderRadius: 12, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, flexDirection: "row-reverse", justifyContent: "space-between" }}>
         <Text style={{ color: colors.text, fontWeight: "700" }}>{selected?.name ?? "اختيار القارئ"}</Text>
