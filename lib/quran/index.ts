@@ -59,3 +59,10 @@ export function getSurahStartPage(surahNumber: number): number | null {
 export function getSurahName(surahNumber: number): string {
   return quran.surahs.find((surah) => surah.id === surahNumber)?.name ?? "";
 }
+
+/** Find the local Mushaf page containing an ayah. */
+export function getQuranPageForVerse(surahNumber: number, ayahNumber: number): number | null {
+  if (!Number.isInteger(surahNumber) || !Number.isInteger(ayahNumber) || surahNumber < 1 || ayahNumber < 1) return null;
+  const pageIndex = quran.pages.findIndex((page) => page.some(([surah, ayah]) => surah === surahNumber && ayah === ayahNumber));
+  return pageIndex >= 0 ? pageIndex + 1 : null;
+}
