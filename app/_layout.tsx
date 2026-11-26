@@ -5,7 +5,7 @@ import { StatusBar } from "expo-status-bar";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import "react-native-reanimated";
-import { Alert, Linking, Platform } from "react-native";
+import { Alert, Linking, Platform, useWindowDimensions } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import "@/lib/_core/nativewind-pressable";
 import { ThemeProvider } from "@/lib/theme-provider";
@@ -31,11 +31,17 @@ export const unstable_settings = {
 };
 
 export default function RootLayout() {
+  const windowDimensions = useWindowDimensions();
+  const windowFrame: Rect = { x: 0, y: 0, width: windowDimensions.width, height: windowDimensions.height };
   const initialInsets = initialWindowMetrics?.insets ?? DEFAULT_WEB_INSETS;
-  const initialFrame = initialWindowMetrics?.frame ?? DEFAULT_WEB_FRAME;
+  const reportedInitialFrame = initialWindowMetrics?.frame;
+  const initialFrame = reportedInitialFrame && reportedInitialFrame.width > 0 && reportedInitialFrame.height > 0
+    ? reportedInitialFrame
+    : windowFrame;
 
   const [insets, setInsets] = useState<EdgeInsets>(initialInsets);
   const [frame, setFrame] = useState<Rect>(initialFrame);
+  const effectiveFrame = frame.width > 0 && frame.height > 0 ? frame : windowFrame;
 
   // Initialize Manus runtime for cookie injection from parent container
   useEffect(() => {
@@ -142,7 +148,7 @@ export default function RootLayout() {
     return (
       <ThemeProvider>
         <SafeAreaProvider initialMetrics={providerInitialMetrics}>
-          <SafeAreaFrameContext.Provider value={frame}>
+          <SafeAreaFrameContext.Provider value={effectiveFrame}>
             <SafeAreaInsetsContext.Provider value={insets}>
               {content}
             </SafeAreaInsetsContext.Provider>
