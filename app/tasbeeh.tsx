@@ -76,6 +76,10 @@ export default function TasbeehScreen() {
       setNotice("تم إيقاف التذكير اليومي.");
       return;
     }
+    if (!store.tasbeehGoal) {
+      setNotice("حدد هدفك اليومي أولًا، ثم فعّل التذكير لمساعدتك على إكماله.");
+      return;
+    }
     const match = /^(?:[01]\d|2[0-3]):[0-5]\d$/.exec(timeDraft.trim());
     if (!match) {
       setNotice("اكتب وقت التذكير بصيغة 20:00.");
@@ -170,7 +174,7 @@ export default function TasbeehScreen() {
           <MaterialCommunityIcons name="bell-ring-outline" size={24} color={colors.gold} />
           <Text style={{ color: colors.text, fontSize: 17, fontWeight: "800" }}>تذكير لطيف لو الهدف لسه ما اكتملش</Text>
         </View>
-        <Text style={{ color: colors.muted, textAlign: "right", lineHeight: 22 }}>سيصلك إشعار يومي في الوقت الذي تختاره. عند إكمال هدفك يتوقف التذكير تلقائيًا.</Text>
+        <Text style={{ color: colors.muted, textAlign: "right", lineHeight: 22 }}>سيصلك إشعار يومي على الأجهزة التي تدعم الإشعارات في الوقت الذي تختاره. عند إكمال هدفك يتوقف التذكير تلقائيًا.</Text>
         <TextInput value={timeDraft} onChangeText={setTimeDraft} placeholder="20:00" placeholderTextColor={colors.muted} style={{ borderWidth: 1, borderColor: colors.border, borderRadius: 13, padding: 13, color: colors.text, textAlign: "center", backgroundColor: colors.surface }} />
         <SulyButton title={store.tasbeehReminderEnabled ? "إيقاف التذكير اليومي" : "تفعيل التذكير اليومي"} secondary onPress={() => void toggleReminder()} />
         {store.tasbeehReminderEnabled ? <Text style={{ color: colors.gold, textAlign: "center" }}>التذكير مضبوط يوميًا الساعة {store.tasbeehReminderTime}</Text> : null}
