@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Pressable, Text, View } from "react-native";
+import { AppState, Pressable, Text, View } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { AppScreen, ScreenHeading, SectionTitle, SulyButton, SulyCard, useSulyTheme, ProgressBar } from "@/components/suly-ui";
@@ -37,8 +37,28 @@ export default function HomeScreen() {
     : null;
   const [now, setNow] = useState(new Date());
   useEffect(() => {
-    const timer = setInterval(() => setNow(new Date()), 60_000);
-    return () => clearInterval(timer);
+    let timer: ReturnType<typeof setInterval> | undefined;
+    const start = () => {
+      if (timer) clearInterval(timer);
+      timer = setInterval(() => setNow(new Date()), 60_000);
+    };
+    const stop = () => {
+      if (timer) clearInterval(timer);
+      timer = undefined;
+    };
+    if (AppState.currentState === "active") start();
+    const subscription = AppState.addEventListener("change", (state) => {
+      if (state === "active") {
+        setNow(new Date());
+        start();
+      } else {
+        stop();
+      }
+    });
+    return () => {
+      stop();
+      subscription.remove();
+    };
   }, []);
   const nextPrayerToday = prayerTimes ? getNextPrayer(prayerTimes, now) : null;
   const tomorrowTimes = store.location ? calculatePrayerTimes(store.location.latitude, store.location.longitude, dateFromKey(shiftDateKey(today, 1)), store.calculationMethod, store.asrSchool) : null;
