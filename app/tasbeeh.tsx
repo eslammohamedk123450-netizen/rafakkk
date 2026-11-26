@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Linking, Modal, Pressable, Text, TextInput, View } from "react-native";
+import { Modal, Pressable, Text, TextInput, View } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import * as Notifications from "expo-notifications";
 import { AppScreen, ScreenHeading, SulyButton, SulyCard, ProgressBar, useSulyTheme } from "@/components/suly-ui";
@@ -12,28 +12,24 @@ const dhikrOptions = [
     title: "سُبْحَانَ اللهِ وَبِحَمْدِهِ",
     note: "ذكر عظيم، ومن قاله مائة مرة في يوم حُطّت خطاياه وإن كانت مثل زبد البحر.",
     source: "صحيح البخاري 6405، وصحيح مسلم 2691",
-    url: "https://sunnah.com/bukhari:6405",
   },
   {
     id: "tasbih-prayer",
     title: "سُبْحَانَ اللهِ · الْحَمْدُ لِلَّهِ · اللهُ أَكْبَرُ",
     note: "من الأذكار الواردة دبر الصلاة: التسبيح والتحميد والتكبير.",
     source: "صحيح مسلم 597",
-    url: "https://sunnah.com/muslim:597",
   },
   {
     id: "hawqala",
     title: "لَا حَوْلَ وَلَا قُوَّةَ إِلَّا بِاللهِ",
     note: "وصفها النبي ﷺ بأنها كنز من كنوز الجنة.",
     source: "صحيح البخاري 6384، وصحيح مسلم 2704",
-    url: "https://sunnah.com/bukhari:6384",
   },
   {
     id: "istighfar",
     title: "أَسْتَغْفِرُ اللهَ",
     note: "الاستغفار من هدي النبي ﷺ؛ كان يستغفر الله ويتوب إليه في اليوم مرات كثيرة.",
     source: "صحيح البخاري 6307",
-    url: "https://sunnah.com/bukhari:6307",
   },
 ];
 
@@ -206,8 +202,7 @@ export default function TasbeehScreen() {
         <View style={{ padding: 12, backgroundColor: colors.surface, borderRadius: 13, gap: 6 }}>
           <Text style={{ color: colors.gold, textAlign: "right", fontWeight: "800" }}>التوثيق</Text>
           <Text style={{ color: colors.text, textAlign: "right", fontSize: 13 }}>{selected.source}</Text>
-          <Text style={{ color: colors.muted, textAlign: "right", fontSize: 12 }}>اضغط لفتح نص الحديث ومراجعته.</Text>
-          <SulyButton title="فتح مصدر الحديث" secondary onPress={() => void Linking.openURL(selected.url).catch(() => setNotice("تعذر فتح المصدر على هذا الجهاز."))} />
+          <Text style={{ color: colors.muted, textAlign: "right", fontSize: 12 }}>التوثيق المعتمد للذكر مذكور أعلاه.</Text>
         </View>
       </SulyCard> : null}
 
