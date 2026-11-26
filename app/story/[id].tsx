@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Image, Linking, Pressable, Text, View } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { AppScreen, ScreenHeading, SulyButton, SulyCard, ProgressBar, useSulyTheme } from "@/components/suly-ui";
@@ -14,12 +14,16 @@ export default function StoryReaderScreen() {
   const savedChapter = story ? store.storyProgress[story.id] ?? 0 : 0;
   const [chapterIndex, setChapterIndex] = useState(savedChapter);
   const [notice, setNotice] = useState("");
+  useEffect(() => {
+    if (story) setChapterIndex(Math.min(store.storyProgress[story.id] ?? 0, story.chapters.length - 1));
+  }, [story?.id, store.storyProgress]);
   if (!story) {
     return <AppScreen><ScreenHeading title="القصة غير موجودة" subtitle="ارجع إلى مكتبة القصص واختر قصة أخرى." /><SulyButton title="العودة للقصص" onPress={() => router.replace("/stories")} /></AppScreen>;
   }
 
-  const chapter = story.chapters[Math.min(chapterIndex, story.chapters.length - 1)];
-  const percent = Math.round(((chapterIndex + 1) / story.chapters.length) * 100);
+  const activeIndex = Math.max(0, Math.min(chapterIndex, story.chapters.length - 1));
+  const chapter = story.chapters[activeIndex];
+  const percent = Math.round(((activeIndex + 1) / story.chapters.length) * 100);
   const savePlace = (nextIndex = chapterIndex) => {
     const safeIndex = Math.max(0, Math.min(story.chapters.length - 1, nextIndex));
     setChapterIndex(safeIndex);
@@ -43,7 +47,7 @@ export default function StoryReaderScreen() {
       </SulyCard>
       <SulyCard style={{ gap: 12 }}>
         <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
-          <Text style={{ color: colors.muted, fontSize: 12 }}>الفصل {chapterIndex + 1} من {story.chapters.length}</Text>
+          <Text style={{ color: colors.muted, fontSize: 12 }}>الفصل {activeIndex + 1} من {story.chapters.length}</Text>
           <Text style={{ color: colors.text, fontWeight: "800" }}>رحلتك في القصة</Text>
         </View>
         <ProgressBar value={chapterIndex + 1} max={story.chapters.length} color={colors.gold} />
@@ -55,10 +59,10 @@ export default function StoryReaderScreen() {
         </View>
         <SulyButton title="احفظ مكاني" secondary onPress={() => savePlace()} />
         <View style={{ flexDirection: "row", gap: 9 }}>
-          <View style={{ flex: 1 }}><SulyButton title="الفصل السابق" secondary disabled={chapterIndex === 0} onPress={() => savePlace(chapterIndex - 1)} /></View>
-          <View style={{ flex: 1 }}><SulyButton title={chapterIndex === story.chapters.length - 1 ? "أنهيت القصة" : "الفصل التالي"} disabled={chapterIndex === story.chapters.length - 1} onPress={() => savePlace(chapterIndex + 1)} /></View>
+          <View style={{ flex: 1 }}><SulyButton title="الفصل السابق" secondary disabled={activeIndex === 0} onPress={() => savePlace(activeIndex - 1)} /></View>
+          <View style={{ flex: 1 }}><SulyButton title={activeIndex === story.chapters.length - 1 ? "أنهيت القصة" : "الفصل التالي"} disabled={activeIndex === story.chapters.length - 1} onPress={() => savePlace(activeIndex + 1)} /></View>
         </View>
-        {chapterIndex === story.chapters.length - 1 ? <Text style={{ color: colors.gold, textAlign: "center", fontWeight: "700" }}>وصلت إلى نهاية القصة. بارك الله في وقتك وقراءتك.</Text> : null}
+        {activeIndex === story.chapters.length - 1 ? <Text style={{ color: colors.gold, textAlign: "center", fontWeight: "700" }}>وصلت إلى نهاية القصة. بارك الله في وقتك وقراءتك.</Text> : null}
         {notice ? <Text style={{ color: colors.muted, textAlign: "center", fontSize: 12 }}>{notice}</Text> : null}
       </SulyCard>
       <SulyCard>
