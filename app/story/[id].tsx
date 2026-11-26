@@ -8,6 +8,59 @@ import { useAppStore } from "@/lib/app-store";
 import { getQuranPage, getQuranPageForVerse, QURAN_SURAHS } from "@/lib/quran";
 import { getTafsirAyah, tafsirDisplayText, TAFSIR_SOURCE } from "@/lib/quran/tafsir";
 
+function parseStoryReferences(value: string) {
+  let previousSurahId: number | null = null;
+  return value.split(/[؛;]/).map((raw) => {
+    const text = raw.trim().replace(/^و(?=سورة)/, "");
+    if (!text) return null;
+    let surahName = "";
+    let startAyah = 0;
+    let endAyah = 0;
+    let match = text.match(/سورة\s+(.+?)،?\s*الآي(?:ة|ات)\s*(\d+)(?:\s*[–-]\s*(\d+))?/);
+    if (match) {
+      surahName = match[1].trim();
+      startAyah = Number(match[2]);
+      endAyah = Number(match[3] ?? match[2]);
+    } else {
+      match = text.match(/سورة\s+(.+?)\s+(\d+):(\d+)(?:\s*[–-]\s*(?:(\d+):)?(\d+))?/);
+      if (match) {
+        surahName = match[1].trim();
+        startAyah = Number(match[3]);
+        endAyah = Number(match[5] ?? match[3]);
+      } else {
+        match = text.match(/سورة\s+(.+?)،\s*(\d+)(?:\s*[–-]\s*(\d+))?/);
+        if (match) {
+          surahName = match[1].trim();
+          startAyah = Number(match[2]);
+          endAyah = Number(match[3] ?? match[2]);
+        } else {
+          const bare = text.match(/^(\d+):(\d+)(?:\s*[–-]\s*(?:(\d+):)?(\d+))?$/);
+          const verseOnly = text.match(/^الآي(?:ة|ات)\s*(\d+)(?:\s*[–-]\s*(\d+))?$/);
+          if (bare) {
+            const surah = QURAN_SURAHS.find((item) => item.id === Number(bare[1]));
+            if (!surah) return null;
+            previousSurahId = surah.id;
+            startAyah = Number(bare[2]);
+            endAyah = Number(bare[4] ?? bare[2]);
+            return { label: text, surahId: surah.id, startAyah, endAyah };
+          }
+          if (verseOnly && previousSurahId) {
+            startAyah = Number(verseOnly[1]);
+            endAyah = Number(verseOnly[2] ?? verseOnly[1]);
+            return { label: text, surahId: previousSurahId, startAyah, endAyah };
+          }
+          return null;
+        }
+      }
+    }
+    const normalize = (name: string) => name.replace(/^ال/, "").replace(/[أإآ]/g, "ا").replace(/[ًٌٍَُِّْـ]/g, "").replace(/[،.]/g, "").trim();
+    const surah = QURAN_SURAHS.find((item) => normalize(item.name) === normalize(surahName));
+    if (!surah || !startAyah || !endAyah) return null;
+    previousSurahId = surah.id;
+    return { label: text, surahId: surah.id, startAyah, endAyah };
+  }).filter((item): item is { label: string; surahId: number; startAyah: number; endAyah: number } => Boolean(item));
+}
+
 export default function StoryReaderScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
@@ -68,14 +121,8 @@ export default function StoryReaderScreen() {
     updateStore((current) => ({ ...current, storyProgress: { ...current.storyProgress, [story.id]: safeIndex + (contextChapter ? 1 : 0) } }));
     setNotice("اتحفظ مكانك في القصة على هذا الجهاز.");
   };
-  const referenceItems = (chapter?.reference ?? "").split(/[؛;]/).map((raw) => {
-    const match = raw.trim().match(/سورة\s+(.+?)،?\s*الآي(?:ة|ات)\s*(\d+)(?:\s*[–-]\s*(\d+))?/);
-    if (!match) return null;
-    const surahName = match[1].replace(/[،.]/g, "").trim();
-    const surah = QURAN_SURAHS.find((item) => item.name === surahName || item.name.replace(/^ال/, "") === surahName.replace(/^ال/, ""));
-    if (!surah) return null;
-    return { label: raw.trim(), surahId: surah.id, startAyah: Number(match[2]), endAyah: Number(match[3] ?? match[2]) };
-  }).filter((item): item is { label: string; surahId: number; startAyah: number; endAyah: number } => Boolean(item));
+  const referenceItems = parseStoryReferences(chapter?.reference ?? "");
+  const contextReferenceItems = parseStoryReferences(contextChapter?.reference ?? "");
   const selectedPage = selectedReference ? getQuranPage(getQuranPageForVerse(selectedReference.surahId, selectedAyah) ?? 0) : [];
   const selectedVerse = selectedPage.find((verse) => verse.surah === selectedReference?.surahId && verse.ayah === selectedAyah);
 
@@ -105,7 +152,12 @@ export default function StoryReaderScreen() {
       {contextChapter && showContext ? <SulyCard style={{ gap: 10 }}>
         <Text style={{ color: colors.gold, fontSize: 19, fontWeight: "900", textAlign: "right" }}>المقدمة التاريخية: قبل بداية القصة</Text>
         <Text style={{ color: colors.text, fontSize: 16, lineHeight: 31, textAlign: "right" }}>{contextChapter.body}</Text>
-        <Text style={{ color: colors.muted, fontSize: 12, textAlign: "right" }}>{contextChapter.reference}</Text>
+        {contextReferenceItems.length ? <View style={{ gap: 7 }}>
+          <Text style={{ color: colors.muted, fontSize: 12, textAlign: "right" }}>مراجع المقدمة — اضغط على المرجع لعرض التفسير أو فتح المصحف:</Text>
+          {contextReferenceItems.map((reference) => <Pressable key={`context-${reference.label}`} onPress={() => { setSelectedReference(reference); setSelectedAyah(reference.startAyah); }} style={{ padding: 9, borderRadius: 10, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border }}>
+            <Text style={{ color: colors.gold, fontSize: 13, textAlign: "right", fontWeight: "700" }}>{reference.label}</Text>
+          </Pressable>)}
+        </View> : <Text style={{ color: colors.muted, fontSize: 12, textAlign: "right" }}>{contextChapter.reference}</Text>}
         <SulyButton title="تخطي المقدمة وابدأ القصة" onPress={() => { setShowContext(false); setShowLessons(false); }} />
       </SulyCard> : null}
 
