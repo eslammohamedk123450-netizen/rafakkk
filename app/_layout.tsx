@@ -5,7 +5,8 @@ import { StatusBar } from "expo-status-bar";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import "react-native-reanimated";
-import { Platform } from "react-native";
+import { Alert, Platform } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import "@/lib/_core/nativewind-pressable";
 import { ThemeProvider } from "@/lib/theme-provider";
 import {
@@ -39,6 +40,29 @@ export default function RootLayout() {
   // Initialize Manus runtime for cookie injection from parent container
   useEffect(() => {
     initManusRuntime();
+  }, []);
+
+  // Explain Android battery restrictions once. Scheduled notification alarms do not
+  // require a persistent JS service; the user can optionally allow unrestricted battery use.
+  useEffect(() => {
+    if (Platform.OS !== "android") return;
+    let active = true;
+    AsyncStorage.getItem("suly.battery-guidance.v1")
+      .then(async (shown) => {
+        if (!active || shown) return;
+        await AsyncStorage.setItem("suly.battery-guidance.v1", "shown");
+        if (!active) return;
+        Alert.alert(
+          "إعداد البطارية للأذان",
+          "لزيادة فرصة وصول الأذان في موعده، افتح إعدادات التطبيق ثم البطارية واختر «غير مقيّد» أو «السماح بالنشاط في الخلفية» إذا كان الخيار متاحًا. التطبيق لا يشغّل خدمة دائمة ولا يظل مستيقظًا؛ نظام أندرويد هو الذي يطلق صوت الأذان المجدول فقط.",
+          [
+            { text: "ليس الآن", style: "cancel" },
+            { text: "فتح إعدادات التطبيق", onPress: () => { void Linking.openSettings(); } },
+          ],
+        );
+      })
+      .catch(() => undefined);
+    return () => { active = false; };
   }, []);
 
   const handleSafeAreaUpdate = useCallback((metrics: Metrics) => {
