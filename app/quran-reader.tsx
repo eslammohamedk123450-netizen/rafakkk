@@ -277,7 +277,7 @@ export default function QuranReaderScreen() {
                 const surah = QURAN_SURAHS.find((item) => item.id === preview[0]?.surah);
                 return <Pressable key={pageNumber} onPress={() => { goToPage(pageNumber); setPagePickerVisible(false); }} style={{ width: "23%", minHeight: 112, backgroundColor: page === pageNumber ? colors.gold + "22" : colors.background, borderWidth: page === pageNumber ? 2 : 1, borderColor: page === pageNumber ? colors.gold : colors.border, borderRadius: 8, padding: 6, alignItems: "center", gap: 4 }}>
                   <Text style={{ color: colors.gold, fontSize: 10, fontWeight: "900" }}>{arabicNumber(pageNumber)}</Text><Text numberOfLines={1} style={{ color: colors.text, fontSize: 9, fontWeight: "800" }}>{surah?.name ?? "المصحف"}</Text>
-                  <View style={{ width: "100%", gap: 3, paddingTop: 3 }}>{preview.slice(0, 5).map((verse, i) => <View key={verse.surah + "-" + verse.ayah + "-" + i} style={{ height: 3, width: (78 + (i % 3) * 7) + "%", backgroundColor: colors.muted + "99", alignSelf: "center", borderRadius: 2 }} />)}</View>
+                  <View style={{ width: "100%", gap: 3, paddingTop: 3 }}>{preview.slice(0, 5).map((verse, i) => <View key={verse.surah + "-" + verse.ayah + "-" + i} style={{ height: 3, width: ((78 + (i % 3) * 7) + "%") as `${number}%`, backgroundColor: colors.muted + "99", alignSelf: "center", borderRadius: 2 }} />)}</View>
                 </Pressable>;
               })}
             </ScrollView>
