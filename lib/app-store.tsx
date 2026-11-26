@@ -36,6 +36,7 @@ export type AppStore = {
   };
   dhikrCounts: Record<string, Record<string, number>>;
   tasbeehCounts: Record<string, number>;
+  tasbeehChallengeCounts: Record<string, number>;
   favorites: string[];
   customDhikr: Array<{
     id: string;
@@ -85,6 +86,7 @@ const defaultStore: AppStore = {
   quranReader: { lastPage: 1, bookmarkPage: null, pagesReadByDate: {}, khatmaPages: [], fontSize: 27 },
   dhikrCounts: {},
   tasbeehCounts: {},
+  tasbeehChallengeCounts: {},
   favorites: [],
   customDhikr: [],
   dhikrGoal: null,
