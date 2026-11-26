@@ -24,8 +24,6 @@ export const STORY_CATEGORIES = [
   { id: "hadith", label: "من السنة" },
 ] as const;
 
-const VIDEO_CHANNEL = "https://www.youtube.com/@MuslimStoriesArabic";
-
 export const ISLAMIC_STORIES: IslamicStory[] = [
   {
     id: "yusuf",
