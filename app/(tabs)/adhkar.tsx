@@ -103,7 +103,7 @@ export default function AdhkarScreen() {
           </View>
           <MaterialCommunityIcons name="counter" size={40} color={colors.gold} />
         </SulyCard>
-      </Pressable>>
+      </Pressable>
 
       <View style={{ flexDirection: "row-reverse", flexWrap: "wrap", gap: 8 }}>{categories.map((item) => <TinyTag key={item.id} title={item.label} selected={category === item.id} onPress={() => setCategory(item.id)} />)}</View>
 
