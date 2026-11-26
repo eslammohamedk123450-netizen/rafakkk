@@ -26,6 +26,7 @@ export type AppStore = {
   };
   quranHistory: Record<string, number>;
   quranHistoryModes: Record<string, QuranPlanMode>;
+  storyProgress: Record<string, number>;
   quranReader: {
     lastPage: number;
     bookmarkPage: number | null;
@@ -76,6 +77,7 @@ const defaultStore: AppStore = {
   },
   quranHistory: {},
   quranHistoryModes: {},
+  storyProgress: {},
   quranReader: { lastPage: 1, bookmarkPage: null, pagesReadByDate: {}, khatmaPages: [], fontSize: 27 },
   dhikrCounts: {},
   tasbeehCounts: {},
@@ -126,6 +128,7 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
           ...defaultStore,
           ...saved,
           quranPlan: { ...defaultStore.quranPlan, ...(saved.quranPlan ?? {}) },
+          storyProgress: saved.storyProgress ?? defaultStore.storyProgress,
           quranReader: { ...defaultStore.quranReader, ...(saved.quranReader ?? {}), khatmaPages: saved.quranReader?.khatmaPages ?? defaultStore.quranReader.khatmaPages, fontSize: saved.quranReader?.fontSize ?? defaultStore.quranReader.fontSize },
           notificationPrefs: {
             ...defaultStore.notificationPrefs,
