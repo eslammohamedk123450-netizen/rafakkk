@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useState } from "react";
-import { Linking, Modal, Pressable, Text, View } from "react-native";
+import { Modal, Pressable, Text, View } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useFocusEffect, useRouter } from "expo-router";
 import { AppScreen, ScreenHeading, SulyButton, SulyCard, SulyInput, TinyTag, useSulyTheme, ProgressBar } from "@/components/suly-ui";
@@ -31,7 +31,6 @@ export default function AdhkarScreen() {
   const [showComposer, setShowComposer] = useState(false);
   const [customTitle, setCustomTitle] = useState("");
   const [customBody, setCustomBody] = useState("");
-  const [localNotice, setLocalNotice] = useState("");
 
   const refresh = useCallback(() => {
     let active = true;
@@ -76,23 +75,12 @@ export default function AdhkarScreen() {
     setCustomBody("");
     setShowComposer(false);
   };
-  const openSource = (value: string) => {
-    try {
-      const url = new URL(value);
-      if (url.protocol !== "https:" && url.protocol !== "http:") throw new Error("Unsupported protocol");
-      void Linking.openURL(url.toString()).catch(() => setLocalNotice("تعذر فتح رابط المصدر على هذا الجهاز."));
-    } catch {
-      setLocalNotice("رابط المصدر غير صالح؛ بقي المحتوى المحلي كما هو.");
-    }
-  };
-
   return (
     <AppScreen>
       <ScreenHeading title="الأذكار" subtitle={`${totalCount} مرة مما سجلته اليوم`} action={<Pressable onPress={() => setShowComposer(true)} style={{ width: 42, height: 42, borderRadius: 14, backgroundColor: colors.card, alignItems: "center", justifyContent: "center" }} accessibilityLabel="إضافة ذكر مخصص"><MaterialCommunityIcons name="plus" size={24} color={colors.gold} /></Pressable>} />
       <SulyCard style={{ backgroundColor: colors.card }}>
         <Text style={{ color: colors.text, textAlign: "right", fontWeight: "700" }}>مكتبتك معاك في كل وقت</Text>
         <Text style={{ color: colors.muted, textAlign: "right", lineHeight: 21 }}>الأذكار والمحتوى الأساسي محفوظان داخل التطبيق ويعملان دون إنترنت. سجلاتك ومفضلاتك تظل على جهازك.</Text>
-        {localNotice ? <Text style={{ color: colors.gold, textAlign: "right" }}>{localNotice}</Text> : null}
       </SulyCard>
       <Pressable onPress={() => router.push("/tasbeeh" as any)} accessibilityRole="button">
         <SulyCard style={{ backgroundColor: colors.card, flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
@@ -138,7 +126,6 @@ export default function AdhkarScreen() {
             <View style={{ padding: 11, borderRadius: 13, backgroundColor: colors.card, gap: 4 }}>
               <Text style={{ color: colors.muted, fontSize: 12, textAlign: "right" }}>{entry.sourceName} · {entry.sourceReference}</Text>
               {entry.authenticity && entry.authenticity !== "مخصص" ? <Text style={{ color: colors.accent, fontSize: 12, textAlign: "right" }}>الحكم المنقول: {entry.authenticity}</Text> : <Text style={{ color: colors.muted, fontSize: 12, textAlign: "right" }}>نص مخصص؛ لم تتم مراجعته كمصدر ديني.</Text>}
-              {entry.sourceUrl ? <Pressable onPress={() => openSource(entry.sourceUrl)}><Text style={{ color: colors.accent, fontSize: 12, textAlign: "right", textDecorationLine: "underline" }}>فتح المصدر</Text></Pressable> : null}
             </View>
             <SulyButton title={`سجّل الذكر · ${count} اليوم`} secondary onPress={() => addCount(entry.id)} />
           </SulyCard>
