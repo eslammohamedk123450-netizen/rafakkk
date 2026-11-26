@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ActivityIndicator, Animated, Image, Platform, Pressable, Text, TextInput, View } from "react-native";
+import { ActivityIndicator, Animated, BackHandler, Image, PanResponder, Platform, Pressable, ScrollView, Text, TextInput, View } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as FileSystem from "expo-file-system/legacy";
 import { useRouter } from "expo-router";
@@ -78,6 +78,64 @@ export default function AudioScreen() {
   const [savedTracks, setSavedTracks] = useState<SavedTrack[]>([]);
   const [downloadingKey, setDownloadingKey] = useState<string | null>(null);
   const rotation = useRef(new Animated.Value(0)).current;
+  const [armAngle, setArmAngle] = useState(43);
+  const [stylusLifted, setStylusLifted] = useState(false);
+  const armAngleRef = useRef(43);
+  const armStartAngleRef = useRef(43);
+  const stylusLiftedRef = useRef(false);
+  const trackTitleRef = useRef(trackTitle);
+  trackTitleRef.current = trackTitle;
+  const playingRef = useRef(status.playing);
+  playingRef.current = status.playing;
+  const spinRef = useRef<() => void>(() => undefined);
+  spinRef.current = () => {
+    rotation.stopAnimation((value) => {
+      const progress = Math.max(0, Math.min(0.999, value));
+      Animated.timing(rotation, {
+        toValue: 1,
+        duration: Math.max(90, 9000 * (1 - progress)),
+        useNativeDriver: true,
+      }).start(({ finished }) => {
+        if (finished && playingRef.current) {
+          rotation.setValue(0);
+          spinRef.current();
+        }
+      });
+    });
+  };
+  const armPanResponder = useMemo(() => PanResponder.create({
+    onMoveShouldSetPanResponder: (_event, gesture) => Math.abs(gesture.dx) > 4 || Math.abs(gesture.dy) > 4,
+    onPanResponderGrant: () => { armStartAngleRef.current = armAngleRef.current; },
+    onPanResponderMove: (_event, gesture) => {
+      const next = Math.max(-12, Math.min(70, armStartAngleRef.current + gesture.dx * 1.2));
+      armAngleRef.current = next;
+      setArmAngle(next);
+    },
+    onPanResponderRelease: (_event, gesture) => {
+      if (gesture.dx < -25) {
+        stylusLiftedRef.current = true;
+        setStylusLifted(true);
+        armAngleRef.current = -8;
+        setArmAngle(-8);
+        player.pause();
+      } else if (gesture.dx > 25) {
+        stylusLiftedRef.current = false;
+        setStylusLifted(false);
+        armAngleRef.current = 43;
+        setArmAngle(43);
+        if (trackTitleRef.current !== "اختر قارئًا أو إذاعة") player.play();
+      } else {
+        const restingAngle = stylusLiftedRef.current ? -8 : 43;
+        armAngleRef.current = restingAngle;
+        setArmAngle(restingAngle);
+      }
+    },
+    onPanResponderTerminate: () => {
+      const restingAngle = stylusLiftedRef.current ? -8 : 43;
+      armAngleRef.current = restingAngle;
+      setArmAngle(restingAngle);
+    },
+  }), [player]);
 
   useEffect(() => {
     void setAudioModeAsync({ playsInSilentMode: true, shouldPlayInBackground: true, interruptionMode: "doNotMix" }).catch(() => setNotice("تعذر تهيئة الصوت على هذا الجهاز."));
@@ -101,14 +159,25 @@ export default function AudioScreen() {
   }, []);
 
   useEffect(() => {
-    if (status.playing) {
-      rotation.setValue(0);
-      const loop = Animated.loop(Animated.timing(rotation, { toValue: 1, duration: 9000, useNativeDriver: true }));
-      loop.start();
-      return () => loop.stop();
-    }
-    rotation.stopAnimation();
+    playingRef.current = status.playing;
+    if (status.playing) spinRef.current();
+    else rotation.stopAnimation();
   }, [status.playing, rotation]);
+
+  useEffect(() => {
+    const subscription = BackHandler.addEventListener("hardwareBackPress", () => {
+      if (selectedReciter && section === "reciters") {
+        setSelectedReciter(null);
+        return true;
+      }
+      if (section !== "reciters") {
+        setSection("reciters");
+        return true;
+      }
+      return false;
+    });
+    return () => subscription.remove();
+  }, [selectedReciter, section]);
 
   const reciter = reciters.find((item) => item.id === selectedReciter) ?? reciters[0];
   const moshaf = reciter?.moshaf?.find((item) => item.id === selectedMoshaf) ?? reciter?.moshaf?.[0];
@@ -244,17 +313,31 @@ export default function AudioScreen() {
 
       <SulyCard>
         <Text style={{ color: colors.text, fontWeight: "800", fontSize: 17, textAlign: "center" }}>مشغل رفيقك الصوتي</Text>
-        <View style={{ alignItems: "center", paddingVertical: 12 }}>
-          <View style={{ width: 224, height: 224, alignItems: "center", justifyContent: "center" }}>
-            <Animated.View style={{ width: 208, height: 208, borderRadius: 104, backgroundColor: "#101114", borderWidth: 7, borderColor: "#292A2E", alignItems: "center", justifyContent: "center", transform: [{ rotate: rotationStyle }] }}>
-              {[180, 156, 132, 108, 84].map((size) => <View key={size} style={{ position: "absolute", width: size, height: size, borderRadius: size / 2, borderWidth: 1, borderColor: "#414247" }} />)}
-              <View style={{ width: 78, height: 78, borderRadius: 39, backgroundColor: colors.gold, borderWidth: 5, borderColor: "#E8D18A", alignItems: "center", justifyContent: "center" }}><Text style={{ color: "#151515", fontSize: 25, fontWeight: "900" }}>ر</Text><Text style={{ color: "#272014", fontSize: 8, fontWeight: "800" }}>SULY AUDIO</Text></View>
-            </Animated.View>
-            <View style={{ position: "absolute", right: 0, top: 2, width: 82, height: 10, borderRadius: 6, backgroundColor: "#B7B7B7", transform: [{ rotate: "43deg" }], borderWidth: 1, borderColor: "#555" }}><View style={{ position: "absolute", right: -3, top: -4, width: 17, height: 17, borderRadius: 9, backgroundColor: "#D4AF37" }} /></View>
+        <View style={{ alignItems: "center", paddingVertical: 12, gap: 10 }}>
+          <View style={{ flexDirection: "row-reverse", alignItems: "center", justifyContent: "center", gap: 12, width: "100%" }}>
+            <View style={{ width: 88, alignItems: "center", gap: 6 }}>
+              {reciter && !isLive && getReciterPhoto(reciter.name) ? <Image source={{ uri: getReciterPhoto(reciter.name)!.uri }} resizeMode="cover" style={{ width: 84, height: 108, borderRadius: 14, backgroundColor: colors.border }} /> : <View style={{ width: 84, height: 108, borderRadius: 14, backgroundColor: colors.gold + "22", borderWidth: 1, borderColor: colors.gold + "55", alignItems: "center", justifyContent: "center" }}><Text style={{ color: colors.gold, fontSize: 34, fontWeight: "900" }}>{!isLive && reciter ? reciter.name.trim().charAt(0) : "♫"}</Text></View>}
+              <Text numberOfLines={2} style={{ color: colors.muted, fontSize: 10, textAlign: "center" }}>{!isLive && reciter ? reciter.name : "مشغل رفيقك"}</Text>
+            </View>
+            <View style={{ width: 190, height: 196, alignItems: "center", justifyContent: "center" }}>
+              <Animated.View style={{ width: 176, height: 176, borderRadius: 88, backgroundColor: "#101114", borderWidth: 7, borderColor: "#292A2E", alignItems: "center", justifyContent: "center", transform: [{ rotate: rotationStyle }] }}>
+                {[150, 130, 110, 90, 70].map((size) => <View key={size} style={{ position: "absolute", width: size, height: size, borderRadius: size / 2, borderWidth: 1, borderColor: "#414247" }} />)}
+                <View style={{ width: 66, height: 66, borderRadius: 33, backgroundColor: colors.gold, borderWidth: 5, borderColor: "#E8D18A", alignItems: "center", justifyContent: "center" }}><Text style={{ color: "#151515", fontSize: 23, fontWeight: "900" }}>ر</Text><Text style={{ color: "#272014", fontSize: 7, fontWeight: "800" }}>SULY AUDIO</Text></View>
+              </Animated.View>
+              <View
+                {...armPanResponder.panHandlers}
+                accessibilityRole="button"
+                accessibilityLabel={stylusLifted ? "اسحب الذراع إلى القرص لاستكمال الصوت" : "اسحب الذراع بعيدًا عن القرص لإيقاف الصوت مؤقتًا"}
+                style={{ position: "absolute", right: 0, top: 3, width: 88, height: 20, borderRadius: 10, backgroundColor: "#B7B7B7", borderWidth: 1, borderColor: "#555", transform: [{ rotate: `${armAngle}deg` }], justifyContent: "center" }}
+              >
+                <View style={{ position: "absolute", right: -2, top: -3, width: 20, height: 20, borderRadius: 10, backgroundColor: "#D4AF37", borderWidth: 2, borderColor: "#6B5422" }} />
+                <View style={{ position: "absolute", left: 2, top: 6, width: 10, height: 8, borderRadius: 3, backgroundColor: "#444" }} />
+              </View>
+            </View>
           </View>
           <Text style={{ color: colors.text, fontWeight: "800", fontSize: 16, textAlign: "center" }}>{trackTitle}</Text>
           <Text style={{ color: colors.muted, marginTop: 4, textAlign: "center" }}>{trackArtist}</Text>
-          <Text style={{ color: status.playing ? colors.gold : colors.muted, marginTop: 7, fontSize: 12 }}>{status.isBuffering ? "جارٍ التحميل..." : status.playing ? "يعمل الآن • القرص يدور" : "متوقف مؤقتًا"}</Text>
+          <Text style={{ color: status.playing ? colors.gold : colors.muted, marginTop: 7, fontSize: 12 }}>{status.isBuffering ? "جارٍ التحميل..." : stylusLifted ? "الذراع مرفوعة • الصوت متوقف مؤقتًا" : status.playing ? "يعمل الآن • القرص يدور" : "متوقف مؤقتًا"}</Text>
           {!isLive && status.duration > 0 ? <View style={{ width: "100%", marginTop: 10, gap: 5 }}>
             <View style={{ height: 4, borderRadius: 4, backgroundColor: colors.border, overflow: "hidden" }}><View style={{ height: 4, width: `${Math.min(100, (status.currentTime / status.duration) * 100)}%`, backgroundColor: colors.gold }} /></View>
             <View style={{ flexDirection: "row", justifyContent: "space-between" }}><Text style={{ color: colors.muted, fontSize: 11 }}>{formatTime(status.currentTime)}</Text><Text style={{ color: colors.muted, fontSize: 11 }}>{formatTime(status.duration)}</Text></View>
@@ -266,6 +349,20 @@ export default function AudioScreen() {
         </View>
         {notice ? <Text style={{ color: colors.gold, textAlign: "center", fontSize: 12 }}>{notice}</Text> : null}
       </SulyCard>
+
+      {!loading && !error && section === "reciters" ? <SulyCard style={{ gap: 9 }}>
+        <Text style={{ color: colors.text, fontWeight: "800", textAlign: "right" }}>اختيار سريع للقراء</Text>
+        <Text style={{ color: colors.muted, fontSize: 11, textAlign: "right" }}>اضغط على صورة القارئ لفتح تسجيلاته</Text>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ flexDirection: "row-reverse", gap: 10 }}>
+          {reciters.filter((item) => !!getReciterPhoto(item.name)).slice(0, 14).map((item) => {
+            const photo = getReciterPhoto(item.name);
+            return <Pressable key={item.id} onPress={() => { setSelectedReciter(item.id); setSelectedMoshaf(item.moshaf?.[0]?.id ?? null); setSelectedSurah(1); setSearch(""); }} style={{ width: 78, alignItems: "center", gap: 5 }}>
+              <Image source={{ uri: photo!.uri }} resizeMode="cover" style={{ width: 66, height: 66, borderRadius: 33, borderWidth: 2, borderColor: selectedReciter === item.id ? colors.gold : colors.border, backgroundColor: colors.border }} />
+              <Text numberOfLines={2} style={{ color: selectedReciter === item.id ? colors.gold : colors.text, fontSize: 10, textAlign: "center", fontWeight: "700" }}>{item.name}</Text>
+            </Pressable>;
+          })}
+        </ScrollView>
+      </SulyCard> : null}
 
       {loading ? <SulyCard><ActivityIndicator color={colors.gold} /><Text style={{ color: colors.muted, textAlign: "center" }}>تحميل مكتبة الصوت...</Text></SulyCard> : null}
       {error ? <SulyCard><Text style={{ color: colors.text, textAlign: "right" }}>{error}</Text><SulyButton title="إعادة المحاولة" secondary onPress={() => router.replace("/audio")} /></SulyCard> : null}
