@@ -68,8 +68,9 @@ export function generateStaticParams() {
   return ISLAMIC_STORIES.map((story) => ({ id: story.id }));
 }
 
-export default function StoryReaderScreen() {
-  const { id } = useLocalSearchParams<{ id: string }>();
+export default function StoryReaderScreen({ storyId }: { storyId?: string } = {}) {
+  const routeParams = useLocalSearchParams<{ id: string }>();
+  const id = storyId ?? routeParams.id;
   const router = useRouter();
   const { store, updateStore } = useAppStore();
   const { colors } = useSulyTheme();
