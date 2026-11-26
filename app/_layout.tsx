@@ -1,11 +1,11 @@
 import "@/global.css";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { Stack } from "expo-router";
+import { Stack, usePathname, useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import "react-native-reanimated";
-import { Alert, Linking, Platform, useWindowDimensions } from "react-native";
+import { Alert, BackHandler, Linking, Platform, useWindowDimensions } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import "@/lib/_core/nativewind-pressable";
 import { ThemeProvider } from "@/lib/theme-provider";
@@ -31,6 +31,8 @@ export const unstable_settings = {
 };
 
 export default function RootLayout() {
+  const router = useRouter();
+  const pathname = usePathname();
   const windowDimensions = useWindowDimensions();
   const windowFrame: Rect = { x: 0, y: 0, width: windowDimensions.width, height: windowDimensions.height };
   const initialInsets = initialWindowMetrics?.insets ?? DEFAULT_WEB_INSETS;
@@ -42,6 +44,24 @@ export default function RootLayout() {
   const [insets, setInsets] = useState<EdgeInsets>(initialInsets);
   const [frame, setFrame] = useState<Rect>(initialFrame);
   const effectiveFrame = frame.width > 0 && frame.height > 0 ? frame : windowFrame;
+
+  // Keep Android's system back button inside the app on stack pages.
+  useEffect(() => {
+    if (Platform.OS !== "android") return;
+    const subscription = BackHandler.addEventListener("hardwareBackPress", () => {
+      if (router.canGoBack()) {
+        router.back();
+        return true;
+      }
+      const isTabRoot = pathname === "/" || pathname === "/quran" || pathname === "/prayer" || pathname === "/stories" || pathname === "/adhkar" || pathname === "/achievements";
+      if (!isTabRoot) {
+        router.replace("/");
+        return true;
+      }
+      return false;
+    });
+    return () => subscription.remove();
+  }, [pathname, router]);
 
   // Initialize Manus runtime for cookie injection from parent container
   useEffect(() => {
