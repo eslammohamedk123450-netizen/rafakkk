@@ -3,7 +3,7 @@ import { Linking, Modal, Pressable, ScrollView, Text, View } from "react-native"
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { AppScreen, ScreenHeading, SulyButton, SulyCard, ProgressBar, useSulyTheme } from "@/components/suly-ui";
-import { getIslamicStory } from "@/lib/content/stories";
+import { getIslamicStory, ISLAMIC_STORIES } from "@/lib/content/stories";
 import { useAppStore } from "@/lib/app-store";
 import { getQuranPage, getQuranPageForVerse, QURAN_SURAHS } from "@/lib/quran";
 import { getTafsirAyah, tafsirDisplayText, TAFSIR_SOURCE } from "@/lib/quran/tafsir";
@@ -61,6 +61,11 @@ function parseStoryReferences(value: string) {
     previousSurahId = surah.id;
     return { label: text, surahId: surah.id, startAyah, endAyah };
   }).filter((item): item is { label: string; surahId: number; startAyah: number; endAyah: number } => Boolean(item));
+}
+
+// GitHub Pages serves a static Expo export, so pre-generate one HTML route per story.
+export function generateStaticParams() {
+  return ISLAMIC_STORIES.map((story) => ({ id: story.id }));
 }
 
 export default function StoryReaderScreen() {
