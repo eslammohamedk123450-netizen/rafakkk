@@ -174,7 +174,7 @@ export default function StoryReaderScreen() {
         {contextChapter ? <SulyButton title="عرض المقدمة التاريخية" secondary onPress={() => setShowContext(true)} /> : null}
       </SulyCard> : null}
 
-      <SulyCard style={{ gap: 12 }}>
+      {!showContext ? <SulyCard style={{ gap: 12 }}>
         <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
           <Text style={{ color: colors.muted, fontSize: 12 }}>الفصل {activeIndex + 1} من {readingChapters.length}</Text>
           <Text style={{ color: colors.text, fontWeight: "800" }}>رحلتك في القصة</Text>
@@ -208,15 +208,16 @@ export default function StoryReaderScreen() {
         {activeIndex === readingChapters.length - 1 ? <Text style={{ color: colors.gold, textAlign: "center", fontWeight: "700" }}>وصلت إلى نهاية القصة. بارك الله في وقتك وقراءتك.</Text> : null}
         {notice ? <Text style={{ color: colors.muted, textAlign: "center", fontSize: 12 }}>{notice}</Text> : null}
       </SulyCard>
+ : null}
 
-      <SulyCard>
+      {!showContext ? <SulyCard>
         <Text style={{ color: colors.text, textAlign: "right", fontWeight: "800", fontSize: 17 }}>المصادر والمشاهدة</Text>
         {story.sources.map((source) => <Pressable key={source.url} onPress={() => openLink(source.url)} style={{ paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: colors.border }}>
           <Text style={{ color: colors.gold, textAlign: "right", fontWeight: "700" }}>{source.label} ↗</Text>
         </Pressable>)}
         <Text style={{ color: colors.muted, textAlign: "right", fontSize: 12, lineHeight: 21 }}>روابط المصادر الخارجية اختيارية للمراجعة فقط؛ أما آيات القصة فتُفتح داخل مصحف رفيقك.</Text>
         <SulyButton title="ابحث عن فيديو القصة على يوتيوب" secondary onPress={() => openLink(story.videoUrl)} />
-      </SulyCard>
+      </SulyCard> : null}
       <Modal visible={Boolean(selectedReference)} transparent animationType="slide" onRequestClose={() => setSelectedReference(null)}>
         <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.68)", justifyContent: "flex-end" }}>
           <View style={{ backgroundColor: colors.surface, borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 20, gap: 13, maxHeight: "82%" }}>
