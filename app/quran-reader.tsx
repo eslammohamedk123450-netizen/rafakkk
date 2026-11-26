@@ -61,8 +61,8 @@ export default function QuranReaderScreen() {
           throw new Error("لا يتوفر تفسير لهذه الآية في المصدر حاليًا.");
         }
         const plainText = (value: string) => value
-          .replace(/<br\s*\\/?\s*>/gi, "\n")
-          .replace(/<\\/(p|div|li)>/gi, "\n")
+          .replace(/<br\s*\/?\s*>/gi, "\n")
+          .replace(/<\/(p|div|li)>/gi, "\n")
           .replace(/<[^>]*>/g, "")
           .replace(/&nbsp;/g, " ")
           .replace(/&amp;/g, "&")
