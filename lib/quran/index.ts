@@ -66,3 +66,33 @@ export function getQuranPageForVerse(surahNumber: number, ayahNumber: number): n
   const pageIndex = quran.pages.findIndex((page) => page.some(([surah, ayah]) => surah === surahNumber && ayah === ayahNumber));
   return pageIndex >= 0 ? pageIndex + 1 : null;
 }
+
+/** Search the complete local Quran text by surah name, ayah number or verse text. */
+export type QuranSearchResult = QuranVerse & { page: number; surahName: string };
+
+function normalizeQuranSearch(value: string): string {
+  return value.normalize("NFKC").replace(/[\u064B-\u065F\u0670\u0640]/g, "").replace(/[أإآٱ]/g, "ا").replace(/ى/g, "ي").replace(/ة/g, "ه").replace(/[٠-٩]/g, (digit) => String("٠١٢٣٤٥٦٧٨٩".indexOf(digit))).replace(/[^\p{L}\p{N}: ]/gu, " ").replace(/\s+/g, " ").trim().toLowerCase();
+}
+
+export function searchQuran(query: string, limit = 12): QuranSearchResult[] {
+  const normalized = normalizeQuranSearch(query);
+  if (normalized.length < 2) return [];
+  const surahById = new Map(quran.surahs.map((surah) => [surah.id, surah]));
+  const directVerse = normalized.match(/^(?:([0-9]{1,3})\s*[:：]\s*([0-9]{1,3})|(.+?)\s+([0-9]{1,3}))$/);
+  const results: QuranSearchResult[] = [];
+  quran.pages.forEach((pageVerses, pageIndex) => {
+    for (const [surahId, ayah, text] of pageVerses) {
+      const surah = surahById.get(surahId);
+      if (!surah) continue;
+      const verseText = normalizeQuranSearch(text);
+      const surahName = normalizeQuranSearch(surah.name);
+      let matches = verseText.includes(normalized) || surahName.includes(normalized);
+      if (directVerse) {
+        if (directVerse[1] && directVerse[2]) matches = surahId === Number(directVerse[1]) && ayah === Number(directVerse[2]);
+        else if (directVerse[3] && directVerse[4]) matches = surahName.includes(normalizeQuranSearch(directVerse[3])) && ayah === Number(directVerse[4]);
+      }
+      if (matches) results.push({ surah: surahId, ayah, text, page: pageIndex + 1, surahName: surah.name });
+    }
+  });
+  return results.slice(0, Math.max(1, Math.min(limit, 30)));
+}
