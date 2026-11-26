@@ -92,7 +92,6 @@ export default function QuranScreen() {
         <ProgressBar value={khatmaPages} max={604} color={colors.gold} />
         <Text style={{ color: colors.muted, textAlign: "right", fontSize: 12 }}>{khatmaPercent}% من صفحات المصحف سُجلت في ختمتك الحالية. تكرار الصفحة لا يزيد العدد مرتين.</Text>
         {khatmaPages > 0 ? <SulyButton title="بدء ختمة جديدة" secondary onPress={startNewKhatma} /> : null}
-        {khatmaPages > 0 ? <SulyButton title="بدء ختمة جديدة" secondary onPress={startNewKhatma} /> : null}
         <Text style={{ color: colors.muted, textAlign: "right" }}>ورد اليوم</Text>
         <Text style={{ color: colors.text, textAlign: "right", fontSize: 19, fontWeight: "700" }}>{goalCaption}</Text>
         <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}><Text style={{ color: colors.muted }}>متبقي {remaining} {selectedMode.unit}</Text><Text style={{ color: colors.text, fontSize: 27, fontWeight: "800" }}>{progress} / {store.quranPlan.target}</Text></View>
