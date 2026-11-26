@@ -620,7 +620,7 @@ export const ISLAMIC_STORIES: IslamicStory[] = [
       { label: "القرآن الكريم – سورة البقرة", url: "https://quran.com/2" }
     ],
     videoUrl: "https://www.youtube.com/results?search_query=قصة+إبراهيم+عليه+السلام+من+القرآن"
-  },,
+  },
 
   {
     id: "adam",
