@@ -2,7 +2,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export const TAFSIR_SOURCE = {
   title: "التفسير الميسّر",
-  credit: "إعداد لجنة علمية بمجمع الملك فهد لطباعة المصحف الشريف",
+  credit: "إعداد نخبة من العلماء · مجمع الملك فهد لطباعة المصحف الشريف بالمدينة المنورة",
   publisher: "QuranEnc.com",
   version: "1.0.0",
   url: "https://quranenc.com/en/browse/arabic_moyassar",
