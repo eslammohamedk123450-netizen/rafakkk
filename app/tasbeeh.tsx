@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Alert, Pressable, Text, TextInput, View } from "react-native";
+import { Linking, Pressable, Text, TextInput, View } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import * as Notifications from "expo-notifications";
 import { AppScreen, ScreenHeading, SulyButton, SulyCard, ProgressBar, useSulyTheme } from "@/components/suly-ui";
@@ -154,7 +154,7 @@ export default function TasbeehScreen() {
           <Text style={{ color: colors.gold, textAlign: "right", fontWeight: "800" }}>التوثيق</Text>
           <Text style={{ color: colors.text, textAlign: "right", fontSize: 13 }}>{selected.source}</Text>
           <Text style={{ color: colors.muted, textAlign: "right", fontSize: 12 }}>اضغط لفتح نص الحديث ومراجعته.</Text>
-          <SulyButton title="فتح مصدر الحديث" secondary onPress={() => import("react-native").then(({ Linking }) => Linking.openURL(selected.url))} />
+          <SulyButton title="فتح مصدر الحديث" secondary onPress={() => void Linking.openURL(selected.url).catch(() => setNotice("تعذر فتح المصدر على هذا الجهاز."))} />
         </View>
       </SulyCard>
 
