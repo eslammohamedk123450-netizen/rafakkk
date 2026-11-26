@@ -21,7 +21,6 @@ import { initManusRuntime, subscribeSafeAreaInsets } from "@/lib/_core/manus-run
 import { AppStoreProvider } from "@/lib/app-store";
 import { NotificationReconciler } from "@/lib/notifications/reconciler";
 import { AutomaticLocationSetup } from "@/lib/location/auto-location";
-import { AutomaticLocationSetup } from "@/lib/location/auto-location";
 
 const DEFAULT_WEB_INSETS: EdgeInsets = { top: 0, right: 0, bottom: 0, left: 0 };
 const DEFAULT_WEB_FRAME: Rect = { x: 0, y: 0, width: 0, height: 0 };
