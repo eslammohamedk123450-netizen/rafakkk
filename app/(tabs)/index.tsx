@@ -111,14 +111,14 @@ export default function HomeScreen() {
           <MaterialCommunityIcons name="weather-night" size={30} color={colors.gold} />
         </View>
         {nextPrayer ? (
-          <View style={{ borderTopWidth: 1, borderTopColor: colors.border, paddingTop: 13, marginTop: 6, flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
-            <View style={{ alignItems: "flex-end" }}>
-              <Text style={{ color: colors.muted, fontSize: 13 }}>{nextPrayerToday ? "الصلاة التالية" : "أول صلاة غدًا"}</Text>
-              <Text style={{ color: colors.text, fontSize: 25, fontWeight: "900", marginTop: 3 }}>{nextPrayer.name}</Text>
-              <Text style={{ color: colors.muted, fontSize: 13, fontWeight: "700", marginTop: 2 }}>{formatPrayerTime(nextPrayer.time, store.location?.timeZone)}</Text>
-              <Text accessibilityLiveRegion="polite" style={{ color: colors.gold, fontSize: 21, fontWeight: "900", marginTop: 7, fontVariant: ["tabular-nums"] }}>{formatRemaining(nextPrayer.time, now)}</Text>
+          <View style={{ borderTopWidth: 1, borderTopColor: colors.border, paddingTop: 17, marginTop: 10, alignItems: "center", width: "100%", gap: 5 }}>
+            <View style={{ width: 52, height: 52, borderRadius: 17, backgroundColor: colors.gold + "20", borderWidth: 1, borderColor: colors.gold + "55", alignItems: "center", justifyContent: "center", marginBottom: 5 }}>
+              <MaterialCommunityIcons name="clock-time-four-outline" size={29} color={colors.gold} />
             </View>
-            <MaterialCommunityIcons name="clock-time-four-outline" size={25} color={colors.gold} />
+            <Text style={{ color: colors.muted, fontSize: 14, fontWeight: "700", textAlign: "center" }}>{nextPrayerToday ? "الصلاة القادمة" : "أول صلاة غدًا"}</Text>
+            <Text style={{ color: colors.text, fontSize: 31, fontWeight: "900", marginTop: 1, textAlign: "center", width: "100%" }}>{nextPrayer.name}</Text>
+            <Text style={{ color: colors.text, fontSize: 27, fontWeight: "900", marginTop: 2, textAlign: "center", width: "100%", fontVariant: ["tabular-nums"] }}>{formatPrayerTime(nextPrayer.time, store.location?.timeZone)}</Text>
+            <Text accessibilityLiveRegion="polite" style={{ color: colors.gold, fontSize: 19, fontWeight: "900", marginTop: 5, textAlign: "center", fontVariant: ["tabular-nums"] }}>{formatRemaining(nextPrayer.time, now)}</Text>
           </View>
         ) : store.location ? (
           <Text style={{ color: colors.muted, textAlign: "right", marginTop: 8 }}>اكتملت أوقات اليوم المعروضة. يمكنك متابعة أوقات الغد من صفحة الصلاة.</Text>
