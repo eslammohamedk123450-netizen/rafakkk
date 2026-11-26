@@ -1,14 +1,12 @@
 import { useMemo, useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
 import { AppScreen, ScreenHeading, SulyCard, TinyTag, ProgressBar, useSulyTheme } from "@/components/suly-ui";
 import { ISLAMIC_STORIES, STORY_CATEGORIES } from "@/lib/content/stories";
 import { useAppStore } from "@/lib/app-store";
 import StoryReaderScreen from "../story/[id]";
 
 export default function StoriesScreen() {
-  const router = useRouter();
   const { store } = useAppStore();
   const { colors } = useSulyTheme();
   const [category, setCategory] = useState<string>("all");
