@@ -13,6 +13,7 @@ import {
   QURAN_SOURCE_URL,
   QURAN_SURAHS,
 } from "@/lib/quran";
+import { getTafsirAyah, tafsirDisplayText, TAFSIR_SOURCE } from "@/lib/quran/tafsir";
 
 const ARABIC_DIGITS = "٠١٢٣٤٥٦٧٨٩";
 
@@ -50,29 +51,11 @@ export default function QuranReaderScreen() {
     setTafsirError("");
     setTafsirText("");
     setTafsirFootnotes("");
-    fetch(`https://quranenc.com/api/v1/translation/aya/arabic_moyassar/${selectedTafsir.surah}/${selectedTafsir.ayah}`)
-      .then(async (response) => {
-        if (!response.ok) throw new Error("تعذر جلب التفسير من المصدر.");
-        return response.json();
-      })
-      .then((payload) => {
-        const result = payload?.result;
-        if (!result || typeof result.translation !== "string" || !result.translation.trim()) {
-          throw new Error("لا يتوفر تفسير لهذه الآية في المصدر حاليًا.");
-        }
-        const plainText = (value: string) => value
-          .replace(/<br\s*\/?\s*>/gi, "\n")
-          .replace(/<\/(p|div|li)>/gi, "\n")
-          .replace(/<[^>]*>/g, "")
-          .replace(/&nbsp;/g, " ")
-          .replace(/&amp;/g, "&")
-          .replace(/&quot;/g, '"')
-          .replace(/&#39;/g, "'")
-          .replace(/&lt;/g, "<")
-          .replace(/&gt;/g, ">");
+    getTafsirAyah(selectedTafsir.surah, selectedTafsir.ayah)
+      .then((result) => {
         if (active) {
-          setTafsirText(plainText(result.translation));
-          setTafsirFootnotes(typeof result.footnotes === "string" ? plainText(result.footnotes) : "");
+          setTafsirText(tafsirDisplayText(result.translation));
+          setTafsirFootnotes(tafsirDisplayText(result.footnotes));
         }
       })
       .catch((error) => {
@@ -261,7 +244,7 @@ export default function QuranReaderScreen() {
               {tafsirFootnotes ? <Text style={{ color: colors.muted, textAlign: "right", lineHeight: 24, fontSize: 12 }}>{tafsirFootnotes}</Text> : null}
               <View style={{ borderTopWidth: 1, borderTopColor: colors.border, paddingTop: 9, gap: 4 }}>
                 <Text style={{ color: colors.gold, textAlign: "right", fontWeight: "800", fontSize: 12 }}>المصدر: التفسير الميسّر</Text>
-                <Text style={{ color: colors.muted, textAlign: "right", fontSize: 11, lineHeight: 19 }}>إعداد لجنة علمية بمجمع الملك فهد لطباعة المصحف الشريف · النسخة 1.0.0 · QuranEnc.com</Text>
+                <Text style={{ color: colors.muted, textAlign: "right", fontSize: 11, lineHeight: 19 }}>{TAFSIR_SOURCE.credit} · النسخة {TAFSIR_SOURCE.version} · {TAFSIR_SOURCE.publisher}</Text>
               </View>
             </ScrollView>
           </View>
