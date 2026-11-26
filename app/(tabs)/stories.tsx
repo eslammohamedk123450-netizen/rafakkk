@@ -31,8 +31,9 @@ export default function StoriesScreen() {
       </View>
       <View style={{ gap: 12 }}>
         {stories.map((story) => {
+          const hasProgress = Object.prototype.hasOwnProperty.call(store.storyProgress, story.id);
           const saved = store.storyProgress[story.id] ?? 0;
-          const percent = Math.round(((saved + 1) / story.chapters.length) * 100);
+          const percent = hasProgress ? Math.round(((saved + 1) / story.chapters.length) * 100) : 0;
           return (
             <Pressable key={story.id} onPress={() => router.push(`/story/${story.id}` as Href)} accessibilityRole="button">
               <SulyCard style={{ padding: 0, overflow: "hidden", gap: 0 }}>
@@ -46,10 +47,10 @@ export default function StoriesScreen() {
                   <Text style={{ color: colors.gold, textAlign: "right", fontSize: 13, fontWeight: "600" }}>{story.subtitle}</Text>
                   <Text style={{ color: colors.muted, textAlign: "right", lineHeight: 22 }}>{story.summary}</Text>
                   <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
-                    <Text style={{ color: colors.muted, fontSize: 12 }}>{saved > 0 ? `آخر مكان محفوظ: الفصل ${saved + 1}` : "ابدأ القصة"}</Text>
+                    <Text style={{ color: colors.muted, fontSize: 12 }}>{hasProgress ? `آخر مكان محفوظ: الفصل ${saved + 1}` : "ابدأ القصة"}</Text>
                     <Text style={{ color: colors.gold, fontWeight: "800" }}>اقرأ القصة ←</Text>
                   </View>
-                  <ProgressBar value={saved + 1} max={story.chapters.length} color={colors.gold} />
+                  <ProgressBar value={hasProgress ? saved + 1 : 0} max={story.chapters.length} color={colors.gold} />
                   <Text style={{ color: colors.muted, fontSize: 11, textAlign: "right" }}>{percent}% من الفصول</Text>
                 </View>
               </SulyCard>
