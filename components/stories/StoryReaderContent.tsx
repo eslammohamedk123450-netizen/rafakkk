@@ -72,11 +72,10 @@ export function StoryReaderContent({ storyId, onBack, onOpenQuran }: { storyId: 
   const { store, updateStore } = useAppStore();
   const { colors } = useSulyTheme();
   const story = useMemo(() => getIslamicStory(String(id ?? "")), [id]);
-  const contextChapter = story?.chapters.find((item) => item.title.includes("الخلفية"));
   const lessonsChapter = story?.chapters.find((item) => item.title.includes("الدروس المستفادة"));
   const readingChapters = story ? story.chapters.filter((item) => item !== lessonsChapter) : [];
   const [chapterIndex, setChapterIndex] = useState(0);
-  const [showContext] = useState(false);
+  const showContext = false;
   const [showLessons, setShowLessons] = useState(false);
   const [notice, setNotice] = useState("");
   const [selectedReference, setSelectedReference] = useState<{ label: string; surahId: number; startAyah: number; endAyah: number } | null>(null);
