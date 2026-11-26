@@ -46,6 +46,9 @@ export type AppStore = {
   }>;
   dhikrGoal: number | null;
   tasbeehGoal: number | null;
+  tasbeehReminderEnabled: boolean;
+  tasbeehReminderTime: string;
+  tasbeehReminderNotificationId: string | null;
   adhanPrefs: { enabled: boolean; region: "egyptian" | "turkish" | "indonesian"; voiceId: string; mode: "full" | "takbir"; prayers: Record<PrayerId, boolean> };
   notificationPrefs: {
     enabled: boolean;
@@ -86,6 +89,9 @@ const defaultStore: AppStore = {
   customDhikr: [],
   dhikrGoal: null,
   tasbeehGoal: null,
+  tasbeehReminderEnabled: false,
+  tasbeehReminderTime: "20:00",
+  tasbeehReminderNotificationId: null,
   adhanPrefs: { enabled: false, region: "indonesian", voiceId: "adhan-1", mode: "full", prayers: { fajr: true, dhuhr: true, asr: true, maghrib: true, isha: true } },
   notificationPrefs: {
     enabled: false,
