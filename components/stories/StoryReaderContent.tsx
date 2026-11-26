@@ -72,11 +72,11 @@ export function StoryReaderContent({ storyId, onBack, onOpenQuran }: { storyId: 
   const { store, updateStore } = useAppStore();
   const { colors } = useSulyTheme();
   const story = useMemo(() => getIslamicStory(String(id ?? "")), [id]);
-  const contextChapter = story?.chapters.find((item) => item.title.includes("الخلفية"));
+  const contextChapter = null;
   const lessonsChapter = story?.chapters.find((item) => item.title.includes("الدروس المستفادة"));
-  const readingChapters = story ? story.chapters.filter((item) => item !== contextChapter && item !== lessonsChapter) : [];
+  const readingChapters = story ? story.chapters.filter((item) => item !== lessonsChapter) : [];
   const [chapterIndex, setChapterIndex] = useState(0);
-  const [showContext, setShowContext] = useState(Boolean(contextChapter));
+  const [showContext, setShowContext] = useState(false);
   const [showLessons, setShowLessons] = useState(false);
   const [notice, setNotice] = useState("");
   const [selectedReference, setSelectedReference] = useState<{ label: string; surahId: number; startAyah: number; endAyah: number } | null>(null);
@@ -91,7 +91,7 @@ export function StoryReaderContent({ storyId, onBack, onOpenQuran }: { storyId: 
     const saved = store.storyProgress[story.id] ?? 0;
     const offset = contextChapter ? 1 : 0;
     setChapterIndex(Math.min(Math.max(0, saved - offset), Math.max(0, readingChapters.length - 1)));
-    setShowContext(Boolean(contextChapter));
+    setShowContext(false);
     setShowLessons(false);
     setSelectedReference(null);
     setSelectedAyah(1);
@@ -179,13 +179,13 @@ export function StoryReaderContent({ storyId, onBack, onOpenQuran }: { storyId: 
 
       {!showContext ? <SulyCard style={{ gap: 12 }}>
         <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
-          <Text style={{ color: colors.muted, fontSize: 12 }}>الفصل {activeIndex + 1} من {readingChapters.length}</Text>
+          <Text style={{ color: colors.muted, fontSize: 12 }}>الصفحة {activeIndex + 1} من {readingChapters.length}</Text>
           <Text style={{ color: colors.text, fontWeight: "800" }}>رحلتك في القصة</Text>
         </View>
         <ProgressBar value={activeIndex + 1} max={Math.max(1, readingChapters.length)} color={colors.gold} />
         <Text style={{ color: colors.text, fontSize: 22, fontWeight: "800", textAlign: "right" }}>{chapter?.title}</Text>
         <Text style={{ color: colors.text, fontSize: 17, lineHeight: 34, textAlign: "right" }}>{chapter?.body}</Text>
-        <SulyButton title={showLessons ? "إخفاء الدروس المستفادة من هذا الفصل" : "الدروس المستفادة من هذا الفصل"} secondary disabled={!lessonsText} onPress={() => setShowLessons((value) => !value)} />
+        <SulyButton title={showLessons ? "إخفاء الدروس المستفادة من هذه الصفحة" : "الدروس المستفادة من هذا الفصل"} secondary disabled={!lessonsText} onPress={() => setShowLessons((value) => !value)} />
         {showLessons && lessonsText ? <View style={{ backgroundColor: colors.surface, borderRadius: 14, padding: 13, gap: 8 }}>
           <Text style={{ color: colors.gold, fontWeight: "900", fontSize: 17, textAlign: "right" }}>نتعلم من هذا الجزء</Text>
           <Text style={{ color: colors.text, fontSize: 15, lineHeight: 29, textAlign: "right" }}>{lessonsText}</Text>
@@ -197,7 +197,7 @@ export function StoryReaderContent({ storyId, onBack, onOpenQuran }: { storyId: 
           </View> : null}
         </View> : null}
         <View style={{ borderTopWidth: 1, borderTopColor: colors.border, paddingTop: 12, gap: 8 }}>
-          <Text style={{ color: colors.gold, fontWeight: "800", textAlign: "right" }}>الآيات المرتبطة بهذا الفصل</Text>
+          <Text style={{ color: colors.gold, fontWeight: "800", textAlign: "right" }}>الآيات المرتبطة بهذه الصفحة</Text>
           {referenceItems.length ? referenceItems.map((reference) => <Pressable key={reference.label} onPress={() => { setSelectedReference(reference); setSelectedAyah(reference.startAyah); }} style={{ padding: 12, borderRadius: 12, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border }}>
             <Text style={{ color: colors.gold, textAlign: "right", fontWeight: "800" }}>{reference.label} · اضغط للاختيارات</Text>
           </Pressable>) : <Text style={{ color: colors.muted, textAlign: "right", lineHeight: 22 }}>{chapter?.reference}</Text>}
@@ -205,8 +205,8 @@ export function StoryReaderContent({ storyId, onBack, onOpenQuran }: { storyId: 
         </View>
         <SulyButton title="احفظ مكاني" secondary onPress={() => savePlace()} />
         <View style={{ flexDirection: "row", gap: 9 }}>
-          <View style={{ flex: 1 }}><SulyButton title="الفصل السابق" secondary disabled={activeIndex === 0} onPress={() => { setShowLessons(false); savePlace(activeIndex - 1); }} /></View>
-          <View style={{ flex: 1 }}><SulyButton title={activeIndex === readingChapters.length - 1 ? "أنهيت القصة" : "الفصل التالي"} disabled={activeIndex === readingChapters.length - 1} onPress={() => { setShowLessons(false); savePlace(activeIndex + 1); }} /></View>
+          <View style={{ flex: 1 }}><SulyButton title="الصفحة السابقة" secondary disabled={activeIndex === 0} onPress={() => { setShowLessons(false); savePlace(activeIndex - 1); }} /></View>
+          <View style={{ flex: 1 }}><SulyButton title={activeIndex === readingChapters.length - 1 ? "أنهيت القصة" : "الصفحة التالية"} disabled={activeIndex === readingChapters.length - 1} onPress={() => { setShowLessons(false); savePlace(activeIndex + 1); }} /></View>
         </View>
         {activeIndex === readingChapters.length - 1 ? <Text style={{ color: colors.gold, textAlign: "center", fontWeight: "700" }}>وصلت إلى نهاية القصة. بارك الله في وقتك وقراءتك.</Text> : null}
         {notice ? <Text style={{ color: colors.muted, textAlign: "center", fontSize: 12 }}>{notice}</Text> : null}
