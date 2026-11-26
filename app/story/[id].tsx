@@ -1,11 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
-import { Linking, Pressable, Text, View } from "react-native";
+import { Linking, Modal, Pressable, ScrollView, Text, View } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { AppScreen, ScreenHeading, SulyButton, SulyCard, ProgressBar, useSulyTheme } from "@/components/suly-ui";
 import { getIslamicStory } from "@/lib/content/stories";
 import { useAppStore } from "@/lib/app-store";
-import { QURAN_SURAHS } from "@/lib/quran";
+import { getQuranPage, getQuranPageForVerse, QURAN_SURAHS } from "@/lib/quran";
 
 export default function StoryReaderScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -20,6 +20,8 @@ export default function StoryReaderScreen() {
   const [showContext, setShowContext] = useState(true);
   const [showLessons, setShowLessons] = useState(false);
   const [notice, setNotice] = useState("");
+  const [selectedReference, setSelectedReference] = useState<{ label: string; surahId: number; startAyah: number; endAyah: number } | null>(null);
+  const [showVerseExplanation, setShowVerseExplanation] = useState(false);
 
   useEffect(() => {
     if (!story) return;
@@ -42,10 +44,21 @@ export default function StoryReaderScreen() {
     updateStore((current) => ({ ...current, storyProgress: { ...current.storyProgress, [story.id]: safeIndex + (contextChapter ? 1 : 0) } }));
     setNotice("اتحفظ مكانك في القصة على هذا الجهاز.");
   };
-  const referencedSurah = chapter?.reference.match(/سورة\s+([^،؛.\s]+)/)?.[1];
-  const referencedSurahId = referencedSurah ? QURAN_SURAHS.find((item) => item.name.includes(referencedSurah) || item.name.replace("ال", "").includes(referencedSurah))?.id : undefined;
-  const referencedAyah = chapter?.reference.match(/الآيات?\s*(\d+)/)?.[1];
-  const openQuranReference = () => { if (referencedSurahId) router.push(`/quran-reader?surah=${referencedSurahId}${referencedAyah ? `&ayah=${referencedAyah}` : ""}` as any); };
+  const referenceItems = (chapter?.reference ?? "").split(/[؛;]/).map((raw) => {
+    const match = raw.trim().match(/سورة\\s+(.+?)،?\\s*الآيات?\\s*(\\d+)(?:\\s*[–-]\\s*(\\d+))?/);
+    if (!match) return null;
+    const surahName = match[1].replace(/[،.]/g, "").trim();
+    const surah = QURAN_SURAHS.find((item) => item.name === surahName || item.name.replace(/^ال/, "") === surahName.replace(/^ال/, ""));
+    if (!surah) return null;
+    return { label: raw.trim(), surahId: surah.id, startAyah: Number(match[2]), endAyah: Number(match[3] ?? match[2]) };
+  }).filter((item): item is { label: string; surahId: number; startAyah: number; endAyah: number } => Boolean(item));
+  const selectedPage = selectedReference ? getQuranPage(getQuranPageForVerse(selectedReference.surahId, selectedReference.startAyah) ?? 0) : [];
+  const selectedVerse = selectedPage.find((verse) => verse.surah === selectedReference?.surahId && verse.ayah === selectedReference?.startAyah);
+  const openSelectedReferenceInQuran = () => {
+    if (!selectedReference) return;
+    router.push(`/quran-reader?surah=${selectedReference.surahId}&ayah=${selectedReference.startAyah}` as any);
+    setSelectedReference(null);
+  };
   const openLink = async (url: string) => {
     try { await Linking.openURL(url); } catch { setNotice("تعذر فتح الرابط. تحقق من اتصال الإنترنت."); }
   };
@@ -91,9 +104,11 @@ export default function StoryReaderScreen() {
           <Text style={{ color: colors.text, fontSize: 15, lineHeight: 29, textAlign: "right" }}>{lessonsText}</Text>
         </View> : null}
         <View style={{ borderTopWidth: 1, borderTopColor: colors.border, paddingTop: 12, gap: 8 }}>
-          <Text style={{ color: colors.gold, fontWeight: "800", textAlign: "right" }}>آيات هذا الفصل في مصحف رفيقك</Text>
-          {referencedSurahId ? <SulyButton title={`فتح سورة ${referencedSurah} في المصحف الداخلي`} secondary onPress={openQuranReference} /> : null}
-          <Text style={{ color: colors.muted, textAlign: "right", lineHeight: 22 }}>{chapter?.reference}</Text>
+          <Text style={{ color: colors.gold, fontWeight: "800", textAlign: "right" }}>الآيات المرتبطة بهذا الفصل</Text>
+          {referenceItems.length ? referenceItems.map((reference) => <Pressable key={reference.label} onPress={() => { setSelectedReference(reference); setShowVerseExplanation(false); }} style={{ padding: 12, borderRadius: 12, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border }}>
+            <Text style={{ color: colors.gold, textAlign: "right", fontWeight: "800" }}>{reference.label} · اضغط للاختيارات</Text>
+          </Pressable>) : <Text style={{ color: colors.muted, textAlign: "right", lineHeight: 22 }}>{chapter?.reference}</Text>}
+          <Text style={{ color: colors.muted, textAlign: "right", fontSize: 12 }}>اضغط على المرجع لتختار شرح الآيات أو فتح موضعها في مصحف رفيقك.</Text>
         </View>
         <SulyButton title="احفظ مكاني" secondary onPress={() => savePlace()} />
         <View style={{ flexDirection: "row", gap: 9 }}>
@@ -112,6 +127,25 @@ export default function StoryReaderScreen() {
         <Text style={{ color: colors.muted, textAlign: "right", fontSize: 12, lineHeight: 21 }}>روابط المصادر الخارجية اختيارية للمراجعة فقط؛ أما آيات القصة فتُفتح داخل مصحف رفيقك.</Text>
         <SulyButton title="ابحث عن فيديو القصة على يوتيوب" secondary onPress={() => openLink(story.videoUrl)} />
       </SulyCard>
+      <Modal visible={Boolean(selectedReference)} transparent animationType="slide" onRequestClose={() => setSelectedReference(null)}>
+        <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.68)", justifyContent: "flex-end" }}>
+          <View style={{ backgroundColor: colors.card, borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 20, gap: 13, maxHeight: "82%" }}>
+            <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+              <Pressable onPress={() => setSelectedReference(null)}><Text style={{ color: colors.muted, fontSize: 16 }}>إغلاق ✕</Text></Pressable>
+              <Text style={{ color: colors.gold, fontWeight: "900", fontSize: 18 }}>ماذا تريد أن تفعل؟</Text>
+            </View>
+            <Text style={{ color: colors.text, textAlign: "right", fontWeight: "700" }}>{selectedReference?.label}</Text>
+            <SulyButton title="شرح مبسط للآيات وعلاقتها بالقصة" secondary onPress={() => setShowVerseExplanation((value) => !value)} />
+            {showVerseExplanation ? <ScrollView style={{ maxHeight: 210 }}>
+              <Text style={{ color: colors.text, textAlign: "right", lineHeight: 29, fontSize: 15 }}>{chapter?.body}</Text>
+              {selectedVerse ? <Text style={{ color: colors.gold, textAlign: "right", lineHeight: 29, marginTop: 10 }}>{selectedVerse.text}</Text> : null}
+              <Text style={{ color: colors.muted, textAlign: "right", lineHeight: 23, fontSize: 12, marginTop: 8 }}>هذا شرح لسياق الآيات داخل القصة، وليس نقلًا عن كتاب تفسير معتمد.</Text>
+            </ScrollView> : null}
+            <SulyButton title="الذهاب إلى الآية في المصحف الداخلي" onPress={openSelectedReferenceInQuran} />
+            <Text style={{ color: colors.muted, textAlign: "center", fontSize: 11 }}>لن يتم فتح أي تطبيق أو موقع خارجي.</Text>
+          </View>
+        </View>
+      </Modal>
       <Text style={{ color: colors.muted, textAlign: "center", fontSize: 11, lineHeight: 18 }}>هذه صياغة مبسطة وليست بديلًا عن النص القرآني أو الحديث الأصلي. عند اختلاف الروايات، يُرجع إلى المصادر المذكورة.</Text>
     </AppScreen>
   );
