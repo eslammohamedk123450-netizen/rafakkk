@@ -5,20 +5,76 @@ import { nextPrayerDates } from "@/lib/prayer/dates";
 import { localDateTimeToUtc } from "@/lib/time-zones";
 
 export const MOTIVATION_MESSAGES = {
-  prayer: ["إذا جاء وقت الصلاة، خذ لحظة هادئة وابدأ بما تستطيع.", "موعد الصلاة مساحة قصيرة للعودة إلى يومك بهدوء."],
-  repentance: ["البدء من جديد متاح، خطوة صغيرة في الوقت الذي يناسبك.", "امنح نفسك فرصة للعودة إلى ما تحب من الخير."],
-  istighfar: ["اجعل للاستغفار مساحة من يومك، بالقدر الذي يناسبك.", "لحظات الاستغفار لا تحتاج إلى استعجال."],
-  quran: ["صفحة واحدة بتركيز قد تكون بداية طيبة لوردك.", "اختر مقدارًا من القراءة ينسجم مع وقتك اليوم."],
-  dhikr: ["وقفة قصيرة للذكر متاحة متى وجدت لها وقتًا.", "تذكّر ما يطمئنك، دون أن تثقل على يومك."],
-  encouragement: ["تقدمك هنا هو ما اخترت تسجيله، وليس مقياسًا لقيمتك.", "يكفي أن تختار خطوة تناسب يومك."],
+  prayer: [
+    "حين يحين وقت الصلاة، اترك للدنيا دقائق واذهب إلى ما يطمئن قلبك.",
+    "الصلاة ليست عبئًا على يومك؛ هي راحة لقلبك ووقفة بين يدي ربك.",
+    "خذ نفسًا هادئًا، توضأ، وقف بين يدي الله بما تستطيع.",
+  ],
+  repentance: [
+    "باب الرجوع إلى الله مفتوح، ابدأ من جديد ولو بخطوة صغيرة.",
+    "لا تجعل تعثّر الأمس يمنعك من خير اليوم. ربنا رحيم.",
+    "كل يوم فرصة جديدة للقرب من الله، خذها برفق.",
+  ],
+  istighfar: [
+    "لو عندك دقيقة، خلّيها استغفارًا يطمئن قلبك.",
+    "استغفر الله وأقبل على يومك بقلب يرجو رحمة ربنا.",
+    "على مهل، ردد: أستغفر الله وأتوب إليه.",
+  ],
+  quran: [
+    "صفحة واحدة بتدبر قد تكون بداية جميلة لوردك اليوم.",
+    "افتح المصحف ولو لدقائق؛ اجعل للقرآن نصيبًا من يومك.",
+    "خذ وقتك مع كلام الله، فالقليل المستمر خير من الانقطاع.",
+  ],
+  dhikr: [
+    "اذكر الله بقلب حاضر، ولو لدقيقة واحدة.",
+    "سبحان الله، والحمد لله، ولا إله إلا الله، والله أكبر.",
+    "وقفة ذكر صغيرة قد تعيد لقلبك هدوءه.",
+  ],
+  encouragement: [
+    "مش لازم تكون كامل؛ المهم تفضل راجع لربنا كل ما تتعثر.",
+    "خطوة خير صغيرة النهارده تستحق إنك تفرح بيها.",
+    "رفيقك هنا يشجعك، مش بيحاسبك. ابدأ من حيث أنت.",
+  ],
 } as const;
 
 type MessageCategory = keyof typeof MOTIVATION_MESSAGES;
 
 function isQuietTime(clock: string, quietStart: string, quietEnd: string) {
-  if (!/^\d{2}:\d{2}$/.test(quietStart) || !/^\d{2}:\d{2}$/.test(quietEnd)) return false;
+  if (!/^\\d{2}:\\d{2}$/.test(quietStart) || !/^\\d{2}:\\d{2}$/.test(quietEnd)) return false;
   if (quietStart === quietEnd) return false;
   return quietStart < quietEnd ? clock >= quietStart && clock < quietEnd : clock >= quietStart || clock < quietEnd;
+}
+
+function shiftDateKey(key: string, amount: number) {
+  const date = new Date(`${key}T12:00:00Z`);
+  date.setUTCDate(date.getUTCDate() + amount);
+  return date.toISOString().slice(0, 10);
+}
+
+function hasQuranActivity(store: AppStore, key: string) {
+  return (store.quranReader.pagesReadByDate[key]?.length ?? 0) > 0 || (store.quranHistory[key] ?? 0) > 0;
+}
+
+function personalizedMessage(category: MessageCategory, store: AppStore, dayKey: string, index: number) {
+  const todayQuran = hasQuranActivity(store, dayKey);
+  const yesterdayQuran = hasQuranActivity(store, shiftDateKey(dayKey, -1));
+  const prayerCount = Object.values(store.prayerLogs[dayKey] ?? {}).filter((status) => status === "completed").length;
+  const dhikrCount = Object.values(store.dhikrCounts[dayKey] ?? {}).reduce((sum, value) => sum + value, 0) + (store.tasbeehCounts[dayKey] ?? 0);
+
+  if (category === "quran" && dayKey === nextPrayerDates(new Date(), store.location?.timeZone || "UTC", 1)[0]?.key) {
+    if (todayQuran) return "ما شاء الله، سجلت قراءة للقرآن اليوم. ربنا يثبتك ويجعل القرآن نور قلبك.";
+    if (yesterdayQuran) return "كان لك نصيب من القرآن أمس. لو ما بدأتش وردك النهارده، افتح المصحف ولو بصفحة؛ رفيقك بيفكّرك بمحبة.";
+  }
+  if (category === "prayer" && prayerCount > 0 && dayKey === nextPrayerDates(new Date(), store.location?.timeZone || "UTC", 1)[0]?.key) {
+    return prayerCount >= 5
+      ? "ما شاء الله، سجلت صلواتك الخمس اليوم. تقبّل الله منك، وداوم على الخير."
+      : `سجلت ${prayerCount} من صلوات اليوم. ربنا يثبتك، ولسه قدامك فرص جميلة للخير.`;
+  }
+  if (category === "dhikr" && dhikrCount > 0 && dayKey === nextPrayerDates(new Date(), store.location?.timeZone || "UTC", 1)[0]?.key) {
+    return `ما شاء الله، سجلت ${dhikrCount} من الأذكار اليوم. تقبّل الله ذكرك، وزاد قلبك طمأنينة.`;
+  }
+  const messages = MOTIVATION_MESSAGES[category];
+  return messages[index % messages.length];
 }
 
 export async function rescheduleMotivationNotifications(store: AppStore) {
@@ -32,7 +88,7 @@ export async function rescheduleMotivationNotifications(store: AppStore) {
   if (!permission.granted) return;
 
   const categories = (Object.keys(MOTIVATION_MESSAGES) as MessageCategory[]).filter((key) => prefs.messageCategories[key]);
-  const times = prefs.messageTimes.filter((clock) => /^([01]\d|2[0-3]):[0-5]\d$/.test(clock)).slice(0, Math.max(1, Math.min(8, prefs.dailyLimit)));
+  const times = prefs.messageTimes.filter((clock) => /^([01]\\d|2[0-3]):[0-5]\\d$/.test(clock)).slice(0, Math.max(1, Math.min(8, prefs.dailyLimit)));
   if (!categories.length || !times.length) return;
   const timeZone = store.location?.timeZone || Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
   const days = nextPrayerDates(new Date(), timeZone, 8);
@@ -43,17 +99,14 @@ export async function rescheduleMotivationNotifications(store: AppStore) {
   days.forEach(({ key }, dayIndex) => {
     times.forEach((clock, timeIndex) => {
       if (isQuietTime(clock, prefs.quietStart, prefs.quietEnd)) return;
-      // A wall-clock time skipped by the DST spring-forward transition is not scheduled
-      // at an unrelated hour; the next daily occurrence will be recalculated normally.
       const scheduledAt = localDateTimeToUtc(key, clock, timeZone, now);
       if (!scheduledAt || scheduledAt.getTime() <= now) return;
       const category = categories[(dayIndex * times.length + timeIndex) % categories.length];
-      const messages = MOTIVATION_MESSAGES[category];
       const occurrence = seenByCategory.get(category) ?? 0;
-      const message = messages[(firstDayOffset + occurrence) % messages.length];
+      const message = personalizedMessage(category, store, key, firstDayOffset + occurrence);
       seenByCategory.set(category, occurrence + 1);
       jobs.push(Notifications.scheduleNotificationAsync({
-        content: { title: "وقفة لطيفة", body: message, data: { kind: "suly-gentle", category } },
+        content: { title: "رفيقك بيفكّرك ❤️", body: message, data: { kind: "suly-gentle", category, dateKey: key } },
         trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: scheduledAt, ...(Platform.OS === "android" ? { channelId: "suly-prayer" } : {}) },
       }));
     });
