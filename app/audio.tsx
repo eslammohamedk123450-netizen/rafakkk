@@ -320,7 +320,7 @@ export default function AudioScreen() {
                 <Text style={{ color: colors.muted, fontSize: 11, marginTop: 4, textAlign: "right" }}>{station.country}</Text>
                 <Text style={{ color: colors.muted, fontSize: 10, marginTop: 3, textAlign: "right" }}>{station.city}</Text>
               </View>
-              <View style={{ width: 38, height: 38, borderRadius: 20, backgroundColor: selected && status.playing ? colors.gold : colors.gold + "20", alignItems: "center", justifyContent: "center" }>
+              <View style={{ width: 38, height: 38, borderRadius: 20, backgroundColor: selected && status.playing ? colors.gold : colors.gold + "20", alignItems: "center", justifyContent: "center" }}>
                 <Text style={{ color: selected && status.playing ? "#111111" : colors.gold, fontWeight: "900", fontSize: 15 }}>{selected && status.playing ? "Ⅱ" : "▶"}</Text>
               </View>
             </View>
