@@ -54,7 +54,7 @@ function QuranAudioBar({ surahId, surahName }: { surahId: number; surahName: str
     if (!edition?.server) { setNotice("لا يوجد تسجيل متاح لهذا القارئ."); return; }
     const available = edition.surah_list?.split(",").map(Number);
     if (available?.length && !available.includes(surahId)) { setNotice("السورة الحالية غير متاحة لهذا المصحف الصوتي."); return; }
-    const url = `${edition.server.replace(/\\/$/, "")}/${String(surahId).padStart(3, "0")}.mp3`;
+    const url = `${edition.server.replace(/\/+$/, "")}/${String(surahId).padStart(3, "0")}.mp3`;
     try {
       player.replace(url);
       player.setActiveForLockScreen(true, { title: `سورة ${surahName}`, artist: selected.name, albumTitle: "رفيقك نحو الالتزام" });
