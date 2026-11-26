@@ -40,15 +40,9 @@ export const MOTIVATION_MESSAGES = {
 type MessageCategory = keyof typeof MOTIVATION_MESSAGES;
 
 function isQuietTime(clock: string, quietStart: string, quietEnd: string) {
-  if (!/^\\d{2}:\\d{2}$/.test(quietStart) || !/^\\d{2}:\\d{2}$/.test(quietEnd)) return false;
+  if (!/^\d{2}:\d{2}$/.test(quietStart) || !/^\d{2}:\d{2}$/.test(quietEnd)) return false;
   if (quietStart === quietEnd) return false;
   return quietStart < quietEnd ? clock >= quietStart && clock < quietEnd : clock >= quietStart || clock < quietEnd;
-}
-
-function shiftDateKey(key: string, amount: number) {
-  const date = new Date(`${key}T12:00:00Z`);
-  date.setUTCDate(date.getUTCDate() + amount);
-  return date.toISOString().slice(0, 10);
 }
 
 function hasQuranActivity(store: AppStore, key: string) {
@@ -68,10 +62,10 @@ function personalizedMessage(category: MessageCategory, store: AppStore, dayKey:
   if (category === "prayer" && prayerCount > 0 && dayKey === currentDayKey) {
     return prayerCount >= 5
       ? "ما شاء الله، سجلت صلواتك الخمس اليوم. تقبّل الله منك، وداوم على الخير."
-      : `سجلت ${prayerCount} من صلوات اليوم. ربنا يثبتك، ولسه قدامك فرص جميلة للخير.`;
+      : "سجلت " + prayerCount + " من صلوات اليوم. ربنا يثبتك، ولسه قدامك فرص جميلة للخير.";
   }
   if (category === "dhikr" && dhikrCount > 0 && dayKey === currentDayKey) {
-    return `ما شاء الله، سجلت ${dhikrCount} من الأذكار اليوم. تقبّل الله ذكرك، وزاد قلبك طمأنينة.`;
+    return "ما شاء الله، سجلت " + dhikrCount + " من الأذكار اليوم. تقبّل الله ذكرك، وزاد قلبك طمأنينة.";
   }
   const messages = MOTIVATION_MESSAGES[category];
   return messages[index % messages.length];
@@ -88,14 +82,15 @@ export async function rescheduleMotivationNotifications(store: AppStore) {
   if (!permission.granted) return;
 
   const categories = (Object.keys(MOTIVATION_MESSAGES) as MessageCategory[]).filter((key) => prefs.messageCategories[key]);
-  const times = prefs.messageTimes.filter((clock) => /^([01]\\d|2[0-3]):[0-5]\\d$/.test(clock)).slice(0, Math.max(1, Math.min(8, prefs.dailyLimit)));
+  const times = prefs.messageTimes.filter((clock) => /^([01]\d|2[0-3]):[0-5]\d$/.test(clock)).slice(0, Math.max(1, Math.min(8, prefs.dailyLimit)));
   if (!categories.length || !times.length) return;
   const timeZone = store.location?.timeZone || Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
-  const days = nextPrayerDates(new Date(), timeZone, 8);\n  const currentDayKey = days[0]?.key ?? "";
-  const seenByCategory = new Map<MessageCategory, number>();
-  const firstDayOffset = Math.floor(Date.parse(`${days[0]?.key ?? "1970-01-01"}T00:00:00Z`) / 86_400_000);
+  const days = nextPrayerDates(new Date(), timeZone, 8);
+  const currentDayKey = days[0]?.key ?? "";
+  const firstDayOffset = Math.floor(Date.parse((days[0]?.key ?? "1970-01-01") + "T00:00:00Z") / 86_400_000);
   const now = Date.now();
   const jobs: Array<Promise<string>> = [];
+  const seenByCategory = new Map<MessageCategory, number>();
   days.forEach(({ key }, dayIndex) => {
     times.forEach((clock, timeIndex) => {
       if (isQuietTime(clock, prefs.quietStart, prefs.quietEnd)) return;
