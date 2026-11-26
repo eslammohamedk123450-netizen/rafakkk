@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Linking, Modal, Platform, Pressable, ScrollView, Text, View } from "react-native";
+import { Modal, Platform, Pressable, ScrollView, Text, View } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useEffect } from "react";
@@ -11,9 +11,8 @@ import {
   getQuranPage,
   getSurahStartPage,
   getQuranPageForVerse,
-  QURAN_LICENSE_URL,
+  QURAN_ATTRIBUTION,
   QURAN_PAGE_COUNT,
-  QURAN_SOURCE_URL,
   QURAN_SURAHS,
 } from "@/lib/quran";
 import { getTafsirAyah, tafsirDisplayText, TAFSIR_SOURCE } from "@/lib/quran/tafsir";
@@ -214,10 +213,6 @@ export default function QuranReaderScreen() {
     if (startPage) goToPage(startPage);
   };
 
-  const openExternal = (url: string) => {
-    void Linking.openURL(url).catch(() => setNotice("تعذر فتح صفحة المصدر على هذا الجهاز."));
-  };
-
   return (
     <AppScreen>
       <ScreenHeading
@@ -253,17 +248,19 @@ export default function QuranReaderScreen() {
 
       <QuranAudioBar surahId={currentSurah?.id ?? 1} surahName={currentSurah?.name ?? "الفاتحة"} />
 
-      <SulyCard style={{ backgroundColor: colors.card, paddingHorizontal: 18, paddingVertical: 24 }}>
-        <View style={{ alignItems: "center", marginBottom: 16, gap: 4 }}>
-          <Text style={{ color: colors.text, fontWeight: "700", fontSize: 18 }}>{currentSurah?.name ?? ""}</Text>
-          <Text style={{ color: colors.muted, fontSize: 13 }}>صفحة {arabicNumber(page)}</Text>
+      <SulyCard style={{ backgroundColor: colors.surface, borderColor: colors.gold + "99", borderWidth: 2, borderRadius: 12, paddingHorizontal: 20, paddingVertical: 22, gap: 14 }}>
+        <View style={{ alignItems: "center", marginBottom: 4, gap: 6, paddingBottom: 12, borderBottomWidth: 1, borderBottomColor: colors.gold + "66" }}>
+          <Text style={{ color: colors.gold, fontSize: 12, fontWeight: "700" }}>۞ ۞ ۞</Text>
+          <Text style={{ color: colors.text, fontWeight: "800", fontSize: 21, letterSpacing: 0.2 }}>{currentSurah?.name ?? ""}</Text>
+          <Text style={{ color: colors.muted, fontSize: 12 }}>الجزء من المصحف · صفحة {arabicNumber(page)}</Text>
         </View>
+        <View style={{ borderWidth: 1, borderColor: colors.border, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 16, backgroundColor: colors.card + "55" }}>
         <Text
           style={{
             color: colors.text,
             fontFamily: Platform.OS === "android" ? "serif" : undefined,
             fontSize,
-            lineHeight: Math.round(fontSize * 2.05),
+            lineHeight: Math.round(fontSize * 2.12),
             textAlign: "justify",
             writingDirection: "rtl",
           }}
@@ -277,20 +274,18 @@ export default function QuranReaderScreen() {
             </Text>
           ))}
         </Text>
+        </View>
         {verses.length === 0 ? <Text style={{ color: colors.muted, textAlign: "center" }}>تعذر تحميل هذه الصفحة من البيانات المحلية.</Text> : null}
-        <View style={{ flexDirection: "row-reverse", justifyContent: "center", alignItems: "center", gap: 12, marginTop: 18 }}>
+        <View style={{ flexDirection: "row-reverse", justifyContent: "center", alignItems: "center", gap: 12, marginTop: 8 }}>
           <Pressable onPress={() => updateStore((current) => ({ ...current, quranReader: { ...current.quranReader, fontSize: Math.max(20, (current.quranReader.fontSize ?? 27) - 2) } }))} accessibilityRole="button" style={{ padding: 8 }}><Text style={{ color: colors.gold, fontWeight: "700" }}>أصغر</Text></Pressable>
           <Text style={{ color: colors.muted }}>حجم الخط</Text>
           <Pressable onPress={() => updateStore((current) => ({ ...current, quranReader: { ...current.quranReader, fontSize: Math.min(36, (current.quranReader.fontSize ?? 27) + 2) } }))} accessibilityRole="button" style={{ padding: 8 }}><Text style={{ color: colors.gold, fontWeight: "700" }}>أكبر</Text></Pressable>
         </View>
       </SulyCard>
 
-      <View style={{ alignItems: "center", gap: 6, paddingHorizontal: 8, paddingBottom: 12 }}>
-        <Text style={{ color: colors.muted, textAlign: "center", fontSize: 12 }}>نص الرسم العثماني من مشروع Tanzil، محفوظ في التطبيق للقراءة دون إنترنت، ولم يُغيّر.</Text>
-        <View style={{ flexDirection: "row-reverse", gap: 18 }}>
-          <Pressable onPress={() => openExternal(QURAN_SOURCE_URL)}><Text style={{ color: colors.gold, fontSize: 12, textDecorationLine: "underline" }}>المصدر Tanzil</Text></Pressable>
-          <Pressable onPress={() => openExternal(QURAN_LICENSE_URL)}><Text style={{ color: colors.gold, fontSize: 12, textDecorationLine: "underline" }}>الترخيص CC BY 3.0</Text></Pressable>
-        </View>
+      <View style={{ alignItems: "center", gap: 4, paddingHorizontal: 8, paddingBottom: 12 }}>
+        <Text style={{ color: colors.muted, textAlign: "center", fontSize: 11, lineHeight: 18 }}>{QURAN_ATTRIBUTION}</Text>
+        <Text style={{ color: colors.muted, textAlign: "center", fontSize: 10 }}>النص بالرسم العثماني · محفوظ للقراءة دون إنترنت</Text>
       </View>
 
       <Modal visible={surahPickerVisible} transparent animationType="slide" onRequestClose={() => setSurahPickerVisible(false)}>
