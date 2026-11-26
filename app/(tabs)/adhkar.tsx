@@ -105,6 +105,22 @@ export default function AdhkarScreen() {
         </SulyCard>
       </Pressable>
 
+      <SulyCard style={{ gap: 12, borderColor: colors.gold, borderWidth: 1 }}>
+        <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+          <MaterialCommunityIcons name="book-open-page-variant" size={28} color={colors.gold} />
+          <View style={{ flex: 1, alignItems: "flex-end", gap: 5 }}>
+            <Text style={{ color: colors.gold, fontWeight: "900", fontSize: 12 }}>حديث صحيح · هدف يومي محدد</Text>
+            <Text style={{ color: colors.text, fontWeight: "900", fontSize: 18, textAlign: "right" }}>سبحان الله وبحمده — 100 مرة</Text>
+          </View>
+        </View>
+        <Text selectable style={{ color: colors.text, textAlign: "right", fontSize: 17, lineHeight: 31 }}>
+          «مَن قالَ: سُبْحانَ اللهِ وبِحَمْدِهِ، في يَوْمٍ مِائَةَ مَرَّةٍ، حُطَّتْ خَطاياهُ وإنْ كانَتْ مِثْلَ زَبَدِ البَحْرِ»
+        </Text>
+        <Text style={{ color: colors.muted, textAlign: "right", fontSize: 12 }}>صحيح البخاري (6405)، وصحيح مسلم (2691)</Text>
+        <Text style={{ color: colors.muted, textAlign: "right", lineHeight: 22 }}>ابدأ الذكر من هنا، وسيتابع التطبيق هذا الهدف وحده حتى تتم المائة.</Text>
+        <SulyButton title="تسبيح الآن · ابدأ 100 مرة" onPress={() => router.push({ pathname: "/tasbeeh", params: { challenge: "subhanallah" } } as any)} />
+      </SulyCard>
+
       <View style={{ flexDirection: "row-reverse", flexWrap: "wrap", gap: 8 }}>{categories.map((item) => <TinyTag key={item.id} title={item.label} selected={category === item.id} onPress={() => setCategory(item.id)} />)}</View>
 
       {visibleEntries.length === 0 ? (
