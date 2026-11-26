@@ -1,5 +1,5 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { StoryReaderContent } from "./story/[id]";
+import { StoryReaderContent } from "@/components/stories/StoryReaderContent";
 
 // A dedicated static web route avoids the dynamic /story/[id] export fallback.
 export default function ReadStoryRoute() {
