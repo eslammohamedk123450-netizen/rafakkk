@@ -1,8 +1,9 @@
 import { useMemo, useState } from "react";
-import { Linking, Pressable, Text, TextInput, View } from "react-native";
+import { Linking, Modal, Pressable, Text, TextInput, View } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import * as Notifications from "expo-notifications";
 import { AppScreen, ScreenHeading, SulyButton, SulyCard, ProgressBar, useSulyTheme } from "@/components/suly-ui";
+import { useLocalSearchParams } from "expo-router";
 import { localDateKey, useAppStore } from "@/lib/app-store";
 
 const dhikrOptions = [
@@ -39,24 +40,62 @@ const dhikrOptions = [
 export default function TasbeehScreen() {
   const { store, updateStore } = useAppStore();
   const { colors } = useSulyTheme();
+  const params = useLocalSearchParams<{ challenge?: string }>();
+  const challengeMode = params.challenge === "subhanallah";
+  const challengeKey = `${localDateKey(new Date(), store.location?.timeZone)}:subhanallah`;
   const today = localDateKey(new Date(), store.location?.timeZone);
-  const count = store.tasbeehCounts[today] ?? 0;
-  const goal = store.tasbeehGoal ?? 100;
+  const count = challengeMode ? (store.tasbeehChallengeCounts[challengeKey] ?? 0) : (store.tasbeehCounts[today] ?? 0);
+  const goal = challengeMode ? 100 : (store.tasbeehGoal ?? 100);
   const remaining = Math.max(0, goal - count);
   const [selectedId, setSelectedId] = useState(dhikrOptions[0].id);
   const [goalDraft, setGoalDraft] = useState(String(goal));
   const [timeDraft, setTimeDraft] = useState(store.tasbeehReminderTime || "20:00");
   const [notice, setNotice] = useState("");
-  const selected = useMemo(() => dhikrOptions.find((item) => item.id === selectedId) ?? dhikrOptions[0], [selectedId]);
-  const completed = store.tasbeehGoal !== null && count >= goal;
+  const [showCompletion, setShowCompletion] = useState(false);
+  const selected = useMemo(() => challengeMode ? dhikrOptions[0] : (dhikrOptions.find((item) => item.id === selectedId) ?? dhikrOptions[0]), [selectedId, challengeMode]);
+  const completed = challengeMode ? count >= 100 : (store.tasbeehGoal !== null && count >= goal);
 
   const increment = () => {
     const nextCount = count + 1;
+    if (challengeMode) {
+      updateStore((current) => ({ ...current, tasbeehChallengeCounts: { ...current.tasbeehChallengeCounts, [challengeKey]: nextCount } }));
+      if (nextCount === 100) setShowCompletion(true);
+      return;
+    }
     updateStore((current) => ({ ...current, tasbeehCounts: { ...current.tasbeehCounts, [today]: nextCount } }));
     if (store.tasbeehGoal && nextCount >= store.tasbeehGoal && store.tasbeehReminderNotificationId) {
       void Notifications.cancelScheduledNotificationAsync(store.tasbeehReminderNotificationId).catch(() => undefined);
       updateStore((current) => ({ ...current, tasbeehReminderEnabled: false, tasbeehReminderNotificationId: null }));
     }
+  };
+
+  const enableChallengeReminder = async () => {
+    const permission = await Notifications.requestPermissionsAsync();
+    if (!permission.granted) {
+      setNotice("لم يتم منح إذن الإشعارات. يمكنك تفعيلها من إعدادات الهاتف لاحقًا.");
+      setShowCompletion(false);
+      return;
+    }
+    try {
+      const [hour, minute] = (timeDraft || "20:00").split(":").map(Number);
+      const id = await Notifications.scheduleNotificationAsync({
+        content: {
+          title: "رفيقك يذكّرك بذكر الله",
+          body: "حان وقت سبحان الله وبحمده 100 مرة. خذ وقتك واذكر الله.",
+          sound: true,
+          data: { screen: "tasbeeh", challenge: "subhanallah" },
+        },
+        trigger: { type: Notifications.SchedulableTriggerInputTypes.DAILY, hour, minute },
+      });
+      if (store.tasbeehReminderNotificationId) {
+        await Notifications.cancelScheduledNotificationAsync(store.tasbeehReminderNotificationId).catch(() => undefined);
+      }
+      updateStore({ tasbeehGoal: 100, tasbeehReminderEnabled: true, tasbeehReminderTime: timeDraft || "20:00", tasbeehReminderNotificationId: id });
+      setNotice("تمام، هنفكّرك كل يوم بذكر سبحان الله وبحمده.");
+    } catch {
+      setNotice("تعذر ضبط التذكير على هذا الجهاز حاليًا.");
+    }
+    setShowCompletion(false);
   };
 
   const saveGoal = () => {
@@ -114,6 +153,14 @@ export default function TasbeehScreen() {
   return (
     <AppScreen>
       <ScreenHeading title="المسبحة الإلكترونية" subtitle="اذكر الله بقلب حاضر، وعلى مهل" />
+      {challengeMode ? (
+        <SulyCard style={{ gap: 8, borderColor: colors.gold, borderWidth: 1 }}>
+          <Text style={{ color: colors.gold, textAlign: "right", fontWeight: "900" }}>تحدّي الحديث الصحيح</Text>
+          <Text style={{ color: colors.text, textAlign: "right", lineHeight: 25 }}>«مَن قالَ: سُبْحانَ اللهِ وبِحَمْدِهِ، في يَوْمٍ مِائَةَ مَرَّةٍ، حُطَّتْ خَطاياهُ وإنْ كانَتْ مِثْلَ زَبَدِ البَحْرِ»</Text>
+          <Text style={{ color: colors.muted, textAlign: "right", fontSize: 12 }}>صحيح البخاري 6405 · صحيح مسلم 2691</Text>
+          <Text style={{ color: colors.muted, textAlign: "right", fontSize: 12 }}>هذا عدّاد مستقل لهذا الذكر، وهدفه 100 مرة.</Text>
+        </SulyCard>
+      ) : null}
       <SulyCard style={{ alignItems: "center", gap: 12, backgroundColor: colors.card }}>
         <View style={{ alignSelf: "stretch", flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
           <Text style={{ color: colors.muted, fontSize: 12 }}>تسبيحات اليوم</Text>
@@ -142,7 +189,7 @@ export default function TasbeehScreen() {
         </View>
       </SulyCard>
 
-      <SulyCard>
+      {!challengeMode ? <SulyCard>
         <Text style={{ color: colors.text, fontSize: 17, fontWeight: "800", textAlign: "right" }}>اختر الذكر الذي تحب تردده</Text>
         <View style={{ gap: 8 }}>
           {dhikrOptions.map((item) => {
@@ -160,16 +207,19 @@ export default function TasbeehScreen() {
           <Text style={{ color: colors.muted, textAlign: "right", fontSize: 12 }}>اضغط لفتح نص الحديث ومراجعته.</Text>
           <SulyButton title="فتح مصدر الحديث" secondary onPress={() => void Linking.openURL(selected.url).catch(() => setNotice("تعذر فتح المصدر على هذا الجهاز."))} />
         </View>
-      </SulyCard>
+      </SulyCard> : null}
 
-      <SulyCard style={{ gap: 10 }}>
+      {!challengeMode ? <SulyCard style={{ gap: 10 }}>
         <Text style={{ color: colors.text, fontSize: 17, fontWeight: "800", textAlign: "right" }}>هدفك اليومي</Text>
         <Text style={{ color: colors.muted, textAlign: "right" }}>اختار رقمًا واقعيًا؛ الهدف للتشجيع وليس للمنافسة أو الضغط.</Text>
-        <TextInput value={goalDraft} onChangeText={setGoalDraft} keyboardType="number-pad" placeholder="مثال: 100" placeholderTextColor={colors.muted} style={{ borderWidth: 1, borderColor: colors.border, borderRadius: 13, padding: 13, color: colors.text, textAlign: "right", backgroundColor: colors.surface }} />
-        <SulyButton title="حفظ الهدف" onPress={saveGoal} />
-      </SulyCard>
+        <View style={{ flexDirection: "row", gap: 8 }}>
+          {[33, 99].map((value) => <Pressable key={value} onPress={() => { setGoalDraft(String(value)); updateStore({ tasbeehGoal: value }); setNotice(`تم اختيار هدف ${value} تسبيحة يوميًا.`); }} style={{ flex: 1, padding: 12, borderRadius: 12, borderWidth: 1, borderColor: goal === value ? colors.gold : colors.border, backgroundColor: colors.surface, alignItems: "center" }}><Text style={{ color: goal === value ? colors.gold : colors.text, fontWeight: "900", fontSize: 18 }}>{value}</Text><Text style={{ color: colors.muted, fontSize: 11 }}>تسبيحة</Text></Pressable>)}
+        </View>
+        <TextInput value={goalDraft} onChangeText={setGoalDraft} keyboardType="number-pad" placeholder="أو اكتب رقمًا يدويًا" placeholderTextColor={colors.muted} style={{ borderWidth: 1, borderColor: colors.border, borderRadius: 13, padding: 13, color: colors.text, textAlign: "right", backgroundColor: colors.surface }} />
+        <SulyButton title="حفظ الهدف اليدوي" onPress={saveGoal} />
+      </SulyCard> : null}
 
-      <SulyCard style={{ gap: 10 }}>
+      {!challengeMode ? <SulyCard style={{ gap: 10 }}>
         <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
           <MaterialCommunityIcons name="bell-ring-outline" size={24} color={colors.gold} />
           <Text style={{ color: colors.text, fontSize: 17, fontWeight: "800" }}>تذكير لطيف لو الهدف لسه ما اكتملش</Text>
@@ -179,7 +229,21 @@ export default function TasbeehScreen() {
         <SulyButton title={store.tasbeehReminderEnabled ? "إيقاف التذكير اليومي" : "تفعيل التذكير اليومي"} secondary onPress={() => void toggleReminder()} />
         {store.tasbeehReminderEnabled ? <Text style={{ color: colors.gold, textAlign: "center" }}>التذكير مضبوط يوميًا الساعة {store.tasbeehReminderTime}</Text> : null}
         {notice ? <Text style={{ color: colors.gold, textAlign: "right" }}>{notice}</Text> : null}
-      </SulyCard>
+      </SulyCard> : null}
+
+      {notice && challengeMode ? <Text style={{ color: colors.gold, textAlign: "right" }}>{notice}</Text> : null}
+      <Modal visible={showCompletion} transparent animationType="fade" onRequestClose={() => setShowCompletion(false)}>
+        <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.72)", justifyContent: "center", padding: 20 }}>
+          <SulyCard style={{ alignItems: "center", gap: 12, borderColor: colors.gold, borderWidth: 1 }}>
+            <MaterialCommunityIcons name="check-decagram" size={54} color={colors.gold} />
+            <Text style={{ color: colors.gold, fontSize: 22, fontWeight: "900" }}>مبارك! اكتمل الذكر</Text>
+            <Text style={{ color: colors.text, textAlign: "center", lineHeight: 25 }}>أتممت 100 مرة من «سبحان الله وبحمده» كما في الحديث الصحيح. تقبّل الله منك.</Text>
+            <Text style={{ color: colors.muted, textAlign: "center" }}>هل تحب أن نذكّرك كل يوم بهذا الذكر؟</Text>
+            <SulyButton title="أيوه، ذكّرني كل يوم" onPress={() => void enableChallengeReminder()} />
+            <SulyButton title="لاحقًا" secondary onPress={() => setShowCompletion(false)} />
+          </SulyCard>
+        </View>
+      </Modal>
     </AppScreen>
   );
 }
