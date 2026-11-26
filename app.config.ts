@@ -88,7 +88,7 @@ const config: ExpoConfig = {
     },
     predictiveBackGestureEnabled: false,
     package: env.androidPackage,
-    permissions: ["POST_NOTIFICATIONS"],
+    permissions: ["POST_NOTIFICATIONS", "SCHEDULE_EXACT_ALARM"],
     intentFilters: [
       {
         action: "VIEW",
@@ -110,6 +110,7 @@ const config: ExpoConfig = {
   },
   plugins: [
     "expo-asset",
+    "./plugins/withAdhanSounds",
     [
       "expo-audio",
       {
