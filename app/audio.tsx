@@ -117,16 +117,24 @@ export default function AudioScreen() {
     const ids = moshaf?.surah_list?.split(",").map((value) => Number(value)).filter((value) => Number.isInteger(value) && value >= 1 && value <= 114);
     return ids?.length ? ids : Array.from({ length: Math.min(114, moshaf?.surah_total ?? 114) }, (_, index) => index + 1);
   }, [moshaf]);
+  const reciterPriority = ["عبد الباسط", "عبدالباسط", "الحصري", "الحصرى", "المنشاوي", "المنشاوى", "مصطفى إسماعيل", "مصطفى اسماعيل", "محمود علي البنا", "الطبلاوي", "محمد جبريل", "أبو العينين شعيشع", "محمد رفعت", "النقشبندي", "طه الفشني", "كامل يوسف البهتيمي", "راغب مصطفى غلوش", "الشحات محمد أنور", "السديس", "الشريم", "المعيقلي", "ياسر الدوسري", "عبدالله الجهني", "علي جابر", "بندر بليلة", "سعد الغامدي", "صالح البدير", "الكلباني", "عبد الله خياط", "سعود الشريم"];
+
   const filteredReciters = useMemo(() => {
     const term = normalizeArabicName(search.trim());
-    if (!term) return reciters;
+    if (!term) return [...reciters].sort((a, b) => {
+      const aIndex = reciterPriority.findIndex((name) => normalizeArabicName(a.name).includes(normalizeArabicName(name)));
+      const bIndex = reciterPriority.findIndex((name) => normalizeArabicName(b.name).includes(normalizeArabicName(name)));
+      const aRank = aIndex < 0 ? Number.MAX_SAFE_INTEGER : aIndex;
+      const bRank = bIndex < 0 ? Number.MAX_SAFE_INTEGER : bIndex;
+      return aRank - bRank || a.name.localeCompare(b.name, "ar");
+    });
     return reciters
       .filter((item) => normalizeArabicName(item.name).includes(term))
       .sort((a, b) => {
         const aName = normalizeArabicName(a.name);
         const bName = normalizeArabicName(b.name);
-        const aPrefix = aName.startsWith(term) ? 0 : aName.split(/\\s+/).some((word) => word.startsWith(term)) ? 1 : 2;
-        const bPrefix = bName.startsWith(term) ? 0 : bName.split(/\\s+/).some((word) => word.startsWith(term)) ? 1 : 2;
+        const aPrefix = aName.startsWith(term) ? 0 : aName.split(/\s+/).some((word) => word.startsWith(term)) ? 1 : 2;
+        const bPrefix = bName.startsWith(term) ? 0 : bName.split(/\s+/).some((word) => word.startsWith(term)) ? 1 : 2;
         return aPrefix - bPrefix || a.name.localeCompare(b.name, "ar");
       });
   }, [reciters, search]);
@@ -135,7 +143,7 @@ export default function AudioScreen() {
     const term = normalizeArabicName(search.trim());
     if (!term) return [];
     const letters = new Set<string>();
-    filteredReciters.forEach((item) => normalizeArabicName(item.name).split(/\\s+/).forEach((word) => {
+    filteredReciters.forEach((item) => normalizeArabicName(item.name).split(/\s+/).forEach((word) => {
       if (word.includes(term) && word.length) letters.add(word.charAt(0));
     }));
     return [...letters].slice(0, 12);
