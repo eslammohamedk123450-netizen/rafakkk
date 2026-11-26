@@ -1,4 +1,4 @@
-export type StoryCategory = "prophets" | "seerah" | "companions" | "quran";
+export type StoryCategory = "prophets" | "seerah" | "companions" | "quran" | "hadith";
 export type StoryChapter = { title: string; body: string; reference: string };
 export type IslamicStory = {
   id: string;
@@ -21,6 +21,7 @@ export const STORY_CATEGORIES = [
   { id: "seerah", label: "السيرة النبوية" },
   { id: "companions", label: "الصحابة" },
   { id: "quran", label: "قصص القرآن" },
+  { id: "hadith", label: "من السنة" },
 ] as const;
 
 const VIDEO_CHANNEL = "https://www.youtube.com/@MuslimStoriesArabic";
@@ -130,8 +131,8 @@ export const ISLAMIC_STORIES: IslamicStory[] = [
   {
     id: "cave-men",
     title: "أصحاب الغار الثلاثة",
-    category: "companions",
-    categoryLabel: "قصص وعِبر",
+    category: "hadith",
+    categoryLabel: "من السنة النبوية",
     subtitle: "الإخلاص والعمل الصالح وقت الشدة",
     summary: "ثلاثة رجال انغلقت عليهم صخرة، فتوسل كل واحد منهم إلى الله بعمل صالح أخلص فيه.",
     readingMinutes: 8,
