@@ -66,6 +66,7 @@ export default function QuranReaderScreen() {
       quranReader: {
         ...current.quranReader,
         lastPage: page,
+        khatmaPages: pageIsRead ? current.quranReader.khatmaPages : [...new Set([...current.quranReader.khatmaPages, page])].sort((a, b) => a - b),
         pagesReadByDate: {
           ...current.quranReader.pagesReadByDate,
           [today]: [...nextPages].sort((a, b) => a - b),
