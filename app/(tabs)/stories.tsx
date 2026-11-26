@@ -11,13 +11,13 @@ export default function StoriesScreen() {
   const { colors } = useSulyTheme();
   const [category, setCategory] = useState<string>("all");
   const [selectedStoryId, setSelectedStoryId] = useState<string | null>(null);
-  if (selectedStoryId) {
-    return <StoryReaderScreen storyId={selectedStoryId} onBack={() => setSelectedStoryId(null)} />;
-  }
   const stories = useMemo(
     () => category === "all" ? ISLAMIC_STORIES : ISLAMIC_STORIES.filter((story) => story.category === category),
     [category],
   );
+  if (selectedStoryId) {
+    return <StoryReaderScreen storyId={selectedStoryId} onBack={() => setSelectedStoryId(null)} />;
+  }
 
   return (
     <AppScreen>
