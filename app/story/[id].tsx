@@ -13,23 +13,27 @@ export default function StoryReaderScreen() {
   const { store, updateStore } = useAppStore();
   const { colors } = useSulyTheme();
   const story = useMemo(() => getIslamicStory(String(id ?? "")), [id]);
-  const savedChapter = story ? store.storyProgress[story.id] ?? 0 : 0;
+  const savedChapter = story ? Math.max(0, (store.storyProgress[story.id] ?? 0) - 1) : 0;
   const [chapterIndex, setChapterIndex] = useState(savedChapter);
   const [notice, setNotice] = useState("");
+  const contextChapter = story?.chapters.find((item) => item.title.includes("الخلفية والأهل والسياق"));
+  const lessonsChapter = story?.chapters.find((item) => item.title.includes("الدروس المستفادة"));
+  const readingChapters = story ? story.chapters.filter((item) => item !== contextChapter && item !== lessonsChapter) : [];
+  const savedReadingChapter = story ? Math.max(0, (store.storyProgress[story.id] ?? 0) - (contextChapter ? 1 : 0)) : 0;
   useEffect(() => {
-    if (story) setChapterIndex(Math.min(store.storyProgress[story.id] ?? 0, story.chapters.length - 1));
-  }, [story?.id, store.storyProgress]);
+    if (story) setChapterIndex(Math.min(Math.max(0, (store.storyProgress[story.id] ?? 0) - (contextChapter ? 1 : 0)), readingChapters.length - 1));
+  }, [story?.id, store.storyProgress, readingChapters.length, contextChapter]);
   if (!story) {
     return <AppScreen><ScreenHeading title="القصة غير موجودة" subtitle="ارجع إلى مكتبة القصص واختر قصة أخرى." /><SulyButton title="العودة للقصص" onPress={() => router.replace("/stories")} /></AppScreen>;
   }
 
-  const activeIndex = Math.max(0, Math.min(chapterIndex, story.chapters.length - 1));
-  const chapter = story.chapters[activeIndex];
-  const percent = Math.round(((activeIndex + 1) / story.chapters.length) * 100);
+  const activeIndex = Math.max(0, Math.min(chapterIndex, readingChapters.length - 1));
+  const chapter = readingChapters[activeIndex];
+  const percent = Math.round(((activeIndex + 1) / readingChapters.length) * 100);
   const savePlace = (nextIndex = chapterIndex) => {
     const safeIndex = Math.max(0, Math.min(story.chapters.length - 1, nextIndex));
     setChapterIndex(safeIndex);
-    updateStore((current) => ({ ...current, storyProgress: { ...current.storyProgress, [story.id]: safeIndex } }));
+    updateStore((current) => ({ ...current, storyProgress: { ...current.storyProgress, [story.id]: safeIndex + (contextChapter ? 1 : 0) } }));
     setNotice("اتحفظ مكانك في القصة على هذا الجهاز.");
   };
   const referencedSurah = chapter.reference.match(/سورة\s+([^،؛.\s]+)/)?.[1];
@@ -53,7 +57,18 @@ export default function StoryReaderScreen() {
           <Text style={{ color: colors.gold, fontWeight: "700", textAlign: "right" }}>{story.categoryLabel} · {story.readingMinutes} دقائق تقريبًا</Text>
           <Text style={{ color: colors.text, textAlign: "right", fontSize: 14, lineHeight: 23 }}>{story.summary}</Text>
         </View>
+      {contextChapter ? <SulyCard style={{ gap: 9 }}>
+        <Text style={{ color: colors.gold, fontSize: 18, fontWeight: "900", textAlign: "right" }}>قبل ما تبدأ: الخلفية والأهل والتاريخ</Text>
+        <Text style={{ color: colors.text, fontSize: 16, lineHeight: 30, textAlign: "right" }}>{contextChapter.body}</Text>
+        <Text style={{ color: colors.muted, fontSize: 12, textAlign: "right" }}>{contextChapter.reference}</Text>
+      </SulyCard> : null}
+      
       </SulyCard>
+      {lessonsChapter ? <SulyCard style={{ gap: 9, borderColor: colors.gold }}>
+        <Text style={{ color: colors.gold, fontSize: 18, fontWeight: "900", textAlign: "right" }}>الدروس المستفادة من القصة</Text>
+        <Text style={{ color: colors.text, fontSize: 16, lineHeight: 30, textAlign: "right" }}>{lessonsChapter.body}</Text>
+        <Text style={{ color: colors.muted, fontSize: 12, textAlign: "right" }}>{lessonsChapter.reference}</Text>
+      </SulyCard> : null}
       <SulyCard style={{ gap: 12 }}>
         <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
           <Text style={{ color: colors.muted, fontSize: 12 }}>الفصل {activeIndex + 1} من {story.chapters.length}</Text>
