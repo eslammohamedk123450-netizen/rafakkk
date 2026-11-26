@@ -34,16 +34,16 @@ function NavigationGrid({ state, navigation }: NavigationGridProps) {
           const event = navigation.emit({ type: "tabPress", target: route.key, canPreventDefault: true });
           if (!selected && !event.defaultPrevented) navigation.navigate(route.name, route.params);
         }}
-        style={({ pressed }) => ({ flex: 1, minHeight: 52, borderRadius: 17, backgroundColor: selected ? colors.card : "#242625", borderWidth: selected ? 1 : 0, borderColor: selected ? colors.gold : "transparent", alignItems: "center", justifyContent: "center", gap: 4, opacity: pressed ? 0.75 : 1 })}
+        style={({ pressed }) => ({ flex: 1, minHeight: 52, borderRadius: 17, backgroundColor: selected ? colors.card : colors.surface, borderWidth: selected ? 1 : 0, borderColor: selected ? colors.gold : "transparent", alignItems: "center", justifyContent: "center", gap: 4, opacity: pressed ? 0.75 : 1 })}
       >
-        <MaterialCommunityIcons name={item.icon} size={22} color={selected ? colors.gold : "#F2F1EC"} />
-        <Text style={{ color: selected ? colors.gold : "#F2F1EC", fontSize: 12, fontWeight: selected ? "700" : "500", writingDirection: "rtl", textAlign: "center" }}>{item.label}</Text>
+        <MaterialCommunityIcons name={item.icon} size={22} color={selected ? colors.gold : colors.muted} />
+        <Text style={{ color: selected ? colors.gold : colors.muted, fontSize: 12, fontWeight: selected ? "700" : "500", writingDirection: "rtl", textAlign: "center" }}>{item.label}</Text>
       </Pressable>
     );
   };
 
   return (
-    <View style={{ backgroundColor: "#050605", paddingHorizontal: 10, paddingTop: 8, paddingBottom: Math.max(insets.bottom, 9), gap: 7, borderTopLeftRadius: 24, borderTopRightRadius: 24 }}>
+    <View style={{ backgroundColor: colors.background, borderTopWidth: 1, borderTopColor: colors.border, paddingHorizontal: 10, paddingTop: 8, paddingBottom: Math.max(insets.bottom, 9), gap: 7, borderTopLeftRadius: 24, borderTopRightRadius: 24 }}>
       <View style={{ flexDirection: "row", direction: "ltr", gap: 7 }}>{topRow.map(renderItem)}</View>
       <View style={{ flexDirection: "row", direction: "ltr", gap: 7 }}>{secondRow.map((item, index) => item ? renderItem(item) : <View key={`empty-${index}`} style={{ flex: 1 }} />)}</View>
     </View>
