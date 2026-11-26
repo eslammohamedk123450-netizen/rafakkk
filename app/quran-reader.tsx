@@ -232,7 +232,7 @@ export default function QuranReaderScreen() {
           {verses.map((verse) => (
             <Text key={`${verse.surah}:${verse.ayah}`} onPress={() => { setCurrentPosition({ surah: verse.surah, ayah: verse.ayah }); setSelectedTafsir({ surah: verse.surah, ayah: verse.ayah }); }} accessibilityRole="button">
               {verse.text}{" "}
-              <Text style={{ color: colors.gold, fontSize: Math.round(fontSize * 0.72) }}>
+              <Text style={{ color: colors.gold, fontSize: Math.round(fontSize * 0.72), backgroundColor: store.quranReader.bookmarkSurah === verse.surah && store.quranReader.bookmarkAyah === verse.ayah ? colors.gold + "22" : "transparent" }}>
                 ﴿{arabicNumber(verse.ayah)}﴾
               </Text>{" "}
             </Text>
