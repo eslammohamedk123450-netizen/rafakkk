@@ -64,7 +64,7 @@ export function NotificationReconciler() {
       );
       await rescheduleMotivationNotifications(store);
     });
-  }, [hydrated, foregroundCycle, systemTimeZone, store.location?.latitude, store.location?.longitude, store.location?.timeZone, store.location?.source, store.calculationMethod, store.asrSchool, store.notificationPrefs, store.adhanPrefs, store.prayerLogs]);
+  }, [hydrated, foregroundCycle, systemTimeZone, store.location?.latitude, store.location?.longitude, store.location?.timeZone, store.location?.source, store.calculationMethod, store.asrSchool, store.notificationPrefs, store.adhanPrefs, store.prayerLogs, store.quranReader.pagesReadByDate, store.quranHistory, store.dhikrCounts, store.tasbeehCounts]);
 
   return null;
 }
