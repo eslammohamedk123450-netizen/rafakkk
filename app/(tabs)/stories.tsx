@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Pressable, Text, View } from "react-native";
+import { Platform, Pressable, Text, View } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRouter, type Href } from "expo-router";
 import { AppScreen, ScreenHeading, SulyCard, TinyTag, ProgressBar, useSulyTheme } from "@/components/suly-ui";
@@ -36,7 +36,7 @@ export default function StoriesScreen() {
           const saved = store.storyProgress[story.id] ?? 0;
           const percent = hasProgress ? Math.round(((saved + 1) / story.chapters.length) * 100) : 0;
           return (
-            <Pressable key={story.id} onPress={() => router.push({ pathname: "/story/[id]", params: { id: story.id } } as Href)} accessibilityRole="button">
+            <Pressable key={story.id} onPress={() => router.push((Platform.OS === "web"\n                ? { pathname: "/story", params: { id: story.id } }\n                : { pathname: "/story/[id]", params: { id: story.id } }) as Href)} accessibilityRole="button">
               <SulyCard style={{ padding: 0, overflow: "hidden", gap: 0 }}>
                 <View style={{ width: "100%", height: 150, backgroundColor: colors.surface, alignItems: "center", justifyContent: "center", gap: 8, borderBottomWidth: 1, borderBottomColor: colors.border }}>
                   <MaterialCommunityIcons name="book-open-page-variant" size={48} color={colors.gold} />
