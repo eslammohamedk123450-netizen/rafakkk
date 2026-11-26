@@ -72,7 +72,7 @@ export function StoryReaderContent({ storyId, onBack, onOpenQuran }: { storyId: 
   const { store, updateStore } = useAppStore();
   const { colors } = useSulyTheme();
   const story = useMemo(() => getIslamicStory(String(id ?? "")), [id]);
-  const contextChapter = null;
+  const contextChapter = story?.chapters.find((item) => item.title.includes("الخلفية"));
   const lessonsChapter = story?.chapters.find((item) => item.title.includes("الدروس المستفادة"));
   const readingChapters = story ? story.chapters.filter((item) => item !== lessonsChapter) : [];
   const [chapterIndex, setChapterIndex] = useState(0);
@@ -89,8 +89,7 @@ export function StoryReaderContent({ storyId, onBack, onOpenQuran }: { storyId: 
   useEffect(() => {
     if (!story) return;
     const saved = store.storyProgress[story.id] ?? 0;
-    const offset = contextChapter ? 1 : 0;
-    setChapterIndex(Math.min(Math.max(0, saved - offset), Math.max(0, readingChapters.length - 1)));
+    setChapterIndex(Math.min(Math.max(0, saved), Math.max(0, readingChapters.length - 1)));
     setShowContext(false);
     setShowLessons(false);
     setSelectedReference(null);
@@ -128,7 +127,7 @@ export function StoryReaderContent({ storyId, onBack, onOpenQuran }: { storyId: 
   const savePlace = (nextIndex = chapterIndex) => {
     const safeIndex = Math.max(0, Math.min(readingChapters.length - 1, nextIndex));
     setChapterIndex(safeIndex);
-    updateStore((current) => ({ ...current, storyProgress: { ...current.storyProgress, [story.id]: safeIndex + (contextChapter ? 1 : 0) } }));
+    updateStore((current) => ({ ...current, storyProgress: { ...current.storyProgress, [story.id]: safeIndex } }));
     setNotice("اتحفظ مكانك في القصة على هذا الجهاز.");
   };
   const referenceItems = parseStoryReferences(chapter?.reference ?? "");
@@ -169,12 +168,6 @@ export function StoryReaderContent({ storyId, onBack, onOpenQuran }: { storyId: 
           </Pressable>)}
         </View> : <Text style={{ color: colors.muted, fontSize: 12, textAlign: "right" }}>{contextChapter.reference}</Text>}
         <SulyButton title="تخطي المقدمة وابدأ القصة" onPress={() => { setShowContext(false); setShowLessons(false); }} />
-      </SulyCard> : null}
-
-      {!showContext ? <SulyCard style={{ gap: 8 }}>
-        <Text style={{ color: colors.gold, fontWeight: "800", textAlign: "right" }}>بدأت القصة الأساسية</Text>
-        <Text style={{ color: colors.muted, fontSize: 12, textAlign: "right" }}>يمكنك الرجوع إلى المقدمة التاريخية في أي وقت.</Text>
-        {contextChapter ? <SulyButton title="عرض المقدمة التاريخية" secondary onPress={() => setShowContext(true)} /> : null}
       </SulyCard> : null}
 
       {!showContext ? <SulyCard style={{ gap: 12 }}>
