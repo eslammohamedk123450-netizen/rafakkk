@@ -86,7 +86,7 @@ const defaultStore: AppStore = {
   customDhikr: [],
   dhikrGoal: null,
   tasbeehGoal: null,
-  adhanPrefs: { enabled: false, region: "egyptian", voiceId: "egypt-classic", mode: "full", prayers: { fajr: true, dhuhr: true, asr: true, maghrib: true, isha: true } },
+  adhanPrefs: { enabled: false, region: "indonesian", voiceId: "adhan-1", mode: "full", prayers: { fajr: true, dhuhr: true, asr: true, maghrib: true, isha: true } },
   notificationPrefs: {
     enabled: false,
     prayers: {
@@ -135,6 +135,8 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
           adhanPrefs: {
             ...defaultStore.adhanPrefs,
             ...(saved.adhanPrefs ?? {}),
+            region: "indonesian",
+            voiceId: saved.adhanPrefs?.voiceId === "adhan-2" ? "adhan-2" : "adhan-1",
             prayers: { ...defaultStore.adhanPrefs.prayers, ...(saved.adhanPrefs?.prayers ?? {}) },
           },
           notificationPrefs: {
