@@ -12,7 +12,7 @@ const topRow: NavItem[] = [
   { route: "index", label: "الرئيسية", icon: "home-outline" },
 ];
 const secondRow: (NavItem | null)[] = [
-  null,
+  { route: "stories", label: "القصص", icon: "book-open-variant" },
   { route: "achievements", label: "إنجازاتي", icon: "chart-box-outline" },
   { route: "adhkar", label: "الأذكار", icon: "hands-pray" },
 ];
@@ -61,6 +61,7 @@ export default function TabLayout() {
       <Tabs.Screen name="prayer" options={{ title: "الصلاة" }} />
       <Tabs.Screen name="quran" options={{ title: "القرآن" }} />
       <Tabs.Screen name="achievements" options={{ title: "إنجازاتي" }} />
+      <Tabs.Screen name="stories" options={{ title: "القصص" }} />
       <Tabs.Screen name="adhkar" options={{ title: "الأذكار" }} />
     </Tabs>
   );
