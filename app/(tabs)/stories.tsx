@@ -1,16 +1,21 @@
 import { useMemo, useState } from "react";
-import { Platform, Pressable, Text, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { useRouter, type Href } from "expo-router";
+import { useRouter } from "expo-router";
 import { AppScreen, ScreenHeading, SulyCard, TinyTag, ProgressBar, useSulyTheme } from "@/components/suly-ui";
 import { ISLAMIC_STORIES, STORY_CATEGORIES } from "@/lib/content/stories";
 import { useAppStore } from "@/lib/app-store";
+import StoryReaderScreen from "../story/[id]";
 
 export default function StoriesScreen() {
   const router = useRouter();
   const { store } = useAppStore();
   const { colors } = useSulyTheme();
   const [category, setCategory] = useState<string>("all");
+  const [selectedStoryId, setSelectedStoryId] = useState<string | null>(null);
+  if (selectedStoryId) {
+    return <StoryReaderScreen storyId={selectedStoryId} onBack={() => setSelectedStoryId(null)} />;
+  }
   const stories = useMemo(
     () => category === "all" ? ISLAMIC_STORIES : ISLAMIC_STORIES.filter((story) => story.category === category),
     [category],
@@ -36,9 +41,7 @@ export default function StoriesScreen() {
           const saved = store.storyProgress[story.id] ?? 0;
           const percent = hasProgress ? Math.round(((saved + 1) / story.chapters.length) * 100) : 0;
           return (
-            <Pressable key={story.id} onPress={() => router.push((Platform.OS === "web"
-                ? { pathname: "/read-story", params: { id: story.id } }
-                : { pathname: "/story/[id]", params: { id: story.id } }) as Href)} accessibilityRole="button">
+            <Pressable key={story.id} onPress={() => setSelectedStoryId(story.id)} accessibilityRole="button">
               <SulyCard style={{ padding: 0, overflow: "hidden", gap: 0 }}>
                 <View style={{ width: "100%", height: 150, backgroundColor: colors.surface, alignItems: "center", justifyContent: "center", gap: 8, borderBottomWidth: 1, borderBottomColor: colors.border }}>
                   <MaterialCommunityIcons name="book-open-page-variant" size={48} color={colors.gold} />
