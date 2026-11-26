@@ -3,6 +3,14 @@ import * as Notifications from "expo-notifications";
 import type { PrayerId } from "@/lib/app-store";
 import { PRAYER_LABELS, type DailyPrayerTimes } from "@/lib/prayer/calculations";
 
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: true,
+    shouldSetBadge: false,
+  }),
+});
+
 export type PrayerNotificationPrefs = Record<PrayerId, {
   enabled: boolean;
   atTime: boolean;
@@ -108,7 +116,7 @@ export async function reschedulePrayerNotifications(
             trigger: {
               type: Notifications.SchedulableTriggerInputTypes.DATE,
               date: alert.at,
-              ...(Platform.OS === "android" ? { channelId: prefs.silent ? "suly-prayer-silent" : "suly-prayer", delivery: "bestEffort" } : {}),
+              ...(Platform.OS === "android" ? { channelId: prefs.silent ? "suly-prayer-silent" : "suly-prayer" } : {}),
             },
           }));
         }
