@@ -55,6 +55,30 @@ export default function StoryReaderScreen() {
       .finally(() => { if (active) setTafsirLoading(false); });
     return () => { active = false; };
   }, [selectedReference?.surahId, selectedAyah]);
+  if (!story) {
+    return <AppScreen><ScreenHeading title="القصة غير موجودة" subtitle="ارجع إلى مكتبة القصص واختر قصة أخرى." /><SulyButton title="العودة للقصص" onPress={() => router.replace("/stories")} /></AppScreen>;
+  }
+
+  const activeIndex = Math.max(0, Math.min(chapterIndex, readingChapters.length - 1));
+  const chapter = readingChapters[activeIndex];
+  const lessonsText = chapter?.lessons || lessonsChapter?.body;
+  const savePlace = (nextIndex = chapterIndex) => {
+    const safeIndex = Math.max(0, Math.min(readingChapters.length - 1, nextIndex));
+    setChapterIndex(safeIndex);
+    updateStore((current) => ({ ...current, storyProgress: { ...current.storyProgress, [story.id]: safeIndex + (contextChapter ? 1 : 0) } }));
+    setNotice("اتحفظ مكانك في القصة على هذا الجهاز.");
+  };
+  const referenceItems = (chapter?.reference ?? "").split(/[؛;]/).map((raw) => {
+    const match = raw.trim().match(/سورة\\s+(.+?)،?\\s*الآي(?:ة|ات)\\s*(\\d+)(?:\\s*[–-]\\s*(\\d+))?/);
+    if (!match) return null;
+    const surahName = match[1].replace(/[،.]/g, "").trim();
+    const surah = QURAN_SURAHS.find((item) => item.name === surahName || item.name.replace(/^ال/, "") === surahName.replace(/^ال/, ""));
+    if (!surah) return null;
+    return { label: raw.trim(), surahId: surah.id, startAyah: Number(match[2]), endAyah: Number(match[3] ?? match[2]) };
+  }).filter((item): item is { label: string; surahId: number; startAyah: number; endAyah: number } => Boolean(item));
+  const selectedPage = selectedReference ? getQuranPage(getQuranPageForVerse(selectedReference.surahId, selectedAyah) ?? 0) : [];
+  const selectedVerse = selectedPage.find((verse) => verse.surah === selectedReference?.surahId && verse.ayah === selectedAyah);
+
   const openSelectedReferenceInQuran = () => {
     if (!selectedReference) return;
     router.push(`/quran-reader?surah=${selectedReference.surahId}&ayah=${selectedAyah}` as any);
