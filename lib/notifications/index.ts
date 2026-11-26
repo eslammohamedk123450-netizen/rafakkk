@@ -7,7 +7,7 @@ Notifications.setNotificationHandler({
   handleNotification: async (notification) => ({
     shouldShowBanner: true,
     shouldShowList: true,
-    shouldPlaySound: notification.request.content.sound !== false && notification.request.content.data?.kind !== "suly-gentle",
+    shouldPlaySound: notification.request.content.data?.kind !== "suly-gentle" && notification.request.content.data?.silent !== true,
     shouldSetBadge: false,
   }),
 });
@@ -114,7 +114,7 @@ export async function reschedulePrayerNotifications(
               title: alert.suffix + " صلاة " + PRAYER_LABELS[prayerId],
               body: alert.suffix === "تذكير اختياري بشأن" ? "إن كنت قد صليت، يمكنك تسجيلها؛ وإن لم يكن التنبيه مناسبًا فتجاهله." : "خذ لحظة هادئة، وسجّل صلاتك حين ترغب.",
               sound: prefs.silent ? false : "default",
-              data: { kind: "suly-prayer", prayerId, dateKey: day.dateKey, phase: alert.suffix },
+              data: { kind: "suly-prayer", prayerId, dateKey: day.dateKey, phase: alert.suffix, silent: prefs.silent },
             },
             trigger: {
               type: Notifications.SchedulableTriggerInputTypes.DATE,
