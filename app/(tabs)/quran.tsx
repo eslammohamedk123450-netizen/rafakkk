@@ -84,7 +84,6 @@ export default function QuranScreen() {
   return (
     <AppScreen>
       <ScreenHeading title="الورد القرآني" subtitle="خطة تناسب وقتك، وخطوة في كل مرة" action={<Pressable onPress={() => router.push("/settings")}><Text style={{ color: colors.gold, fontWeight: "700" }}>الإعدادات</Text></Pressable>} />
-      <SulyButton title="القراء والتلاوات · إذاعة القرآن" secondary onPress={() => router.push("/audio")} />
       <SulyCard style={{ backgroundColor: colors.card, gap: 14 }}>
         <Text style={{ color: colors.text, textAlign: "right", fontSize: 17, fontWeight: "800" }}>رحلتك مع القرآن</Text>
         <Text style={{ color: colors.muted, textAlign: "right", fontSize: 13 }}>كل صفحة تقرؤها وتسجلها تقرّبك خطوة من إتمام المصحف.</Text>
