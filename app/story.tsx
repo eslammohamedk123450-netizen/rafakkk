@@ -1,0 +1,1 @@
+// GitHub Pages needs a concrete static route; the selected story ID is passed as a query parameter.\nexport { default } from "./story/[id]";\n
