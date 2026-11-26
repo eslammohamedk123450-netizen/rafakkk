@@ -19,7 +19,7 @@ const RECITER_PHOTOS: Array<{ match: string[]; uri: string; credit: string }> = 
   { match: ["الحصري", "الحصرى", "Husary", "Hussary"], uri: "https://commons.wikimedia.org/wiki/Special:FilePath/Hussary.jpg?width=480", credit: "Wikimedia Commons • Public domain" },
   { match: ["المنشاوي", "المنشاوى", "Minshawi", "Minshawy"], uri: "https://commons.wikimedia.org/wiki/Special:FilePath/Elminshwey.jpg?width=480", credit: "Wikimedia Commons • Public domain" },
   { match: ["عبد الباسط", "عبدالباسط", "Abdul Basit", "Abdel Basit"], uri: "https://commons.wikimedia.org/wiki/Special:FilePath/Abdul_Basit_Abd_us-Samad_in_South_Africa_in_1966_%283%29_%28cropped%29.jpg?width=480", credit: "Wikimedia Commons • Public domain" },
-  { match: ["السديس", "Sudais"], uri: "https://commons.wikimedia.org/wiki/Special:FilePath/Abdul-Rahman_Al-Sudais_%28Cropped%2C_2011%29.jpg?width=480", credit: "Wikimedia Commons • GODL-India" },
+  { match: ["السديس", "Sudais"], uri: "https://commons.wikimedia.org/wiki/Special:FilePath/Abdul-Rahman_Al-Sudais_%28Cropped%2C_2011%29.jpg?width=480", credit: "الصورة: Prime Minister’s Office • ترخيص GODL-India" },
   { match: ["ماهر المعيقلي", "المعيقلي", "Mueaqly", "Muaiqly"], uri: "https://commons.wikimedia.org/wiki/Special:FilePath/Maher_Al_Mueaqly.png?width=480", credit: "Wikimedia Commons • CC BY-SA 3.0" },
   { match: ["العفاسي", "Alafasy", "Afasy"], uri: "https://commons.wikimedia.org/wiki/Special:FilePath/%D0%9C%D0%B8%D1%88%D0%B0%D1%80%D0%B8_%D0%A0%D0%B0%D1%88%D0%B8%D0%B4.jpg?width=480", credit: "Wikimedia Commons" },
   { match: ["المطرود", "Matrood", "Matroud"], uri: "https://commons.wikimedia.org/wiki/Special:FilePath/Abdullah_Al_Matroud.jpg?width=480", credit: "Wikimedia Commons • CC BY-SA 4.0" },
@@ -86,10 +86,6 @@ export default function AudioScreen() {
       const radioList: RadioStation[] = Array.isArray(radioData?.radios) ? radioData.radios : Array.isArray(radioData?.radio) ? radioData.radio : [];
       setReciters(list);
       setStations(radioList);
-      if (list[0]) {
-        setSelectedReciter(list[0].id);
-        setSelectedMoshaf(list[0].moshaf?.[0]?.id ?? null);
-      }
     }).catch(() => { if (active) setError("تعذر تحميل المكتبة الصوتية. تحقق من الإنترنت وحاول مرة أخرى."); })
       .finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
@@ -250,6 +246,7 @@ export default function AudioScreen() {
             const count = item.moshaf?.reduce((sum, edition) => sum + (edition.surah_total || 0), 0) ?? 0;
             return <Pressable key={item.id} onPress={() => { setSelectedReciter(item.id); setSelectedMoshaf(item.moshaf?.[0]?.id ?? null); setSelectedSurah(1); }} style={{ width: "48%", backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderRadius: 16, padding: 9, alignItems: "center" }}>
               {photo ? <Image source={{ uri: photo.uri }} resizeMode="cover" style={{ width: "100%", height: 128, borderRadius: 11, backgroundColor: colors.border }} /> : <View style={{ width: "100%", height: 128, borderRadius: 11, backgroundColor: colors.gold + "22", alignItems: "center", justifyContent: "center" }}><Text style={{ color: colors.gold, fontSize: 42, fontWeight: "900" }}>{item.name.trim().charAt(0)}</Text><Text style={{ color: colors.muted, fontSize: 10 }}>القارئ</Text></View>}
+              {photo ? <Text style={{ color: colors.muted, fontSize: 8, textAlign: "center", marginTop: 3 }}>{photo.credit}</Text> : null}
               <Text numberOfLines={2} style={{ color: colors.text, fontWeight: "800", textAlign: "center", marginTop: 9, minHeight: 38 }}>{item.name}</Text>
               <Text style={{ color: colors.muted, fontSize: 11, marginTop: 3 }}>{item.moshaf?.length ?? 0} مصحف • {count} سورة متاحة</Text>
               <Text style={{ color: colors.gold, fontSize: 11, marginTop: 7 }}>عرض التلاوات ←</Text>
@@ -269,6 +266,7 @@ export default function AudioScreen() {
               <Pressable onPress={() => setSelectedReciter(null)} style={{ paddingVertical: 8 }}><Text style={{ color: colors.gold }}>← العودة لكل القراء</Text></Pressable>
             </View>
           </View>
+          {getReciterPhoto(reciter.name) ? <Text style={{ color: colors.muted, fontSize: 9, textAlign: "center", marginTop: 8 }}>{getReciterPhoto(reciter.name)?.credit}</Text> : null}
         </SulyCard>
         {reciter.moshaf?.length ? <SulyCard>
           <Text style={{ color: colors.text, fontWeight: "800", textAlign: "right" }}>اختر الرواية أو المصحف الصوتي</Text>
