@@ -1,7 +1,7 @@
 import { Platform } from "react-native";
 import * as Notifications from "expo-notifications";
 import type { AppStore } from "@/lib/app-store";
-import { nextPrayerDates } from "@/lib/prayer/dates";
+import { nextPrayerDates, shiftDateKey } from "@/lib/prayer/dates";
 import { localDateTimeToUtc } from "@/lib/time-zones";
 
 export const MOTIVATION_MESSAGES = {
@@ -55,22 +55,22 @@ function hasQuranActivity(store: AppStore, key: string) {
   return (store.quranReader.pagesReadByDate[key]?.length ?? 0) > 0 || (store.quranHistory[key] ?? 0) > 0;
 }
 
-function personalizedMessage(category: MessageCategory, store: AppStore, dayKey: string, index: number) {
+function personalizedMessage(category: MessageCategory, store: AppStore, dayKey: string, currentDayKey: string, index: number) {
   const todayQuran = hasQuranActivity(store, dayKey);
   const yesterdayQuran = hasQuranActivity(store, shiftDateKey(dayKey, -1));
   const prayerCount = Object.values(store.prayerLogs[dayKey] ?? {}).filter((status) => status === "completed").length;
   const dhikrCount = Object.values(store.dhikrCounts[dayKey] ?? {}).reduce((sum, value) => sum + value, 0) + (store.tasbeehCounts[dayKey] ?? 0);
 
-  if (category === "quran" && dayKey === nextPrayerDates(new Date(), store.location?.timeZone || "UTC", 1)[0]?.key) {
+  if (category === "quran" && dayKey === currentDayKey) {
     if (todayQuran) return "ما شاء الله، سجلت قراءة للقرآن اليوم. ربنا يثبتك ويجعل القرآن نور قلبك.";
     if (yesterdayQuran) return "كان لك نصيب من القرآن أمس. لو ما بدأتش وردك النهارده، افتح المصحف ولو بصفحة؛ رفيقك بيفكّرك بمحبة.";
   }
-  if (category === "prayer" && prayerCount > 0 && dayKey === nextPrayerDates(new Date(), store.location?.timeZone || "UTC", 1)[0]?.key) {
+  if (category === "prayer" && prayerCount > 0 && dayKey === currentDayKey) {
     return prayerCount >= 5
       ? "ما شاء الله، سجلت صلواتك الخمس اليوم. تقبّل الله منك، وداوم على الخير."
       : `سجلت ${prayerCount} من صلوات اليوم. ربنا يثبتك، ولسه قدامك فرص جميلة للخير.`;
   }
-  if (category === "dhikr" && dhikrCount > 0 && dayKey === nextPrayerDates(new Date(), store.location?.timeZone || "UTC", 1)[0]?.key) {
+  if (category === "dhikr" && dhikrCount > 0 && dayKey === currentDayKey) {
     return `ما شاء الله، سجلت ${dhikrCount} من الأذكار اليوم. تقبّل الله ذكرك، وزاد قلبك طمأنينة.`;
   }
   const messages = MOTIVATION_MESSAGES[category];
@@ -91,7 +91,7 @@ export async function rescheduleMotivationNotifications(store: AppStore) {
   const times = prefs.messageTimes.filter((clock) => /^([01]\\d|2[0-3]):[0-5]\\d$/.test(clock)).slice(0, Math.max(1, Math.min(8, prefs.dailyLimit)));
   if (!categories.length || !times.length) return;
   const timeZone = store.location?.timeZone || Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
-  const days = nextPrayerDates(new Date(), timeZone, 8);
+  const days = nextPrayerDates(new Date(), timeZone, 8);\n  const currentDayKey = days[0]?.key ?? "";
   const seenByCategory = new Map<MessageCategory, number>();
   const firstDayOffset = Math.floor(Date.parse(`${days[0]?.key ?? "1970-01-01"}T00:00:00Z`) / 86_400_000);
   const now = Date.now();
@@ -103,7 +103,7 @@ export async function rescheduleMotivationNotifications(store: AppStore) {
       if (!scheduledAt || scheduledAt.getTime() <= now) return;
       const category = categories[(dayIndex * times.length + timeIndex) % categories.length];
       const occurrence = seenByCategory.get(category) ?? 0;
-      const message = personalizedMessage(category, store, key, firstDayOffset + occurrence);
+      const message = personalizedMessage(category, store, key, currentDayKey, firstDayOffset + occurrence);
       seenByCategory.set(category, occurrence + 1);
       jobs.push(Notifications.scheduleNotificationAsync({
         content: { title: "رفيقك بيفكّرك ❤️", body: message, data: { kind: "suly-gentle", category, dateKey: key } },
