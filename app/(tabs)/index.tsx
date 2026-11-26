@@ -8,6 +8,14 @@ import { calculatePrayerTimes, formatPrayerTime, getNextPrayer, PRAYER_LABELS } 
 import { dateFromKey, shiftDateKey } from "@/lib/prayer/dates";
 import { calculateQuranDayProgress } from "@/lib/quran/progress";
 
+function formatRemaining(target: Date, now: Date) {
+  const totalMinutes = Math.max(0, Math.ceil((target.getTime() - now.getTime()) / 60_000));
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+  if (hours > 0) return `متبقي ${hours} ساعة و${minutes} دقيقة`;
+  return `متبقي ${minutes} دقيقة`;
+}
+
 export default function HomeScreen() {
   const router = useRouter();
   const { store, updateStore } = useAppStore();
@@ -67,6 +75,7 @@ export default function HomeScreen() {
             <View style={{ alignItems: "flex-end" }}>
               <Text style={{ color: colors.muted, fontSize: 13 }}>{nextPrayerToday ? "الصلاة التالية" : "أول صلاة غدًا"}</Text>
               <Text style={{ color: colors.text, fontSize: 20, fontWeight: "800", marginTop: 2 }}>{nextPrayer.name} · {formatPrayerTime(nextPrayer.time, store.location?.timeZone)}</Text>
+              <Text accessibilityLiveRegion="polite" style={{ color: colors.gold, fontSize: 13, fontWeight: "700", marginTop: 5 }}>{formatRemaining(nextPrayer.time, now)}</Text>
             </View>
             <MaterialCommunityIcons name="clock-time-four-outline" size={25} color={colors.gold} />
           </View>
