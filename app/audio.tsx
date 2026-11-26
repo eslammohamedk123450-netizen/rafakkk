@@ -275,7 +275,7 @@ export default function AudioScreen() {
         <SulyCard>
           <Text style={{ color: colors.text, fontWeight: "900", fontSize: 17, textAlign: "right" }}>سور القرآن المتاحة بصوت القارئ</Text>
           <Text style={{ color: colors.muted, fontSize: 12, textAlign: "right" }}>اضغط تشغيل للاستماع، أو تنزيل لحفظ السورة على جهازك.</Text>
-          {availableSurahs.map((id) => {
+          {availableSurahs.length ? availableSurahs.map((id) => {
             const key = `${reciter.id}-${moshaf?.id ?? 0}-${id}`;
             const saved = savedTracks.find((track) => track.key === key);
             const title = SURAH_NAMES[id - 1] ?? `سورة ${id}`;
@@ -285,7 +285,7 @@ export default function AudioScreen() {
               <Pressable onPress={() => saved ? playSurah(id, reciter, moshaf, saved.uri) : playSurah(id, reciter, moshaf)} style={{ backgroundColor: colors.gold + "20", paddingHorizontal: 10, paddingVertical: 8, borderRadius: 10 }}><Text style={{ color: colors.gold, fontWeight: "800", fontSize: 11 }}>▶</Text></Pressable>
               <Pressable disabled={!!saved || downloadingKey === key} onPress={() => void downloadSurah(id, reciter, moshaf)} style={{ borderWidth: 1, borderColor: saved ? colors.gold : colors.border, paddingHorizontal: 9, paddingVertical: 8, borderRadius: 10, opacity: saved || downloadingKey === key ? 0.65 : 1 }}><Text style={{ color: saved ? colors.gold : colors.text, fontSize: 11, fontWeight: "700" }}>{downloadingKey === key ? "..." : saved ? "✓ تم" : "↓ تنزيل"}</Text></Pressable>
             </View>;
-          })}
+          }) : <Text style={{ color: colors.muted, textAlign: "center", paddingVertical: 18 }}>لا توجد تسجيلات كاملة متاحة لهذا القارئ في المصدر حاليًا.</Text>}
         </SulyCard>
       </> : null}
 
