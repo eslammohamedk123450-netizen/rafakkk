@@ -26,8 +26,6 @@ export default function IndonesianAdhanScreen() {
   const status1 = useAudioPlayerStatus(player1);
   const status2 = useAudioPlayerStatus(player2);
   const selectedSecond = store.adhanPrefs.voiceId === "adhan-2";
-  const player = selectedSecond ? player2 : player1;
-  const status = selectedSecond ? status2 : status1;
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
