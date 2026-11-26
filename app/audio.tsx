@@ -104,7 +104,7 @@ export default function AudioScreen() {
   };
 
   const playUrl = async (url: string | undefined, title: string, artist: string, live: boolean) => {
-    if (!url || !/^https:\/\//i.test(url)) { setNotice("رابط الصوت غير متاح أو غير آمن."); return; }
+    if (!url || !(/^(https:\/\/|file:\/\/)/i.test(url))) { setNotice("رابط الصوت غير متاح أو غير آمن."); return; }
     try {
       setNotice("جارٍ تجهيز الصوت...");
       setTrackTitle(title);
