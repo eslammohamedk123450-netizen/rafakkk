@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { Linking, Modal, Platform, Pressable, ScrollView, Text, View } from "react-native";
-import { useRouter } from "expo-router";
+import { useRouter, useLocalSearchParams } from "expo-router";
+import { useEffect } from "react";
 import { AppScreen, ScreenHeading, SulyButton, SulyCard, SulyInput, useSulyTheme } from "@/components/suly-ui";
 import { localDateKey, useAppStore } from "@/lib/app-store";
 import {
@@ -24,9 +25,13 @@ function clampPage(value: number) {
 
 export default function QuranReaderScreen() {
   const router = useRouter();
+  const params = useLocalSearchParams<{ surah?: string }>();
+  const requestedSurah = Number(params.surah);
   const { store, updateStore } = useAppStore();
   const { colors } = useSulyTheme();
-  const page = clampPage(store.quranReader.lastPage || 1);
+  const requestedPage = Number.isInteger(requestedSurah) && requestedSurah > 0 ? getSurahStartPage(requestedSurah) : null;
+  const page = clampPage(requestedPage ?? store.quranReader.lastPage ?? 1);
+  useEffect(() => { if (requestedPage) goToPage(requestedPage); }, [params.surah]);
   const [pageDraft, setPageDraft] = useState<string | null>(null);
   const [surahPickerVisible, setSurahPickerVisible] = useState(false);
   const fontSize = store.quranReader.fontSize ?? 27;
