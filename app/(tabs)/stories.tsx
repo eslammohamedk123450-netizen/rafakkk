@@ -5,7 +5,7 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { AppScreen, ScreenHeading, SulyCard, TinyTag, ProgressBar, useSulyTheme } from "@/components/suly-ui";
 import { ISLAMIC_STORIES, STORY_CATEGORIES } from "@/lib/content/stories";
 import { useAppStore } from "@/lib/app-store";
-import { StoryReaderContent } from "../story/[id]";
+import { StoryReaderContent } from "@/components/stories/StoryReaderContent";
 
 export default function StoriesScreen() {
   const { store } = useAppStore();
