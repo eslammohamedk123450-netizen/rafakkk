@@ -99,7 +99,7 @@ export default function StoryReaderScreen() {
   const selectedVerse = selectedPage.find((verse) => verse.surah === selectedReference?.surahId && verse.ayah === selectedAyah);
   const openSelectedReferenceInQuran = () => {
     if (!selectedReference) return;
-    router.push(`/quran-reader?surah=${selectedReference.surahId}&ayah=${selectedReference.startAyah}` as any);
+    router.push(`/quran-reader?surah=${selectedReference.surahId}&ayah=${selectedAyah}` as any);
     setSelectedReference(null);
   };
   const openLink = async (url: string) => {
