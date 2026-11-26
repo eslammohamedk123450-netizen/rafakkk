@@ -119,7 +119,7 @@ export default function IndonesianAdhanScreen() {
       {error ? <Text style={{ color: colors.gold, textAlign: "center" }}>{error}</Text> : null}
       <SulyCard>
         <Text style={{ color: colors.muted, textAlign: "right", lineHeight: 22 }}>
-          التسجيلات الثلاثة محفوظة داخل ملفات التطبيق، ويمكن تشغيلهما دون اتصال بالإنترنت. تظهر التسجيلات بأرقام فقط دون أسماء المؤذنين أو البلدان.
+          التسجيلات الثلاثة محفوظة داخل ملفات التطبيق، ويمكن تشغيلها دون اتصال بالإنترنت. تظهر التسجيلات بأرقام فقط دون أسماء المؤذنين أو البلدان.
         </Text>
         <SulyButton title="إيقاف جميع التسجيلات" secondary onPress={stop} />
         <SulyButton title="العودة إلى الإعدادات" onPress={() => router.back()} />
