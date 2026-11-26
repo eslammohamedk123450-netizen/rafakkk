@@ -126,6 +126,9 @@ export default function QuranReaderScreen() {
   const [searchQuery, setSearchQuery] = useState("");
   const searchResults = useMemo(() => searchQuran(searchQuery, 10), [searchQuery]);
   const [surahPickerVisible, setSurahPickerVisible] = useState(false);
+  const [pagePickerVisible, setPagePickerVisible] = useState(false);
+  const [readerMenuVisible, setReaderMenuVisible] = useState(false);
+  const [currentPosition, setCurrentPosition] = useState<{ surah: number; ayah: number } | null>(null);
   const fontSize = store.quranReader.fontSize ?? 27;
   const [notice, setNotice] = useState("");
   const [selectedTafsir, setSelectedTafsir] = useState<{ surah: number; ayah: number } | null>(null);
@@ -242,31 +245,17 @@ export default function QuranReaderScreen() {
         ) : searchQuery.trim().length === 1 ? <Text style={{ color: colors.muted, textAlign: "right", fontSize: 11 }}>اكتب حرفًا آخر لبدء البحث.</Text> : null}
       </View>
 
-      <SulyCard style={{ paddingHorizontal: 10, paddingVertical: 12, gap: 10 }}>
-        <View style={{ flexDirection: "row-reverse", justifyContent: "space-between", alignItems: "center" }}>
-          <Text style={{ color: colors.text, fontWeight: "800", fontSize: 18 }}>{currentSurah?.name ?? "سورة"}</Text>
-          <Text style={{ color: colors.muted }}>الصفحة {arabicNumber(page)} من {arabicNumber(QURAN_PAGE_COUNT)}</Text>
-        </View>
-        <View style={{ flexDirection: "row-reverse", gap: 8 }}>
-          <View style={{ flex: 1 }}><SulyButton title="السورة" secondary onPress={() => setSurahPickerVisible(true)} /></View>
-          <View style={{ flex: 1 }}><SulyButton title="السابقة" secondary disabled={page <= 1} onPress={() => goToPage(page - 1)} /></View>
-          <View style={{ flex: 1 }}><SulyButton title="التالية" secondary disabled={page >= QURAN_PAGE_COUNT} onPress={() => goToPage(page + 1)} /></View>
-        </View>
-        <View style={{ flexDirection: "row-reverse", alignItems: "flex-end", gap: 8 }}>
-          <View style={{ flex: 1 }}><SulyInput label="اذهب إلى صفحة" value={pageDraft ?? `${page}`} onChangeText={setPageDraft} keyboardType="number-pad" returnKeyType="go" onSubmitEditing={submitPage} /></View>
-          <View style={{ width: 105 }}><SulyButton title="انتقل" onPress={submitPage} /></View>
-        </View>
-        <View style={{ flexDirection: "row-reverse", gap: 8 }}>
-          <View style={{ flex: 1 }}><SulyButton title={pageIsRead ? "إلغاء تسجيل الصفحة" : "سجّل الصفحة مقروءة"} secondary onPress={togglePageRead} /></View>
-          <View style={{ flex: 1 }}><SulyButton title={pageIsBookmarked ? "إزالة العلامة" : "احفظ علامة"} secondary onPress={toggleBookmark} /></View>
-        </View>
-        {store.quranReader.bookmarkPage !== null ? <SulyButton title={`العودة إلى العلامة · الصفحة ${arabicNumber(store.quranReader.bookmarkPage)}`} secondary onPress={() => goToPage(store.quranReader.bookmarkPage!)} /> : null}
-        <Text style={{ color: colors.muted, textAlign: "right", fontSize: 13 }}>
-          قرأت {arabicNumber(pagesReadToday.length)} صفحة اليوم. {store.quranReader.bookmarkPage ? `علامتك عند الصفحة ${arabicNumber(store.quranReader.bookmarkPage)}.` : "يمكنك وضع علامة للعودة إلى موضع تختاره."}
-        </Text>
-        {notice ? <Text style={{ color: colors.gold, textAlign: "right" }}>{notice}</Text> : null}
-      </SulyCard>
+      <QuranAudioBar surahId={currentSurah?.id ?? 1} surahName={currentSurah?.name ?? "الفاتحة"} />
 
+      <View style={{ flexDirection: "row-reverse", alignItems: "center", justifyContent: "space-between", paddingVertical: 3 }}>
+        <View style={{ flexDirection: "row-reverse", alignItems: "center", gap: 8 }}>
+          <Pressable onPress={() => setReaderMenuVisible(true)} accessibilityRole="button" accessibilityLabel="قائمة المصحف" style={{ width: 42, height: 42, borderRadius: 12, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, alignItems: "center", justifyContent: "center" }}><MaterialCommunityIcons name="menu" size={23} color={colors.gold} /></Pressable>
+          <Pressable onPress={() => setPagePickerVisible(true)} accessibilityRole="button" accessibilityLabel="فهرس صفحات المصحف" style={{ width: 42, height: 42, borderRadius: 12, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, alignItems: "center", justifyContent: "center" }}><MaterialCommunityIcons name="book-open-page-variant" size={22} color={colors.gold} /></Pressable>
+          <Pressable onPress={() => { updateStore((current) => ({ ...current, quranReader: { ...current.quranReader, lastPage: page, bookmarkPage: page, bookmarkSurah: currentPosition?.surah ?? verses[0]?.surah ?? null, bookmarkAyah: currentPosition?.ayah ?? verses[0]?.ayah ?? null } })); setNotice("اتحفظ موضع القراءة. تقدر ترجع له من علامة الدبوس."); }} accessibilityRole="button" accessibilityLabel="حفظ موضع القراءة" style={{ width: 42, height: 42, borderRadius: 12, backgroundColor: pageIsBookmarked ? colors.gold + "25" : colors.surface, borderWidth: 1, borderColor: pageIsBookmarked ? colors.gold : colors.border, alignItems: "center", justifyContent: "center" }}><MaterialCommunityIcons name="pin" size={22} color={colors.gold} /></Pressable>
+        </View>
+        <View style={{ alignItems: "flex-end", gap: 2 }}><Text style={{ color: colors.text, fontWeight: "800", fontSize: 16 }}>{currentSurah?.name ?? "المصحف"}</Text><Text style={{ color: colors.muted, fontSize: 11 }}>صفحة {arabicNumber(page)} من {arabicNumber(QURAN_PAGE_COUNT)}</Text></View>
+      </View>
+      {notice ? <Text style={{ color: colors.gold, textAlign: "right", fontSize: 12 }}>{notice}</Text> : null}
       <View style={{ marginHorizontal: -10, backgroundColor: colors.surface, borderColor: colors.gold + "99", borderWidth: 2, borderRadius: 9, paddingHorizontal: 10, paddingVertical: 14, gap: 10 }}>
         <View style={{ alignItems: "center", marginBottom: 4, gap: 6, paddingBottom: 12, borderBottomWidth: 1, borderBottomColor: colors.gold + "66" }}>
           <Text style={{ color: colors.gold, fontSize: 12, fontWeight: "700" }}>۞ ۞ ۞</Text>
@@ -285,7 +274,7 @@ export default function QuranReaderScreen() {
           }}
         >
           {verses.map((verse) => (
-            <Text key={`${verse.surah}:${verse.ayah}`} onPress={() => setSelectedTafsir({ surah: verse.surah, ayah: verse.ayah })} accessibilityRole="button">
+            <Text key={`${verse.surah}:${verse.ayah}`} onPress={() => { setCurrentPosition({ surah: verse.surah, ayah: verse.ayah }); setSelectedTafsir({ surah: verse.surah, ayah: verse.ayah }); }} accessibilityRole="button">
               {verse.text}{" "}
               <Text style={{ color: colors.gold, fontSize: Math.round(fontSize * 0.72) }}>
                 ﴿{arabicNumber(verse.ayah)}﴾
@@ -302,13 +291,43 @@ export default function QuranReaderScreen() {
         </View>
       </View>
 
-      <QuranAudioBar surahId={currentSurah?.id ?? 1} surahName={currentSurah?.name ?? "الفاتحة"} />
+
 
       <View style={{ alignItems: "center", gap: 4, paddingHorizontal: 8, paddingBottom: 12 }}>
         <Text style={{ color: colors.muted, textAlign: "center", fontSize: 11, lineHeight: 18 }}>{QURAN_ATTRIBUTION}</Text>
         <Text style={{ color: colors.muted, textAlign: "center", fontSize: 10 }}>النص بالرسم العثماني · محفوظ للقراءة دون إنترنت</Text>
       </View>
 
+      <Modal visible={readerMenuVisible} transparent animationType="fade" onRequestClose={() => setReaderMenuVisible(false)}>
+        <Pressable onPress={() => setReaderMenuVisible(false)} style={{ flex: 1, justifyContent: "flex-start", backgroundColor: "rgba(0,0,0,0.55)", padding: 18, paddingTop: 95 }}>
+          <Pressable onPress={() => undefined} style={{ backgroundColor: colors.surface, borderRadius: 18, borderWidth: 1, borderColor: colors.border, padding: 8, gap: 3 }}>
+            {[
+              { icon: "book-open-variant", label: "فهرس السور", action: () => { setReaderMenuVisible(false); setSurahPickerVisible(true); } },
+              { icon: "view-grid-outline", label: "كل صفحات المصحف", action: () => { setReaderMenuVisible(false); setPagePickerVisible(true); } },
+              { icon: "pin", label: "حفظ موضع القراءة الحالي", action: () => { updateStore((current) => ({ ...current, quranReader: { ...current.quranReader, lastPage: page, bookmarkPage: page, bookmarkSurah: currentPosition?.surah ?? verses[0]?.surah ?? null, bookmarkAyah: currentPosition?.ayah ?? verses[0]?.ayah ?? null } })); setReaderMenuVisible(false); setNotice("اتحفظ موضع القراءة الحالي."); } },
+              { icon: "bookmark-multiple", label: store.quranReader.bookmarkPage ? "العودة لآخر علامة · صفحة " + arabicNumber(store.quranReader.bookmarkPage) : "لا توجد علامة محفوظة", action: () => { if (store.quranReader.bookmarkPage) { goToPage(store.quranReader.bookmarkPage); const saved = store.quranReader as typeof store.quranReader & { bookmarkSurah?: number | null; bookmarkAyah?: number | null }; if (saved.bookmarkSurah && saved.bookmarkAyah) setCurrentPosition({ surah: saved.bookmarkSurah, ayah: saved.bookmarkAyah }); } setReaderMenuVisible(false); } },
+            ].map((item) => <Pressable key={item.label} onPress={item.action} style={{ flexDirection: "row-reverse", alignItems: "center", gap: 12, padding: 13, borderRadius: 12 }}><MaterialCommunityIcons name={item.icon as any} size={21} color={colors.gold} /><Text style={{ color: colors.text, textAlign: "right", fontWeight: "700", flex: 1 }}>{item.label}</Text></Pressable>)}
+          </Pressable>
+        </Pressable>
+      </Modal>
+      <Modal visible={pagePickerVisible} transparent animationType="slide" onRequestClose={() => setPagePickerVisible(false)}>
+        <View style={{ flex: 1, justifyContent: "flex-end", backgroundColor: "rgba(0,0,0,0.62)", padding: 8 }}>
+          <View style={{ backgroundColor: colors.surface, borderRadius: 20, maxHeight: "88%", padding: 12, gap: 10 }}>
+            <View style={{ flexDirection: "row-reverse", alignItems: "center", justifyContent: "space-between" }}><Text style={{ color: colors.text, fontWeight: "900", fontSize: 17 }}>صفحات المصحف</Text><Pressable onPress={() => setPagePickerVisible(false)}><Text style={{ color: colors.gold, fontWeight: "700" }}>إغلاق ✕</Text></Pressable></View>
+            <Text style={{ color: colors.muted, textAlign: "right", fontSize: 11 }}>اضغط على معاينة الصفحة للانتقال إليها. المعاينات مصغّرات نصية وليست صورًا ممسوحة للمصحف.</Text>
+            <ScrollView contentContainerStyle={{ flexDirection: "row-reverse", flexWrap: "wrap", justifyContent: "space-between", gap: 8 }}>
+              {Array.from({ length: QURAN_PAGE_COUNT }, (_, index) => index + 1).map((pageNumber) => {
+                const preview = getQuranPage(pageNumber);
+                const surah = QURAN_SURAHS.find((item) => item.id === preview[0]?.surah);
+                return <Pressable key={pageNumber} onPress={() => { goToPage(pageNumber); setPagePickerVisible(false); }} style={{ width: "23%", minHeight: 112, backgroundColor: page === pageNumber ? colors.gold + "22" : colors.background, borderWidth: page === pageNumber ? 2 : 1, borderColor: page === pageNumber ? colors.gold : colors.border, borderRadius: 8, padding: 6, alignItems: "center", gap: 4 }}>
+                  <Text style={{ color: colors.gold, fontSize: 10, fontWeight: "900" }}>{arabicNumber(pageNumber)}</Text><Text numberOfLines={1} style={{ color: colors.text, fontSize: 9, fontWeight: "800" }}>{surah?.name ?? "المصحف"}</Text>
+                  <View style={{ width: "100%", gap: 3, paddingTop: 3 }}>{preview.slice(0, 5).map((verse, i) => <View key={verse.surah + "-" + verse.ayah + "-" + i} style={{ height: 3, width: (78 + (i % 3) * 7) + "%", backgroundColor: colors.muted + "99", alignSelf: "center", borderRadius: 2 }} />)}</View>
+                </Pressable>;
+              })}
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
       <Modal visible={surahPickerVisible} transparent animationType="slide" onRequestClose={() => setSurahPickerVisible(false)}>
         <View style={{ flex: 1, justifyContent: "flex-end", backgroundColor: "rgba(0,0,0,0.55)", padding: 12 }}>
           <View style={{ backgroundColor: colors.surface, borderColor: colors.border, borderWidth: 1, borderRadius: 22, maxHeight: "84%", overflow: "hidden" }}>
