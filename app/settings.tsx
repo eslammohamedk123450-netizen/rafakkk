@@ -23,7 +23,7 @@ const CITIES = [
 const ADHAN_VOICES = {
   egyptian: [{ id: "egypt-classic", label: "مصري كلاسيكي" }, { id: "egypt-calm", label: "مصري هادئ" }, { id: "egypt-strong", label: "مصري جهوري" }],
   turkish: [{ id: "turkish-traditional", label: "تركي تقليدي" }, { id: "turkish-soft", label: "تركي هادئ" }, { id: "turkish-maqam", label: "تركي بالمقامات" }],
-  indonesian: [{ id: "indo-masjid", label: "إندونيسي مسجد" }, { id: "indo-calm", label: "إندونيسي هادئ" }, { id: "indo-clear", label: "إندونيسي واضح" }],
+  indonesian: [{ id: "indo-regional", label: "أذان إندونيسيا" }],
 } as const;
 const ADHAN_REGIONS = [{ id: "egyptian", label: "🇪🇬 مصري" }, { id: "turkish", label: "🇹🇷 تركي" }, { id: "indonesian", label: "🇮🇩 إندونيسي" }] as const;
 
@@ -184,13 +184,14 @@ export default function SettingsScreen() {
 
       <SulyCard>
         <Text style={{ color: colors.text, fontSize: 18, fontWeight: "700", textAlign: "right" }}>المؤذنون والأذان</Text>
-        <Text style={{ color: colors.muted, textAlign: "right", lineHeight: 21 }}>اختار الطابع والمؤذن المفضل ونوع الأذان. الاختيارات تُحفظ على جهازك. توصيل الملفات الصوتية والتشغيل التلقائي وقت الصلاة واختبار الخلفية على أندرويد ما زال قيد التنفيذ.</Text>
+        <Text style={{ color: colors.muted, textAlign: "right", lineHeight: 21 }}>اختار طابع الأذان، وابدأ الآن بتجربة التسجيل الإندونيسي الحقيقي. ربط التشغيل التلقائي بمواقيت الصلاة قيد التنفيذ.</Text>
         <View style={{ flexDirection: "row-reverse", flexWrap: "wrap", gap: 7 }}>
           <TinyTag title={store.adhanPrefs.enabled ? "الأذان الصوتي مفعّل" : "الأذان الصوتي متوقف"} selected={store.adhanPrefs.enabled} onPress={() => updateStore((current) => ({ ...current, adhanPrefs: { ...current.adhanPrefs, enabled: !current.adhanPrefs.enabled } }))} />
         </View>
         <Text style={{ color: colors.text, fontWeight: "700", textAlign: "right" }}>الطابع / البلد</Text>
         <View style={{ flexDirection: "row-reverse", flexWrap: "wrap", gap: 7 }}>{ADHAN_REGIONS.map((region) => <TinyTag key={region.id} title={region.label} selected={store.adhanPrefs.region === region.id} onPress={() => updateStore((current) => ({ ...current, adhanPrefs: { ...current.adhanPrefs, region: region.id, voiceId: ADHAN_VOICES[region.id][0].id } }))} />)}</View>
         <Text style={{ color: colors.text, fontWeight: "700", textAlign: "right" }}>اختيار الصوت</Text>
+        {store.adhanPrefs.region === "indonesian" ? <SulyButton title="تجربة الأذان الإندونيسي واختياره" secondary onPress={() => router.push("/adhan-indonesian")} /> : null}
         <View style={{ flexDirection: "row-reverse", flexWrap: "wrap", gap: 7 }}>{ADHAN_VOICES[store.adhanPrefs.region].map((voice) => <TinyTag key={voice.id} title={voice.label} selected={store.adhanPrefs.voiceId === voice.id} onPress={() => updateStore((current) => ({ ...current, adhanPrefs: { ...current.adhanPrefs, voiceId: voice.id } }))} />)}</View>
         <Text style={{ color: colors.text, fontWeight: "700", textAlign: "right" }}>نوع الأذان</Text>
         <View style={{ flexDirection: "row-reverse", flexWrap: "wrap", gap: 7 }}>
@@ -199,7 +200,7 @@ export default function SettingsScreen() {
         </View>
         <Text style={{ color: colors.text, fontWeight: "700", textAlign: "right" }}>الصلاة التي يشغّل عندها الأذان</Text>
         <View style={{ flexDirection: "row-reverse", flexWrap: "wrap", gap: 7 }}>{(Object.keys(PRAYER_LABELS) as PrayerId[]).map((id) => <TinyTag key={id} title={PRAYER_LABELS[id]} selected={store.adhanPrefs.prayers[id]} onPress={() => updateStore((current) => ({ ...current, adhanPrefs: { ...current.adhanPrefs, prayers: { ...current.adhanPrefs.prayers, [id]: !current.adhanPrefs.prayers[id] } } }))} />)}</View>
-        <Text style={{ color: colors.muted, textAlign: "right", fontSize: 12 }}>ملحوظة: أسماء الطوابع حاليًا اختيارات إعداد، وليست ملفات تسجيل لمؤذنين حقيقيين. لن نربط تسجيلًا غير موثوق أو ندّعي تشغيله قبل إضافة الصوت واختباره.</Text>
+        <Text style={{ color: colors.muted, textAlign: "right", fontSize: 12 }}>التسجيل الإندونيسي متاح للتجربة عبر صفحة الصوت. الأصوات المصرية والتركية ستُضاف بعد التحقق من تسجيلاتها ومصادرها.</Text>
       </SulyCard>
 
       <SulyCard>
