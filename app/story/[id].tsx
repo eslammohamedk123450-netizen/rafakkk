@@ -6,6 +6,7 @@ import { AppScreen, ScreenHeading, SulyButton, SulyCard, ProgressBar, useSulyThe
 import { getIslamicStory } from "@/lib/content/stories";
 import { useAppStore } from "@/lib/app-store";
 import { getQuranPage, getQuranPageForVerse, QURAN_SURAHS } from "@/lib/quran";
+import { getTafsirAyah, tafsirDisplayText, TAFSIR_SOURCE } from "@/lib/quran/tafsir";
 
 export default function StoryReaderScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -41,29 +42,11 @@ export default function StoryReaderScreen() {
     setTafsirError("");
     setTafsirText("");
     setTafsirFootnotes("");
-    fetch(`https://quranenc.com/api/v1/translation/aya/arabic_moyassar/${selectedReference.surahId}/${selectedAyah}`)
-      .then(async (response) => {
-        if (!response.ok) throw new Error("تعذر جلب التفسير من المصدر.");
-        return response.json();
-      })
-      .then((payload) => {
-        const result = payload?.result;
-        if (!result || typeof result.translation !== "string" || !result.translation.trim()) {
-          throw new Error("لا يتوفر نص تفسير لهذه الآية في المصدر حاليًا.");
-        }
-        const plainText = (value: string) => value
-          .replace(/<br\s*\/?\s*>/gi, "\n")
-          .replace(/<\/(p|div|li)>/gi, "\n")
-          .replace(/<[^>]*>/g, "")
-          .replace(/&nbsp;/g, " ")
-          .replace(/&amp;/g, "&")
-          .replace(/&quot;/g, '"')
-          .replace(/&#39;/g, "'")
-          .replace(/&lt;/g, "<")
-          .replace(/&gt;/g, ">");
+    getTafsirAyah(selectedReference.surahId, selectedAyah)
+      .then((result) => {
         if (active) {
-          setTafsirText(plainText(result.translation));
-          setTafsirFootnotes(typeof result.footnotes === "string" ? plainText(result.footnotes) : "");
+          setTafsirText(tafsirDisplayText(result.translation));
+          setTafsirFootnotes(tafsirDisplayText(result.footnotes));
         }
       })
       .catch((error) => {
@@ -72,31 +55,6 @@ export default function StoryReaderScreen() {
       .finally(() => { if (active) setTafsirLoading(false); });
     return () => { active = false; };
   }, [selectedReference?.surahId, selectedAyah]);
-
-  if (!story) {
-    return <AppScreen><ScreenHeading title="القصة غير موجودة" subtitle="ارجع إلى مكتبة القصص واختر قصة أخرى." /><SulyButton title="العودة للقصص" onPress={() => router.replace("/stories")} /></AppScreen>;
-  }
-
-  const activeIndex = Math.max(0, Math.min(chapterIndex, readingChapters.length - 1));
-  const chapter = readingChapters[activeIndex];
-  const lessonsText = chapter?.lessons || lessonsChapter?.body;
-  const percent = Math.round(((activeIndex + 1) / Math.max(1, readingChapters.length)) * 100);
-  const savePlace = (nextIndex = chapterIndex) => {
-    const safeIndex = Math.max(0, Math.min(readingChapters.length - 1, nextIndex));
-    setChapterIndex(safeIndex);
-    updateStore((current) => ({ ...current, storyProgress: { ...current.storyProgress, [story.id]: safeIndex + (contextChapter ? 1 : 0) } }));
-    setNotice("اتحفظ مكانك في القصة على هذا الجهاز.");
-  };
-  const referenceItems = (chapter?.reference ?? "").split(/[؛;]/).map((raw) => {
-    const match = raw.trim().match(/سورة\s+(.+?)،?\s*الآي(?:ة|ات)\s*(\d+)(?:\s*[–-]\s*(\d+))?/);
-    if (!match) return null;
-    const surahName = match[1].replace(/[،.]/g, "").trim();
-    const surah = QURAN_SURAHS.find((item) => item.name === surahName || item.name.replace(/^ال/, "") === surahName.replace(/^ال/, ""));
-    if (!surah) return null;
-    return { label: raw.trim(), surahId: surah.id, startAyah: Number(match[2]), endAyah: Number(match[3] ?? match[2]) };
-  }).filter((item): item is { label: string; surahId: number; startAyah: number; endAyah: number } => Boolean(item));
-  const selectedPage = selectedReference ? getQuranPage(getQuranPageForVerse(selectedReference.surahId, selectedAyah) ?? 0) : [];
-  const selectedVerse = selectedPage.find((verse) => verse.surah === selectedReference?.surahId && verse.ayah === selectedAyah);
   const openSelectedReferenceInQuran = () => {
     if (!selectedReference) return;
     router.push(`/quran-reader?surah=${selectedReference.surahId}&ayah=${selectedAyah}` as any);
@@ -201,7 +159,7 @@ export default function StoryReaderScreen() {
               {tafsirFootnotes ? <Text style={{ color: colors.muted, textAlign: "right", lineHeight: 24, fontSize: 12 }}>{tafsirFootnotes}</Text> : null}
               <View style={{ borderTopWidth: 1, borderTopColor: colors.border, paddingTop: 9, gap: 4 }}>
                 <Text style={{ color: colors.gold, textAlign: "right", fontWeight: "800", fontSize: 12 }}>المصدر: التفسير الميسّر</Text>
-                <Text style={{ color: colors.muted, textAlign: "right", fontSize: 11, lineHeight: 19 }}>إعداد لجنة علمية بمجمع الملك فهد لطباعة المصحف الشريف · النسخة 1.0.0 · الناشر الرقمي: QuranEnc.com</Text>
+                <Text style={{ color: colors.muted, textAlign: "right", fontSize: 11, lineHeight: 19 }}>{TAFSIR_SOURCE.credit} · النسخة {TAFSIR_SOURCE.version} · الناشر الرقمي: {TAFSIR_SOURCE.publisher}</Text>
               </View>
             </ScrollView>
             <SulyButton title="الذهاب إلى الآية في المصحف الداخلي" onPress={openSelectedReferenceInQuran} />
