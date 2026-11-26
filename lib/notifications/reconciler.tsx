@@ -37,10 +37,8 @@ export function NotificationReconciler() {
         setForegroundCycle((value) => value + 1);
       }
     });
-    const interval = setInterval(refreshSystemTimeZone, 60_000);
     return () => {
       subscription.remove();
-      clearInterval(interval);
     };
   }, []);
 
