@@ -5,6 +5,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { AppScreen, ScreenHeading, SulyButton, SulyCard, ProgressBar, useSulyTheme } from "@/components/suly-ui";
 import { getIslamicStory } from "@/lib/content/stories";
 import { useAppStore } from "@/lib/app-store";
+import { QURAN_SURAHS } from "@/lib/quran";
 
 export default function StoryReaderScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -31,6 +32,9 @@ export default function StoryReaderScreen() {
     updateStore((current) => ({ ...current, storyProgress: { ...current.storyProgress, [story.id]: safeIndex } }));
     setNotice("اتحفظ مكانك في القصة على هذا الجهاز.");
   };
+  const referencedSurah = chapter.reference.match(/سورة\s+([^،؛.\s]+)/)?.[1];
+  const referencedSurahId = referencedSurah ? QURAN_SURAHS.find((item) => item.name.includes(referencedSurah) || item.name.replace("ال", "").includes(referencedSurah))?.id : undefined;
+  const openQuranReference = () => { if (referencedSurahId) router.push(`/quran-reader?surah=${referencedSurahId}` as any); };
   const openLink = async (url: string) => {
     try { await Linking.openURL(url); } catch { setNotice("تعذر فتح الرابط. تحقق من اتصال الإنترنت."); }
   };
@@ -59,6 +63,7 @@ export default function StoryReaderScreen() {
         <Text style={{ color: colors.text, fontSize: 17, lineHeight: 34, textAlign: "right" }}>{chapter.body}</Text>
         <View style={{ borderTopWidth: 1, borderTopColor: colors.border, paddingTop: 12, gap: 6 }}>
           <Text style={{ color: colors.gold, fontWeight: "800", textAlign: "right" }}>مرجع هذا الفصل</Text>
+          {referencedSurahId ? <SulyButton title={`فتح سورة ${referencedSurah} في مصحف رفيقك`} secondary onPress={openQuranReference} /> : null}
           <Text style={{ color: colors.muted, textAlign: "right", lineHeight: 22 }}>{chapter.reference}</Text>
         </View>
         <SulyButton title="احفظ مكاني" secondary onPress={() => savePlace()} />
