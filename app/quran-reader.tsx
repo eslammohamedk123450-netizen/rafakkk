@@ -2,6 +2,8 @@ import { useMemo, useState } from "react";
 import { Linking, Modal, Platform, Pressable, ScrollView, Text, View } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { useEffect } from "react";
+import { ActivityIndicator } from "react-native";
+import { setAudioModeAsync, useAudioPlayer, useAudioPlayerStatus } from "expo-audio";
 import { AppScreen, ScreenHeading, SulyButton, SulyCard, SulyInput, useSulyTheme } from "@/components/suly-ui";
 import { localDateKey, useAppStore } from "@/lib/app-store";
 import {
@@ -16,6 +18,90 @@ import {
 import { getTafsirAyah, tafsirDisplayText, TAFSIR_SOURCE } from "@/lib/quran/tafsir";
 
 const ARABIC_DIGITS = "٠١٢٣٤٥٦٧٨٩";
+const RECITERS_API = "https://mp3quran.net/api/v3/reciters?language=ar";
+type ReaderReciter = { id: number; name: string; moshaf?: { id: number; name: string; server: string; surah_list?: string }[] };
+
+function QuranAudioBar({ surahId, surahName }: { surahId: number; surahName: string }) {
+  const { colors } = useSulyTheme();
+  const player = useAudioPlayer(null, { updateInterval: 500 });
+  const status = useAudioPlayerStatus(player);
+  const [reciters, setReciters] = useState<ReaderReciter[]>([]);
+  const [selectedId, setSelectedId] = useState<number | null>(null);
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [notice, setNotice] = useState("");
+
+  useEffect(() => {
+    let active = true;
+    void setAudioModeAsync({ playsInSilentMode: true, shouldPlayInBackground: true, interruptionMode: "doNotMix" }).catch(() => undefined);
+    fetch(RECITERS_API).then((response) => {
+      if (!response.ok) throw new Error("reciters");
+      return response.json();
+    }).then((data) => {
+      if (!active) return;
+      const list: ReaderReciter[] = Array.isArray(data?.reciters) ? data.reciters.filter((item: ReaderReciter) => item.moshaf?.some((edition) => edition.server)) : [];
+      setReciters(list);
+      if (list.length) setSelectedId(list[0].id);
+    }).catch(() => { if (active) setNotice("تعذر تحميل القراء. تحقق من الإنترنت."); })
+      .finally(() => { if (active) setLoading(false); });
+    return () => { active = false; };
+  }, []);
+
+  const selected = reciters.find((item) => item.id === selectedId) ?? reciters[0];
+  const edition = selected?.moshaf?.find((item) => item.server);
+  const playCurrentSurah = () => {
+    if (!edition?.server) { setNotice("لا يوجد تسجيل متاح لهذا القارئ."); return; }
+    const available = edition.surah_list?.split(",").map(Number);
+    if (available?.length && !available.includes(surahId)) { setNotice("السورة الحالية غير متاحة لهذا المصحف الصوتي."); return; }
+    const url = `${edition.server.replace(/\\/$/, "")}/${String(surahId).padStart(3, "0")}.mp3`;
+    try {
+      player.replace(url);
+      player.setActiveForLockScreen(true, { title: `سورة ${surahName}`, artist: selected.name, albumTitle: "رفيقك نحو الالتزام" });
+      player.play();
+      setNotice("");
+    } catch {
+      setNotice("تعذر تشغيل التلاوة حاليًا.");
+    }
+  };
+
+  return (
+    <SulyCard style={{ gap: 10, borderColor: colors.gold + "66" }}>
+      <View style={{ flexDirection: "row-reverse", alignItems: "center", gap: 8 }}>
+        <MaterialCommunityIcons name="headphones" size={24} color={colors.gold} />
+        <View style={{ flex: 1, alignItems: "flex-end" }}>
+          <Text style={{ color: colors.text, fontWeight: "900", fontSize: 16 }}>الاستماع مع القراءة</Text>
+          <Text style={{ color: colors.muted, fontSize: 11 }}>استمع للسورة الحالية وأنت تقرأ المصحف</Text>
+        </View>
+      </View>
+      <Pressable onPress={() => setPickerOpen(true)} style={{ padding: 12, borderRadius: 12, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, flexDirection: "row-reverse", justifyContent: "space-between" }}>
+        <Text style={{ color: colors.text, fontWeight: "700" }}>{selected?.name ?? "اختيار القارئ"}</Text>
+        <Text style={{ color: colors.gold }}>تغيير القارئ</Text>
+      </Pressable>
+      <View style={{ flexDirection: "row-reverse", gap: 8 }}>
+        <View style={{ flex: 1 }}><SulyButton title={status.playing ? "إيقاف مؤقت" : "استمع للسورة"} onPress={() => status.playing ? player.pause() : playCurrentSurah()} disabled={loading || !selected} /></View>
+        <View style={{ flex: 1 }}><SulyButton title="إيقاف" secondary onPress={() => { player.pause(); void player.seekTo(0).catch(() => undefined); }} disabled={!status.playing && status.currentTime === 0} /></View>
+      </View>
+      {loading ? <ActivityIndicator color={colors.gold} /> : null}
+      {status.isBuffering ? <Text style={{ color: colors.muted, textAlign: "right", fontSize: 11 }}>جارٍ تحميل التلاوة...</Text> : null}
+      {notice ? <Text style={{ color: colors.muted, textAlign: "right", fontSize: 11 }}>{notice}</Text> : null}
+      <Modal visible={pickerOpen} transparent animationType="slide" onRequestClose={() => setPickerOpen(false)}>
+        <View style={{ flex: 1, justifyContent: "flex-end", backgroundColor: "rgba(0,0,0,0.6)", padding: 12 }}>
+          <View style={{ backgroundColor: colors.surface, borderRadius: 20, maxHeight: "75%", padding: 15 }}>
+            <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+              <Pressable onPress={() => setPickerOpen(false)}><Text style={{ color: colors.gold }}>إغلاق</Text></Pressable>
+              <Text style={{ color: colors.text, fontWeight: "900", fontSize: 17 }}>اختر القارئ</Text>
+            </View>
+            <ScrollView>
+              {reciters.map((item) => <Pressable key={item.id} onPress={() => { setSelectedId(item.id); setPickerOpen(false); player.pause(); }} style={{ paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: colors.border }}>
+                <Text style={{ color: selectedId === item.id ? colors.gold : colors.text, textAlign: "right", fontWeight: "700" }}>{item.name}</Text>
+              </Pressable>)}
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
+    </SulyCard>
+  );
+}
 
 function arabicNumber(value: number) {
   return `${value}`.replace(/\d/g, (digit) => ARABIC_DIGITS[Number(digit)]);
@@ -163,6 +249,8 @@ export default function QuranReaderScreen() {
         </Text>
         {notice ? <Text style={{ color: colors.gold, textAlign: "right" }}>{notice}</Text> : null}
       </SulyCard>
+
+      <QuranAudioBar surahId={currentSurah?.id ?? 1} surahName={currentSurah?.name ?? "الفاتحة"} />
 
       <SulyCard style={{ backgroundColor: colors.card, paddingHorizontal: 18, paddingVertical: 24 }}>
         <View style={{ alignItems: "center", marginBottom: 16, gap: 4 }}>
