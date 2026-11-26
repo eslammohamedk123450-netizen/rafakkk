@@ -110,6 +110,12 @@ const config: ExpoConfig = {
   },
   plugins: [
     "expo-asset",
+    [
+      "expo-audio",
+      {
+        enableBackgroundPlayback: true,
+      },
+    ],
     "expo-router",
     "expo-sqlite",
     "expo-notifications",
