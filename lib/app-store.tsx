@@ -136,7 +136,7 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
             ...defaultStore.adhanPrefs,
             ...(saved.adhanPrefs ?? {}),
             region: "indonesian",
-            voiceId: saved.adhanPrefs?.voiceId === "adhan-2" ? "adhan-2" : "adhan-1",
+            voiceId: saved.adhanPrefs?.voiceId === "adhan-3" ? "adhan-3" : saved.adhanPrefs?.voiceId === "adhan-2" ? "adhan-2" : "adhan-1",
             prayers: { ...defaultStore.adhanPrefs.prayers, ...(saved.adhanPrefs?.prayers ?? {}) },
           },
           notificationPrefs: {
