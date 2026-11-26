@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { Linking, Modal, Platform, Pressable, ScrollView, Text, View } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useEffect } from "react";
 import { ActivityIndicator } from "react-native";
 import { setAudioModeAsync, useAudioPlayer, useAudioPlayerStatus } from "expo-audio";
