@@ -5,6 +5,31 @@ import { useAppStore } from "@/lib/app-store";
 import { useRouter, useSegments } from "expo-router";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 
+/** Shared visual scale. Keep palette decisions in useSulyTheme; these tokens only
+ * standardize rhythm, typography and touch targets across every screen. */
+export const SulyMetrics = {
+  pageHorizontal: 18,
+  pageTop: 8,
+  pageBottom: 150,
+  sectionGap: 12,
+  cardRadius: 20,
+  cardPadding: 16,
+  controlRadius: 14,
+  controlHeight: 46,
+  iconSmall: 18,
+  iconDefault: 22,
+  iconLarge: 26,
+} as const;
+
+export const SulyType = {
+  pageTitle: 25,
+  sectionTitle: 18,
+  cardTitle: 16,
+  body: 15,
+  secondary: 13,
+  caption: 11,
+} as const;
+
 export function useSulyTheme() {
   const deviceScheme = useColorScheme();
   const { store } = useAppStore();
@@ -19,7 +44,7 @@ export function AppScreen({ children, noBottomSpace = false }: { children: React
   const { colors } = useSulyTheme();
   return (
     <SafeAreaView edges={["top", "left", "right"]} style={{ flex: 1, backgroundColor: colors.background }}>
-      <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingHorizontal: 18, paddingTop: 8, paddingBottom: noBottomSpace ? 24 : 150, gap: 14 }}>
+      <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingHorizontal: SulyMetrics.pageHorizontal, paddingTop: SulyMetrics.pageTop, paddingBottom: noBottomSpace ? 24 : SulyMetrics.pageBottom, gap: SulyMetrics.sectionGap }}>
         {children}
       </ScrollView>
     </SafeAreaView>
@@ -32,21 +57,21 @@ export function ScreenHeading({ title, subtitle, action }: { title: string; subt
   const segments = useSegments();
   const isTabPage = segments[0] === "(tabs)";
   return (
-    <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingTop: 4, paddingBottom: 8, gap: 8 }}>
+    <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingTop: 4, paddingBottom: 6, gap: 10, minHeight: 48 }}>
       <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
         {!isTabPage ? <>
-          <Pressable onPress={() => router.canGoBack() ? router.back() : router.replace("/")} accessibilityRole="button" accessibilityLabel="رجوع للصفحة السابقة" style={{ width: 40, height: 40, borderRadius: 13, backgroundColor: colors.card, alignItems: "center", justifyContent: "center" }}>
-            <MaterialCommunityIcons name="arrow-left" size={22} color={colors.gold} />
+          <Pressable onPress={() => router.canGoBack() ? router.back() : router.replace("/")} accessibilityRole="button" accessibilityLabel="رجوع للصفحة السابقة" style={{ width: 38, height: 38, borderRadius: 13, backgroundColor: colors.card, alignItems: "center", justifyContent: "center" }}>
+            <MaterialCommunityIcons name="arrow-left" size={21} color={colors.gold} />
           </Pressable>
-          <Pressable onPress={() => router.replace("/")} accessibilityRole="button" accessibilityLabel="العودة للرئيسية" style={{ width: 40, height: 40, borderRadius: 13, backgroundColor: colors.card, alignItems: "center", justifyContent: "center" }}>
-            <MaterialCommunityIcons name="home-outline" size={21} color={colors.gold} />
+          <Pressable onPress={() => router.replace("/")} accessibilityRole="button" accessibilityLabel="العودة للرئيسية" style={{ width: 38, height: 38, borderRadius: 13, backgroundColor: colors.card, alignItems: "center", justifyContent: "center" }}>
+            <MaterialCommunityIcons name="home-outline" size={20} color={colors.gold} />
           </Pressable>
         </> : null}
         {action}
       </View>
-      <View style={{ flex: 1, alignItems: "flex-end" }}>
-        <Text style={{ color: colors.text, fontSize: 28, fontWeight: "800", textAlign: "right" }}>{title}</Text>
-        {subtitle ? <Text style={{ color: colors.muted, fontSize: 14, marginTop: 4, textAlign: "right" }}>{subtitle}</Text> : null}
+      <View style={{ flex: 1, alignItems: "flex-end", gap: 2 }}>
+        <Text style={{ color: colors.text, fontSize: SulyType.pageTitle, fontWeight: "800", textAlign: "right", letterSpacing: -0.3 }}>{title}</Text>
+        {subtitle ? <Text style={{ color: colors.muted, fontSize: SulyType.secondary, lineHeight: 19, textAlign: "right" }}>{subtitle}</Text> : null}
       </View>
     </View>
   );
@@ -54,35 +79,35 @@ export function ScreenHeading({ title, subtitle, action }: { title: string; subt
 
 export function SulyCard({ children, style }: { children: ReactNode; style?: ViewStyle }) {
   const { colors } = useSulyTheme();
-  return <View style={[{ backgroundColor: colors.surface, borderColor: colors.border, borderWidth: 1, borderRadius: 22, padding: 16, gap: 10 }, style]}>{children}</View>;
+  return <View style={[{ backgroundColor: colors.surface, borderColor: colors.border, borderWidth: 1, borderRadius: SulyMetrics.cardRadius, padding: SulyMetrics.cardPadding, gap: 12 }, style]}>{children}</View>;
 }
 
 export function SectionTitle({ children, trailing }: { children: string; trailing?: ReactNode }) {
   const { colors } = useSulyTheme();
-  return <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginTop: 4 }}><Text style={{ color: colors.text, fontSize: 19, fontWeight: "700", textAlign: "right" }}>{children}</Text>{trailing}</View>;
+  return <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginTop: 3, minHeight: 30 }}><Text style={{ color: colors.text, fontSize: SulyType.sectionTitle, fontWeight: "800", textAlign: "right" }}>{children}</Text>{trailing}</View>;
 }
 
 export function SulyButton({ title, onPress, secondary = false, disabled = false }: { title: string; onPress: () => void; secondary?: boolean; disabled?: boolean }) {
   const { colors } = useSulyTheme();
   return (
-    <Pressable onPress={onPress} disabled={disabled} accessibilityRole="button" style={({ pressed }) => ({ minHeight: 48, borderRadius: 16, paddingHorizontal: 16, justifyContent: "center", alignItems: "center", backgroundColor: secondary ? colors.card : colors.gold, borderWidth: secondary ? 1 : 0, borderColor: colors.border, opacity: disabled ? 0.45 : pressed ? 0.78 : 1 })}>
-      <Text style={{ color: secondary ? colors.text : "#17392F", fontSize: 16, fontWeight: "700", textAlign: "center" }}>{title}</Text>
+    <Pressable onPress={onPress} disabled={disabled} accessibilityRole="button" style={({ pressed }) => ({ minHeight: SulyMetrics.controlHeight, borderRadius: SulyMetrics.controlRadius, paddingHorizontal: 15, justifyContent: "center", alignItems: "center", backgroundColor: secondary ? colors.card : colors.gold, borderWidth: secondary ? 1 : 0, borderColor: colors.border, opacity: disabled ? 0.42 : pressed ? 0.76 : 1 })}>
+      <Text style={{ color: secondary ? colors.text : "#17392F", fontSize: SulyType.body, fontWeight: "700", textAlign: "center" }}>{title}</Text>
     </Pressable>
   );
 }
 
 export function SulyInput({ label, value, onChangeText, placeholder, keyboardType = "default", ...props }: TextInputProps & { label: string; value: string; onChangeText: (value: string) => void }) {
   const { colors } = useSulyTheme();
-  return <View style={{ gap: 6 }}><Text style={{ color: colors.muted, fontSize: 13, textAlign: "right" }}>{label}</Text><TextInput {...props} value={value} onChangeText={onChangeText} placeholder={placeholder} keyboardType={keyboardType} placeholderTextColor={colors.muted} style={{ minHeight: 46, borderRadius: 13, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.field, color: colors.text, paddingHorizontal: 12, textAlign: "right", fontSize: 16 }} /></View>;
+  return <View style={{ gap: 6 }}><Text style={{ color: colors.muted, fontSize: SulyType.secondary, textAlign: "right" }}>{label}</Text><TextInput {...props} value={value} onChangeText={onChangeText} placeholder={placeholder} keyboardType={keyboardType} placeholderTextColor={colors.muted} style={[{ minHeight: SulyMetrics.controlHeight, borderRadius: SulyMetrics.controlRadius, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.field, color: colors.text, paddingHorizontal: 13, textAlign: "right", fontSize: SulyType.body }, props.style]} /></View>;
 }
 
 export function ProgressBar({ value, max, color }: { value: number; max: number; color?: string }) {
   const { colors } = useSulyTheme();
   const ratio = max > 0 ? Math.max(0, Math.min(1, value / max)) : 0;
-  return <View style={{ height: 9, overflow: "hidden", borderRadius: 99, backgroundColor: colors.border, flexDirection: "row" }}><View style={{ width: `${ratio * 100}%`, height: "100%", backgroundColor: color ?? colors.accent, borderRadius: 99 }} /></View>;
+  return <View accessibilityRole="progressbar" accessibilityValue={{ min: 0, max, now: Math.min(value, max) }} style={{ height: 8, overflow: "hidden", borderRadius: 99, backgroundColor: colors.border, flexDirection: "row" }}><View style={{ width: `${ratio * 100}%`, height: "100%", backgroundColor: color ?? colors.accent, borderRadius: 99 }} /></View>;
 }
 
 export function TinyTag({ title, selected = false, onPress }: { title: string; selected?: boolean; onPress?: () => void }) {
   const { colors } = useSulyTheme();
-  return <Pressable onPress={onPress} style={{ borderRadius: 999, borderWidth: 1, borderColor: selected ? colors.gold : colors.border, backgroundColor: selected ? colors.card : "transparent", paddingVertical: 8, paddingHorizontal: 12 }}><Text style={{ color: selected ? colors.gold : colors.text, fontWeight: selected ? "700" : "500", textAlign: "center" }}>{title}</Text></Pressable>;
+  return <Pressable onPress={onPress} accessibilityRole={onPress ? "button" : undefined} accessibilityState={onPress ? { selected } : undefined} style={({ pressed }) => ({ minHeight: 36, justifyContent: "center", borderRadius: 999, borderWidth: 1, borderColor: selected ? colors.gold : colors.border, backgroundColor: selected ? colors.card : "transparent", paddingVertical: 7, paddingHorizontal: 12, opacity: pressed ? 0.75 : 1 })}><Text style={{ color: selected ? colors.gold : colors.text, fontSize: 13, fontWeight: selected ? "700" : "500", textAlign: "center" }}>{title}</Text></Pressable>;
 }
