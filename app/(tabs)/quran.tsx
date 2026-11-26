@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Alert } from "react-native";
 import { Pressable, Text, View } from "react-native";
 import { useRouter, type Href } from "expo-router";
 import { AppScreen, ScreenHeading, SulyButton, SulyCard, SulyInput, TinyTag, useSulyTheme, ProgressBar } from "@/components/suly-ui";
@@ -70,6 +71,14 @@ export default function QuranScreen() {
       };
     });
   };
+  const startNewKhatma = () => Alert.alert(
+    "بدء ختمة جديدة",
+    "سيُصفّر تقدم الختمة الحالية فقط، مع الاحتفاظ بآخر صفحة والعلامة المرجعية وسجل قراءتك اليومي.",
+    [
+      { text: "إلغاء", style: "cancel" },
+      { text: "ابدأ ختمة جديدة", style: "destructive", onPress: () => updateStore((current) => ({ ...current, quranReader: { ...current.quranReader, khatmaPages: [] } })) },
+    ],
+  );
   const goalCaption = store.quranPlan.mode === "surah" ? `${store.quranPlan.surahName || "المقطع المحدد"}${store.quranPlan.passage ? ` · ${store.quranPlan.passage}` : ""}` : `هدفك اليومي ${store.quranPlan.target} ${selectedMode.unit}`;
 
   return (
@@ -82,6 +91,7 @@ export default function QuranScreen() {
         <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}><Text style={{ color: colors.muted }}>إنجاز الختمة الحالية</Text><Text style={{ color: colors.text, fontWeight: "800" }}>{khatmaPages} / 604 صفحة</Text></View>
         <ProgressBar value={khatmaPages} max={604} color={colors.gold} />
         <Text style={{ color: colors.muted, textAlign: "right", fontSize: 12 }}>{khatmaPercent}% من صفحات المصحف سُجلت في ختمتك الحالية. تكرار الصفحة لا يزيد العدد مرتين.</Text>
+        {khatmaPages > 0 ? <SulyButton title="بدء ختمة جديدة" secondary onPress={startNewKhatma} /> : null}
         <Text style={{ color: colors.muted, textAlign: "right" }}>ورد اليوم</Text>
         <Text style={{ color: colors.text, textAlign: "right", fontSize: 19, fontWeight: "700" }}>{goalCaption}</Text>
         <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}><Text style={{ color: colors.muted }}>متبقي {remaining} {selectedMode.unit}</Text><Text style={{ color: colors.text, fontSize: 27, fontWeight: "800" }}>{progress} / {store.quranPlan.target}</Text></View>
