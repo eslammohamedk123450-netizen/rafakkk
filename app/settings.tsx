@@ -23,6 +23,7 @@ const CITIES = [
 const ADHAN_VOICES = [
   { id: "adhan-1", label: "الأذان 1" },
   { id: "adhan-2", label: "الأذان 2" },
+  { id: "adhan-3", label: "الأذان 3" },
 ] as const;
 
 const MESSAGE_CATEGORIES = [
