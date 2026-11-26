@@ -36,6 +36,7 @@ function parseStoryReferences(value: string) {
         } else {
           const bare = text.match(/^(\d+):(\d+)(?:\s*[–-]\s*(?:(\d+):)?(\d+))?$/);
           const verseOnly = text.match(/^الآي(?:ة|ات)\s*(\d+)(?:\s*[–-]\s*(\d+))?$/);
+          const inheritedRange = text.match(/^(\d+)(?:\s*[–-]\s*(\d+))?$/);
           if (bare) {
             const surah = QURAN_SURAHS.find((item) => item.id === Number(bare[1]));
             if (!surah) return null;
@@ -44,9 +45,10 @@ function parseStoryReferences(value: string) {
             endAyah = Number(bare[4] ?? bare[2]);
             return { label: text, surahId: surah.id, startAyah, endAyah };
           }
-          if (verseOnly && previousSurahId) {
-            startAyah = Number(verseOnly[1]);
-            endAyah = Number(verseOnly[2] ?? verseOnly[1]);
+          if ((verseOnly || inheritedRange) && previousSurahId) {
+            const range = verseOnly ?? inheritedRange!;
+            startAyah = Number(range[1]);
+            endAyah = Number(range[2] ?? range[1]);
             return { label: text, surahId: previousSurahId, startAyah, endAyah };
           }
           return null;
