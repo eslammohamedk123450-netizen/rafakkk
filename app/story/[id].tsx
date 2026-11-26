@@ -19,7 +19,6 @@ export default function StoryReaderScreen() {
   const contextChapter = story?.chapters.find((item) => item.title.includes("الخلفية والأهل والسياق"));
   const lessonsChapter = story?.chapters.find((item) => item.title.includes("الدروس المستفادة"));
   const readingChapters = story ? story.chapters.filter((item) => item !== contextChapter && item !== lessonsChapter) : [];
-  const savedReadingChapter = story ? Math.max(0, (store.storyProgress[story.id] ?? 0) - (contextChapter ? 1 : 0)) : 0;
   useEffect(() => {
     if (story) setChapterIndex(Math.min(Math.max(0, (store.storyProgress[story.id] ?? 0) - (contextChapter ? 1 : 0)), readingChapters.length - 1));
   }, [story?.id, store.storyProgress, readingChapters.length, contextChapter]);
