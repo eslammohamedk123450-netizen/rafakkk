@@ -1042,7 +1042,7 @@ for (const story of ISLAMIC_STORIES) {
       { title: "اللقاء والاعتراف ولمّ شمل الأسرة", body: "عرف الإخوة حقيقة يوسف واعترفوا بخطئهم، فاختار العفو وأرسل قميصه إلى أبيه. اجتمعت الأسرة وتحققت الرؤيا القديمة، وختم يوسف قصته بالدعاء أن يتوفاه الله مسلمًا ويلحقه بالصالحين. النهاية عودة للأسرة ورد للفضل إلى الله بدل الانتقام.", reference: "سورة يوسف، الآيات 80–101" }
     );
   }
-  if (!story.chapters.some((chapter) => chapter.title.includes("الخلفية التاريخية"))) {
+  if (!story.chapters.some((chapter) => chapter.title.includes("الخلفية"))) {
     const context = STORY_CONTEXT[story.id];
     if (context) story.chapters.unshift({
       title: "الخلفية التاريخية: الأهل والزمان والمكان",
