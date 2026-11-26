@@ -255,6 +255,17 @@ export default function SettingsScreen() {
         <SulyButton title="حفظ تفضيلات الرسائل" onPress={saveMessageSettings} />
       </SulyCard>
 
+      <SulyCard>
+        <Pressable onPress={() => router.push("/licenses")} style={{ flexDirection: "row-reverse", alignItems: "center", justifyContent: "space-between" }}>
+          <MaterialCommunityIcons name="chevron-left" size={22} color={colors.gold} />
+          <View style={{ flex: 1, gap: 3 }}>
+            <Text style={{ color: colors.text, fontWeight: "700", textAlign: "right" }}>حول التطبيق والتراخيص</Text>
+            <Text style={{ color: colors.muted, textAlign: "right", fontSize: 12 }}>معلومات المصادر وحقوق الاستخدام في مكان واحد</Text>
+          </View>
+          <MaterialCommunityIcons name="file-document-outline" size={21} color={colors.gold} />
+        </Pressable>
+      </SulyCard>
+
       <SulyCard style={{ backgroundColor: colors.card }}><Text style={{ color: colors.text, fontWeight: "700", textAlign: "right" }}>الأذونات والخصوصية</Text><Text style={{ color: colors.muted, textAlign: "right", lineHeight: 21 }}>لا نرفع سجلات الصلاة أو الورد أو الأذكار إلى خادم. الموقع يُستخدم محليًا لحساب المواقيت. يمكنك تغيير أذونات الموقع والإشعارات من إعدادات هاتفك.</Text><SulyButton title="فتح إعدادات الهاتف" secondary onPress={() => Linking.openSettings()} /></SulyCard>
     </AppScreen>
   );
