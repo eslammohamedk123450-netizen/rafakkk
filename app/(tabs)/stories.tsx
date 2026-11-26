@@ -28,7 +28,7 @@ export default function StoriesScreen() {
         <View style={{ padding: 18, gap: 8 }}>
           <Text style={{ color: colors.gold, fontSize: 12, fontWeight: "800", textAlign: "right" }}>مكتبة الحكايات الإسلامية</Text>
           <Text style={{ color: colors.text, fontSize: 21, fontWeight: "800", textAlign: "right" }}>افتح كتابًا… وعِش الرحلة صفحةً صفحة</Text>
-          <Text style={{ color: colors.muted, fontSize: 13, lineHeight: 22, textAlign: "right" }}>سرد متصل يبدأ من البيئة والأسرة والناس، ويمضي مع أحداث القصة حتى نهايتها، مع حفظ موضع القراءة والمراجع.</Text>
+          <Text style={{ color: colors.muted, fontSize: 13, lineHeight: 22, textAlign: "right" }}>سرد متصل يأخذك مع أحداث القصة حتى نهايتها، مع حفظ موضع القراءة لتعود إليه وقتما تحب.</Text>
         </View>
         <View style={{ height: 6, backgroundColor: colors.gold, opacity: 0.75 }} />
       </SulyCard>
@@ -43,8 +43,8 @@ export default function StoriesScreen() {
           return (
             <Pressable key={story.id} onPress={() => setSelectedStoryId(story.id)} accessibilityRole="button">
               <SulyCard style={{ padding: 0, overflow: "hidden", gap: 0 }}>
-                <View style={{ width: "100%", minHeight: 205, backgroundColor: colors.surface, alignItems: "center", justifyContent: "center", gap: 8, borderBottomWidth: 1, borderBottomColor: colors.border }}>
-                  <MaterialCommunityIcons name="book-open-page-variant" size={48} color={colors.gold} />
+                <View style={{ width: "100%", minHeight: 118, backgroundColor: colors.surface, alignItems: "center", justifyContent: "center", gap: 8, borderBottomWidth: 1, borderBottomColor: colors.border }}>
+                  <MaterialCommunityIcons name="book-open-page-variant" size={38} color={colors.gold} />
                   <Text style={{ color: colors.muted, fontSize: 12 }}>من مكتبة رفيقك · محتوى محفوظ على الجهاز</Text>
                 </View>
                 <View style={{ padding: 15, gap: 8 }}>
@@ -67,7 +67,7 @@ export default function StoriesScreen() {
           );
         })}
       </View>
-      <Text style={{ color: colors.muted, fontSize: 11, textAlign: "center", lineHeight: 19 }}>الصور للتعبير عن الأماكن والطبيعة والعمارة فقط، ولا تصوّر الأنبياء أو الصحابة. اقرأ المراجع للتحقق من النصوص والتفاصيل.</Text>
+      <Text style={{ color: colors.muted, fontSize: 11, textAlign: "center", lineHeight: 19 }}>تُعرض القصص بصياغة واضحة، وتظهر الآيات المرتبطة بها داخل المصحف عند توفرها.</Text>
     </AppScreen>
   );
 }
