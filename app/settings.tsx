@@ -6,7 +6,7 @@ import { useRouter } from "expo-router";
 import { AppScreen, ScreenHeading, SulyButton, SulyCard, SulyInput, TinyTag, useSulyTheme } from "@/components/suly-ui";
 import { useAppStore, type PrayerId } from "@/lib/app-store";
 import { CALCULATION_METHODS, PRAYER_LABELS } from "@/lib/prayer/calculations";
-import { requestNotificationPermission } from "@/lib/notifications";
+import { requestAdhanPermissions, requestNotificationPermission } from "@/lib/notifications";
 
 const CITIES = [
   { name: "القاهرة", latitude: "30.0444", longitude: "31.2357", timeZone: "Africa/Cairo" },
@@ -116,6 +116,23 @@ export default function SettingsScreen() {
     updateStore((current) => ({ ...current, notificationPrefs: { ...current.notificationPrefs, enabled: enabling } }));
   };
 
+  const toggleAdhan = async () => {
+    const enabling = !store.adhanPrefs.enabled;
+    if (enabling && !store.location) {
+      setNotice("اختر موقعك أولًا حتى نحسب مواقيت الأذان.");
+      return;
+    }
+    if (enabling) {
+      const granted = await requestAdhanPermissions();
+      if (!granted) {
+        setNotice("يلزم السماح بالإشعارات ومنح إذن المنبهات الدقيقة من إعدادات أندرويد حتى نطلب تشغيل الأذان في موعده.");
+        return;
+      }
+    }
+    updateStore((current) => ({ ...current, adhanPrefs: { ...current.adhanPrefs, enabled: enabling } }));
+    setNotice(enabling ? "تم تفعيل جدولة الأذان حسب الصوت والصلوات المختارة." : "تم إيقاف الأذان التلقائي.");
+  };
+
   const toggleGentleMessages = async () => {
     const enabling = !store.notificationPrefs.gentleMessages;
     if (enabling) {
@@ -182,9 +199,9 @@ export default function SettingsScreen() {
 
       <SulyCard>
         <Text style={{ color: colors.text, fontSize: 18, fontWeight: "700", textAlign: "right" }}>المؤذنون والأذان</Text>
-        <Text style={{ color: colors.muted, textAlign: "right", lineHeight: 21 }}>اختر التسجيل الذي تفضله، واستمع إليه قبل اعتماده. ربط التشغيل التلقائي بمواقيت الصلاة خطوة منفصلة.</Text>
+        <Text style={{ color: colors.muted, textAlign: "right", lineHeight: 21 }}>اختر التسجيل الذي تفضله، وسيُستخدم نفس التسجيل عند موعد كل صلاة تختارها.</Text>
         <View style={{ flexDirection: "row-reverse", flexWrap: "wrap", gap: 7 }}>
-          <TinyTag title={store.adhanPrefs.enabled ? "الأذان الصوتي مفعّل" : "الأذان الصوتي متوقف"} selected={store.adhanPrefs.enabled} onPress={() => updateStore((current) => ({ ...current, adhanPrefs: { ...current.adhanPrefs, enabled: !current.adhanPrefs.enabled } }))} />
+          <TinyTag title={store.adhanPrefs.enabled ? "الأذان الصوتي مفعّل" : "الأذان الصوتي متوقف"} selected={store.adhanPrefs.enabled} onPress={toggleAdhan} />
         </View>
         <Text style={{ color: colors.text, fontWeight: "700", textAlign: "right" }}>اختيار صوت الأذان</Text>
         <Text style={{ color: colors.muted, textAlign: "right", lineHeight: 21 }}>اختر أحد التسجيلين واستمع إليه قبل اعتماده. أسماء التسجيلات معروضة بأرقام فقط.</Text>
@@ -197,7 +214,7 @@ export default function SettingsScreen() {
         </View>
         <Text style={{ color: colors.text, fontWeight: "700", textAlign: "right" }}>الصلاة التي يشغّل عندها الأذان</Text>
         <View style={{ flexDirection: "row-reverse", flexWrap: "wrap", gap: 7 }}>{(Object.keys(PRAYER_LABELS) as PrayerId[]).map((id) => <TinyTag key={id} title={PRAYER_LABELS[id]} selected={store.adhanPrefs.prayers[id]} onPress={() => updateStore((current) => ({ ...current, adhanPrefs: { ...current.adhanPrefs, prayers: { ...current.adhanPrefs.prayers, [id]: !current.adhanPrefs.prayers[id] } } }))} />)}</View>
-        <Text style={{ color: colors.muted, textAlign: "right", fontSize: 12 }}>يمكنك تجربة التسجيلين من صفحة اختيار الصوت. يظهر كل تسجيل برقم فقط دون اسم المؤذن أو البلد.</Text>
+        <Text style={{ color: colors.muted, textAlign: "right", fontSize: 12 }}>يُجدول الأذان محليًا على أندرويد للأيام القادمة، ويُعاد تحديثه عند تغيير الموقع أو طريقة الحساب أو الصوت. يلزم إذن الإشعارات وإذن المنبهات الدقيقة. قد تختلف الدقة حسب إصدار أندرويد وسياسات الشركة المصنّعة.</Text>
       </SulyCard>
 
       <SulyCard>
