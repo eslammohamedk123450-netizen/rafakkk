@@ -52,8 +52,8 @@ export async function getTafsirAyah(surah: number, ayah: number): Promise<Tafsir
 /** Convert source HTML formatting to safe React Native text while retaining its wording. */
 export function tafsirDisplayText(value: string): string {
   return value
-    .replace(/<br\\s*\\/?\\s*>/gi, "\n")
-    .replace(/<\\/(p|div|li)>/gi, "\\n")
+    .replace(/<br\s*\/?\s*>/gi, "\n")
+    .replace(/<\/(p|div|li)>/gi, "\n")
     .replace(/<[^>]*>/g, "")
     .replace(/&nbsp;/g, " ")
     .replace(/&amp;/g, "&")
