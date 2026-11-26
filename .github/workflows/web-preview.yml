@@ -32,6 +32,10 @@ jobs:
           node-version: 22
       - name: Install dependencies
         run: pnpm install --no-frozen-lockfile
+      - name: TypeScript validation
+        run: pnpm check
+      - name: Automated tests
+        run: pnpm test
       - name: Save updated pnpm lockfile
         run: |
           if ! git diff --quiet -- pnpm-lock.yaml; then
