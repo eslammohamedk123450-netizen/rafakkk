@@ -6,15 +6,10 @@ import { useSulyTheme } from "@/components/suly-ui";
 
 type NavItem = { route: string; label: string; icon: React.ComponentProps<typeof MaterialCommunityIcons>["name"] };
 type NavigationGridProps = { state: any; navigation: any };
-const topRow: NavItem[] = [
+const bottomItems: NavItem[] = [
   { route: "quran", label: "القرآن", icon: "book-open-page-variant-outline" },
   { route: "prayer", label: "الصلاة", icon: "clock-time-four-outline" },
   { route: "index", label: "الرئيسية", icon: "home-outline" },
-];
-const secondRow: (NavItem | null)[] = [
-  { route: "stories", label: "القصص", icon: "book-open-variant" },
-  { route: "achievements", label: "إنجازاتي", icon: "chart-box-outline" },
-  { route: "adhkar", label: "الأذكار", icon: "hands-pray" },
 ];
 
 function NavigationGrid({ state, navigation }: NavigationGridProps) {
@@ -44,8 +39,7 @@ function NavigationGrid({ state, navigation }: NavigationGridProps) {
 
   return (
     <View style={{ backgroundColor: colors.background, borderTopWidth: 1, borderTopColor: colors.border, paddingHorizontal: 10, paddingTop: 8, paddingBottom: Math.max(insets.bottom, 9), gap: 7, borderTopLeftRadius: 24, borderTopRightRadius: 24 }}>
-      <View style={{ flexDirection: "row", direction: "ltr", gap: 7 }}>{topRow.map(renderItem)}</View>
-      <View style={{ flexDirection: "row", direction: "ltr", gap: 7 }}>{secondRow.map((item, index) => item ? renderItem(item) : <View key={`empty-${index}`} style={{ flex: 1 }} />)}</View>
+      <View style={{ flexDirection: "row", direction: "ltr", gap: 7 }}>{bottomItems.map(renderItem)}</View>
     </View>
   );
 }
