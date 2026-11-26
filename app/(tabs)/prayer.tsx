@@ -39,6 +39,15 @@ export default function PrayerScreen() {
 
   return (
     <AppScreen>
+      <SulyCard style={{ backgroundColor: colors.card }}>
+        <Pressable onPress={() => router.push("/qibla")} style={{ flexDirection: "row-reverse", alignItems: "center", justifyContent: "space-between", paddingVertical: 5 }}>
+          <View style={{ flexDirection: "row-reverse", alignItems: "center", gap: 10 }}>
+            <MaterialCommunityIcons name="compass-outline" size={25} color={colors.gold} />
+            <View><Text style={{ color: colors.text, fontWeight: "800", textAlign: "right" }}>بوصلة القبلة</Text><Text style={{ color: colors.muted, fontSize: 12, textAlign: "right" }}>حدد اتجاه الكعبة باستخدام حساس الهاتف</Text></View>
+          </View>
+          <MaterialCommunityIcons name="chevron-left" size={22} color={colors.gold} />
+        </Pressable>
+      </SulyCard>
       <ScreenHeading title="الصلاة" subtitle="سجلّك اليومي، كما تختار أنت" action={<Pressable onPress={() => router.push("/settings")} style={{ width: 42, height: 42, borderRadius: 14, backgroundColor: colors.card, alignItems: "center", justifyContent: "center" }}><MaterialCommunityIcons name="cog-outline" size={22} color={colors.gold} /></Pressable>} />
       <SulyCard style={{ backgroundColor: colors.card }}>
         <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
