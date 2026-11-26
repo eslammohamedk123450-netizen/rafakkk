@@ -1,4 +1,4 @@
-import { Platform } from "react-native";
+import { Linking, Platform } from "react-native";
 import * as Notifications from "expo-notifications";
 import type { PrayerId } from "@/lib/app-store";
 import { PRAYER_LABELS, type DailyPrayerTimes } from "@/lib/prayer/calculations";
@@ -48,10 +48,12 @@ export async function requestAdhanPermissions() {
   const notificationsGranted = await requestNotificationPermission();
   if (!notificationsGranted) return false;
   if (Platform.OS === "android") {
-    const exact = await Notifications.getExactAlarmPermissionsAsync();
-    if (!exact.granted) {
-      const requested = await Notifications.requestExactAlarmPermissionsAsync();
-      if (!requested.granted) return false;
+    if (Number(Platform.Version) >= 31) {
+      try {
+        await Linking.sendIntent("android.settings.REQUEST_SCHEDULE_EXACT_ALARM");
+      } catch {
+        return false;
+      }
     }
   }
   return true;
@@ -83,7 +85,6 @@ export async function reschedulePrayerNotifications(
   if (!permission.granted) return;
 
   await prepareNotificationChannel();
-  const exactPermission = Platform.OS === "android" ? await Notifications.getExactAlarmPermissionsAsync() : { granted: false };
   const now = Date.now();
   const schedules: Array<Promise<string>> = [];
   for (const day of days) {
@@ -126,7 +127,7 @@ export async function reschedulePrayerNotifications(
           trigger: {
             type: Notifications.SchedulableTriggerInputTypes.DATE,
             date: prayerTime,
-            ...(Platform.OS === "android" ? { channelId: "suly-" + voiceId, delivery: exactPermission.granted ? "alarmClock" : "bestEffort" } : {}),
+            ...(Platform.OS === "android" ? { channelId: "suly-" + voiceId } : {}),
           },
         }));
       }
