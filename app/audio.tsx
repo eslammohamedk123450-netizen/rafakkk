@@ -93,7 +93,7 @@ export default function AudioScreen() {
           </SulyCard>
           {reciter?.moshaf?.length ? <SulyCard>
             <Text style={{ color: colors.text, fontWeight: "700", textAlign: "right" }}>الرواية / المصحف الصوتي</Text>
-            <View style={{ flexDirection: "row-reverse", flexWrap: "wrap", gap: 7 }}>{reciter.moshaf.map((edition) => <TinyTag key={edition.id} title={edition.name} selected={selectedMoshaf === edition.id} onPress={() => setSelectedMoshaf(edition.id} />)}</View>
+            <View style={{ flexDirection: "row-reverse", flexWrap: "wrap", gap: 7 }}>{reciter.moshaf.map((edition) => <TinyTag key={edition.id} title={edition.name} selected={selectedMoshaf === edition.id} onPress={() => setSelectedMoshaf(edition.id)} />)}</View>
           </SulyCard> : null}
           <SulyCard>
             <Text style={{ color: colors.text, fontWeight: "800", fontSize: 18, textAlign: "right" }}>اختر سورة</Text>
