@@ -162,8 +162,8 @@ export function StoryReaderContent({ storyId, onBack, onOpenQuran }: { storyId: 
         </View>
         <ProgressBar value={activeIndex + 1} max={Math.max(1, readingChapters.length)} color={colors.gold} />
         <Text style={{ color: colors.text, fontSize: 22, fontWeight: "800", textAlign: "right" }}>{chapter?.title}</Text>
-        <Text style={{ color: colors.text, fontSize: 17, lineHeight: 34, textAlign: "right" }}>{chapter?.body}</Text>
-        <SulyButton title={showLessons ? "إخفاء الدروس المستفادة من هذه الصفحة" : "الدروس المستفادة من هذا الفصل"} secondary disabled={!lessonsText} onPress={() => setShowLessons((value) => !value)} />
+        <Text style={{ color: colors.text, fontSize: 19, lineHeight: 39, textAlign: "right" }}>{chapter?.body}</Text>
+        <SulyButton title={showLessons ? "إخفاء الدروس المستفادة من هذه الصفحة" : "الدروس المستفادة من هذه الصفحة"} secondary disabled={!lessonsText} onPress={() => setShowLessons((value) => !value)} />
         {showLessons && lessonsText ? <View style={{ backgroundColor: colors.surface, borderRadius: 14, padding: 13, gap: 8 }}>
           <Text style={{ color: colors.gold, fontWeight: "900", fontSize: 17, textAlign: "right" }}>نتعلم من هذا الجزء</Text>
           <Text style={{ color: colors.text, fontSize: 15, lineHeight: 29, textAlign: "right" }}>{lessonsText}</Text>
