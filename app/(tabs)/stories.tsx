@@ -1,13 +1,15 @@
 import { useMemo, useState } from "react";
 import { Pressable, Text, View } from "react-native";
+import { useRouter } from "expo-router";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { AppScreen, ScreenHeading, SulyCard, TinyTag, ProgressBar, useSulyTheme } from "@/components/suly-ui";
 import { ISLAMIC_STORIES, STORY_CATEGORIES } from "@/lib/content/stories";
 import { useAppStore } from "@/lib/app-store";
-import StoryReaderScreen from "../story/[id]";
+import { StoryReaderContent } from "../story/[id]";
 
 export default function StoriesScreen() {
   const { store } = useAppStore();
+  const router = useRouter();
   const { colors } = useSulyTheme();
   const [category, setCategory] = useState<string>("all");
   const [selectedStoryId, setSelectedStoryId] = useState<string | null>(null);
@@ -16,7 +18,7 @@ export default function StoriesScreen() {
     [category],
   );
   if (selectedStoryId) {
-    return <StoryReaderScreen storyId={selectedStoryId} onBack={() => setSelectedStoryId(null)} />;
+    return <StoryReaderContent storyId={selectedStoryId} onBack={() => setSelectedStoryId(null)} onOpenQuran={(surahId, ayah) => router.push(`/quran-reader?surah=${surahId}&ayah=${ayah}` as any)} />;
   }
 
   return (
