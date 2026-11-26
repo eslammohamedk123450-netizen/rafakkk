@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { AppState, Pressable, Text, View } from "react-native";
+import { AppState, Pressable, ScrollView, Text, View } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { AppScreen, ScreenHeading, SectionTitle, SulyButton, SulyCard, useSulyTheme, ProgressBar } from "@/components/suly-ui";
@@ -9,11 +9,11 @@ import { dateFromKey, shiftDateKey } from "@/lib/prayer/dates";
 import { calculateQuranDayProgress } from "@/lib/quran/progress";
 
 function formatRemaining(target: Date, now: Date) {
-  const totalMinutes = Math.max(0, Math.ceil((target.getTime() - now.getTime()) / 60_000));
-  const hours = Math.floor(totalMinutes / 60);
-  const minutes = totalMinutes % 60;
-  if (hours > 0) return `متبقي ${hours} ساعة و${minutes} دقيقة`;
-  return `متبقي ${minutes} دقيقة`;
+  const totalSeconds = Math.max(0, Math.floor((target.getTime() - now.getTime()) / 1000));
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+  return `متبقي ${String(hours).padStart(2,"0")}:${String(minutes).padStart(2,"0")}:${String(seconds).padStart(2,"0")}`;
 }
 
 export default function HomeScreen() {
@@ -45,11 +45,13 @@ export default function HomeScreen() {
     ? calculatePrayerTimes(store.location.latitude, store.location.longitude, dateFromKey(today), store.calculationMethod, store.asrSchool)
     : null;
   const [now, setNow] = useState(new Date());
+  const [showPrayerTimes, setShowPrayerTimes] = useState(false);
+  const [showWeeklyLog, setShowWeeklyLog] = useState(false);
   useEffect(() => {
     let timer: ReturnType<typeof setInterval> | undefined;
     const start = () => {
       if (timer) clearInterval(timer);
-      timer = setInterval(() => setNow(new Date()), 60_000);
+      timer = setInterval(() => setNow(new Date()), 1000);
     };
     const stop = () => {
       if (timer) clearInterval(timer);
@@ -72,6 +74,15 @@ export default function HomeScreen() {
   const nextPrayerToday = prayerTimes ? getNextPrayer(prayerTimes, now) : null;
   const tomorrowTimes = store.location ? calculatePrayerTimes(store.location.latitude, store.location.longitude, dateFromKey(shiftDateKey(today, 1)), store.calculationMethod, store.asrSchool) : null;
   const nextPrayer = nextPrayerToday ?? (tomorrowTimes ? { id: "fajr" as const, name: PRAYER_LABELS.fajr, time: tomorrowTimes.fajr } : null);
+  const upcomingPrayers = useMemo(() => {
+    if (!prayerTimes) return [];
+    const ids = Object.keys(PRAYER_LABELS) as PrayerId[];
+    const nextIndex = nextPrayerToday ? ids.indexOf(nextPrayerToday.id) : ids.length;
+    return ids.slice(Math.max(0, nextIndex + 1)).map((id) => ({ id, name: PRAYER_LABELS[id], time: prayerTimes[id] }));
+  }, [prayerTimes, nextPrayerToday?.id]);
+  const weekStart = shiftDateKey(today, -((dateFromKey(today).getDay() + 1) % 7));
+  const weekDays = useMemo(() => Array.from({ length: 7 }, (_, index) => shiftDateKey(weekStart, index)), [weekStart]);
+  const dayNames = ["السبت", "الأحد", "الاثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة"];
   const pageTitle = new Intl.DateTimeFormat("ar", {
     weekday: "long", day: "numeric", month: "long", timeZone: store.location?.timeZone,
   }).format(now);
@@ -118,6 +129,21 @@ export default function HomeScreen() {
         )}
       </SulyCard>
 
+      {nextPrayer ? <Pressable onPress={() => setShowPrayerTimes((value) => !value)} accessibilityRole="button" accessibilityState={{ expanded: showPrayerTimes }} style={{ alignItems: "center", paddingVertical: 7 }}>
+        <MaterialCommunityIcons name={showPrayerTimes ? "chevron-up" : "chevron-down"} size={29} color={colors.gold} />
+        <Text style={{ color: colors.muted, fontSize: 11 }}>{showPrayerTimes ? "إخفاء باقي المواقيت" : "عرض باقي صلوات اليوم والغد"}</Text>
+      </Pressable> : null}
+      {showPrayerTimes && prayerTimes ? <SulyCard style={{ gap: 0 }}>
+        <Text style={{ color: colors.gold, textAlign: "right", fontWeight: "800", marginBottom: 8 }}>باقي صلوات اليوم</Text>
+        {upcomingPrayers.map((item) => <View key={item.id} style={{ paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: colors.border, flexDirection: "row", justifyContent: "space-between" }}>
+          <Text style={{ color: colors.text }}>{formatPrayerTime(item.time, store.location?.timeZone)}</Text><Text style={{ color: colors.text, fontWeight: "700" }}>{item.name}</Text>
+        </View>)}
+        <Text style={{ color: colors.gold, textAlign: "right", fontWeight: "800", marginTop: 10 }}>مواقيت الغد</Text>
+        {tomorrowTimes ? (Object.keys(PRAYER_LABELS) as PrayerId[]).map((id) => <View key={id} style={{ paddingVertical: 8, flexDirection: "row", justifyContent: "space-between" }}>
+          <Text style={{ color: colors.text }}>{formatPrayerTime(tomorrowTimes[id], store.location?.timeZone)}</Text><Text style={{ color: colors.muted }}>{PRAYER_LABELS[id]}</Text>
+        </View>) : null}
+      </SulyCard> : null}
+
       <SulyCard style={{ backgroundColor: colors.surface, borderColor: colors.border }}>
         <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "flex-end", gap: 8 }}>
           <Text style={{ color: colors.gold, fontSize: 15, fontWeight: "800" }}>رسالة من رفيقك</Text>
@@ -140,6 +166,40 @@ export default function HomeScreen() {
           })}
         </View>
         <Text style={{ color: colors.muted, fontSize: 12, textAlign: "right" }}>غير المسجلة هنا لا تعني بالضرورة أنك لم تصلِّ؛ عدّل السجل متى احتجت.</Text>
+      </SulyCard>
+
+      <SulyCard style={{ padding: 0, overflow: "hidden" }}>
+        <Pressable onPress={() => setShowWeeklyLog((value) => !value)} accessibilityRole="button" accessibilityState={{ expanded: showWeeklyLog }} style={{ minHeight: 58, paddingHorizontal: 15, flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+          <MaterialCommunityIcons name={showWeeklyLog ? "chevron-up" : "chevron-down"} size={23} color={colors.gold} />
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 9 }}><Text style={{ color: colors.text, fontWeight: "800" }}>جدول تسجيل الصلوات الأسبوعي</Text><MaterialCommunityIcons name="calendar-week" size={22} color={colors.gold} /></View>
+        </Pressable>
+        {showWeeklyLog ? <View style={{ padding: 10, paddingTop: 0 }}>
+          <Text style={{ color: colors.muted, textAlign: "right", fontSize: 11, marginBottom: 8 }}>اضغط على الدائرة لتسجيل الفرض أو إلغاء تسجيله. يبدأ الأسبوع من السبت.</Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator>
+            <View>
+              <View style={{ flexDirection: "row-reverse", alignItems: "center" }}>
+                <View style={{ width: 58 }} />
+                {dayNames.map((day) => <Text key={day} style={{ width: 42, textAlign: "center", color: colors.gold, fontSize: 10, fontWeight: "700" }}>{day}</Text>)}
+              </View>
+              {(Object.keys(PRAYER_LABELS) as PrayerId[]).map((id) => <View key={id} style={{ flexDirection: "row-reverse", alignItems: "center", minHeight: 43, borderTopWidth: 1, borderTopColor: colors.border }}>
+                <Text style={{ width: 58, color: colors.text, fontSize: 12, fontWeight: "700", textAlign: "right" }}>{PRAYER_LABELS[id]}</Text>
+                {weekDays.map((dayKey) => {
+                  const done = store.prayerLogs[dayKey]?.[id] === "completed";
+                  return <Pressable key={dayKey} onPress={() => {
+                    const dayLog = store.prayerLogs[dayKey] ?? {};
+                    const nextLog = { ...dayLog };
+                    if (done) delete nextLog[id]; else nextLog[id] = "completed";
+                    updateStore((current) => ({ ...current, prayerLogs: { ...current.prayerLogs, [dayKey]: nextLog } }));
+                  }} accessibilityRole="checkbox" accessibilityState={{ checked: done }} style={{ width: 42, alignItems: "center", justifyContent: "center", paddingVertical: 6 }}>
+                    <View style={{ width: 25, height: 25, borderRadius: 9, backgroundColor: done ? colors.gold : colors.card, borderWidth: 1, borderColor: done ? colors.gold : colors.border, alignItems: "center", justifyContent: "center" }}>
+                      {done ? <MaterialCommunityIcons name="check" size={17} color="#17392F" /> : null}
+                    </View>
+                  </Pressable>;
+                })}
+              </View>)}
+            </View>
+          </ScrollView>
+        </View> : null}
       </SulyCard>
 
       <View style={{ flexDirection: "row", gap: 10 }}>
@@ -170,6 +230,17 @@ export default function HomeScreen() {
         <MaterialCommunityIcons name="hand-heart-outline" size={25} color={colors.gold} />
       </SulyCard>
 
+      <SectionTitle>مساحتك في رفيقك</SectionTitle>
+      <View style={{ flexDirection: "row", gap: 9 }}>
+        {[
+          { label: "القصص", icon: "book-open-variant" as const, route: "/stories" },
+          { label: "إنجازاتي", icon: "chart-box-outline" as const, route: "/achievements" },
+          { label: "الأذكار", icon: "hands-pray" as const, route: "/adhkar" },
+        ].map((item) => <Pressable key={item.route} onPress={() => router.push(item.route as any)} style={{ flex: 1, minHeight: 100, borderRadius: 18, backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border, alignItems: "center", justifyContent: "center", gap: 9 }}>
+          <MaterialCommunityIcons name={item.icon} size={29} color={colors.gold} />
+          <Text style={{ color: colors.text, fontSize: 13, fontWeight: "800" }}>{item.label}</Text>
+        </Pressable>)}
+      </View>
       <SulyCard style={{ backgroundColor: colors.card }}>
         <Text style={{ color: colors.text, fontSize: 16, fontWeight: "700", textAlign: "right" }}>خطوة صغيرة اليوم تكفي</Text>
         <Text style={{ color: colors.muted, textAlign: "right", lineHeight: 22 }}>اختر هدفًا واحدًا يناسب وقتك، وتذكّر أن التطبيق يسجل ما تختار إدخاله فقط.</Text>
