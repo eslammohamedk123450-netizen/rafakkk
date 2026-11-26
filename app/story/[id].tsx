@@ -13,12 +13,12 @@ export default function StoryReaderScreen() {
   const { store, updateStore } = useAppStore();
   const { colors } = useSulyTheme();
   const story = useMemo(() => getIslamicStory(String(id ?? "")), [id]);
-  const savedChapter = story ? Math.max(0, (store.storyProgress[story.id] ?? 0) - 1) : 0;
-  const [chapterIndex, setChapterIndex] = useState(savedChapter);
-  const [notice, setNotice] = useState("");
   const contextChapter = story?.chapters.find((item) => item.title.includes("الخلفية والأهل والسياق"));
   const lessonsChapter = story?.chapters.find((item) => item.title.includes("الدروس المستفادة"));
   const readingChapters = story ? story.chapters.filter((item) => item !== contextChapter && item !== lessonsChapter) : [];
+  const savedChapter = story ? Math.max(0, (store.storyProgress[story.id] ?? 0) - (contextChapter ? 1 : 0)) : 0;
+  const [chapterIndex, setChapterIndex] = useState(savedChapter);
+  const [notice, setNotice] = useState("");
   useEffect(() => {
     if (story) setChapterIndex(Math.min(Math.max(0, (store.storyProgress[story.id] ?? 0) - (contextChapter ? 1 : 0)), readingChapters.length - 1));
   }, [story?.id, store.storyProgress, readingChapters.length, contextChapter]);
@@ -30,7 +30,7 @@ export default function StoryReaderScreen() {
   const chapter = readingChapters[activeIndex];
   const percent = Math.round(((activeIndex + 1) / readingChapters.length) * 100);
   const savePlace = (nextIndex = chapterIndex) => {
-    const safeIndex = Math.max(0, Math.min(story.chapters.length - 1, nextIndex));
+    const safeIndex = Math.max(0, Math.min(readingChapters.length - 1, nextIndex));
     setChapterIndex(safeIndex);
     updateStore((current) => ({ ...current, storyProgress: { ...current.storyProgress, [story.id]: safeIndex + (contextChapter ? 1 : 0) } }));
     setNotice("اتحفظ مكانك في القصة على هذا الجهاز.");
