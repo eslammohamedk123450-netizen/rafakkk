@@ -34,7 +34,8 @@ export default function StoryReaderScreen() {
   };
   const referencedSurah = chapter.reference.match(/سورة\s+([^،؛.\s]+)/)?.[1];
   const referencedSurahId = referencedSurah ? QURAN_SURAHS.find((item) => item.name.includes(referencedSurah) || item.name.replace("ال", "").includes(referencedSurah))?.id : undefined;
-  const openQuranReference = () => { if (referencedSurahId) router.push(`/quran-reader?surah=${referencedSurahId}` as any); };
+  const referencedAyah = chapter.reference.match(/الآيات?\s*(\d+)/)?.[1];
+  const openQuranReference = () => { if (referencedSurahId) router.push(`/quran-reader?surah=${referencedSurahId}${referencedAyah ? `&ayah=${referencedAyah}` : ""}` as any); };
   const openLink = async (url: string) => {
     try { await Linking.openURL(url); } catch { setNotice("تعذر فتح الرابط. تحقق من اتصال الإنترنت."); }
   };
@@ -63,7 +64,7 @@ export default function StoryReaderScreen() {
         <Text style={{ color: colors.text, fontSize: 17, lineHeight: 34, textAlign: "right" }}>{chapter.body}</Text>
         <View style={{ borderTopWidth: 1, borderTopColor: colors.border, paddingTop: 12, gap: 6 }}>
           <Text style={{ color: colors.gold, fontWeight: "800", textAlign: "right" }}>مرجع هذا الفصل</Text>
-          {referencedSurahId ? <SulyButton title={`فتح سورة ${referencedSurah} في مصحف رفيقك`} secondary onPress={openQuranReference} /> : null}
+          {referencedSurahId ? <SulyButton title={`فتح سورة ${referencedSurah}${referencedAyah ? ` عند الآية ${referencedAyah}` : ""} في مصحف رفيقك`} secondary onPress={openQuranReference} /> : null}
           <Text style={{ color: colors.muted, textAlign: "right", lineHeight: 22 }}>{chapter.reference}</Text>
         </View>
         <SulyButton title="احفظ مكاني" secondary onPress={() => savePlace()} />
