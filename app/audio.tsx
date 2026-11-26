@@ -108,6 +108,7 @@ export default function AudioScreen() {
   const reciter = reciters.find((item) => item.id === selectedReciter) ?? reciters[0];
   const moshaf = reciter?.moshaf?.find((item) => item.id === selectedMoshaf) ?? reciter?.moshaf?.[0];
   const availableSurahs = useMemo(() => {
+    if (!moshaf) return [];
     const ids = moshaf?.surah_list?.split(",").map((value) => Number(value)).filter((value) => Number.isInteger(value) && value >= 1 && value <= 114);
     return ids?.length ? ids : Array.from({ length: Math.min(114, moshaf?.surah_total ?? 114) }, (_, index) => index + 1);
   }, [moshaf]);
