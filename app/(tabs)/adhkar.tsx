@@ -1,7 +1,7 @@
 import { useCallback, useMemo, useState } from "react";
 import { Linking, Modal, Pressable, Text, View } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { useFocusEffect } from "expo-router";
+import { useFocusEffect, useRouter } from "expo-router";
 import { AppScreen, ScreenHeading, SulyButton, SulyCard, SulyInput, TinyTag, useSulyTheme, ProgressBar } from "@/components/suly-ui";
 import { localDateKey, useAppStore } from "@/lib/app-store";
 import { getContentEntries, type StoredContentRecord } from "@/lib/local-db";
@@ -22,6 +22,7 @@ const categories = [
 type DisplayEntry = StoredContentRecord & { custom?: boolean };
 
 export default function AdhkarScreen() {
+  const router = useRouter();
   const { store, updateStore } = useAppStore();
   const { colors } = useSulyTheme();
   const today = localDateKey(new Date(), store.location?.timeZone);
@@ -91,15 +92,16 @@ export default function AdhkarScreen() {
       <SulyCard style={{ backgroundColor: colors.card }}>
         <Text style={{ color: colors.text, textAlign: "right", fontWeight: "700" }}>مكتبتك معاك في كل وقت</Text>
         <Text style={{ color: colors.muted, textAlign: "right", lineHeight: 21 }}>الأذكار والمحتوى الأساسي محفوظان داخل التطبيق ويعملان دون إنترنت. سجلاتك ومفضلاتك تظل على جهازك.</Text>
-        {localNotice ? <Text style={{ color: colors.gold, textAlign: "right" }}>{localNotice}</Text> : null}
-      </SulyCard>
-      <SulyCard style={{ backgroundColor: colors.card }}>
-        <Text style={{ color: colors.text, fontWeight: "700", textAlign: "right", fontSize: 17 }}>عداد التسبيح</Text>
-        <Text style={{ color: colors.gold, fontSize: 34, fontWeight: "800", textAlign: "center" }}>{store.tasbeehCounts[today] ?? 0}</Text>
-        {store.tasbeehGoal ? <><ProgressBar value={store.tasbeehCounts[today] ?? 0} max={store.tasbeehGoal} color={colors.gold} /><Text style={{ color: colors.muted, textAlign: "center" }}>هدفك الاختياري: {store.tasbeehGoal}</Text></> : <Text style={{ color: colors.muted, textAlign: "center" }}>لا يوجد هدف يومي محدد</Text>}
-        <View style={{ flexDirection: "row", gap: 10 }}>
-          <SulyButton title="تسبيحة" onPress={() => updateStore((current) => ({ ...current, tasbeehCounts: { ...current.tasbeehCounts, [today]: (current.tasbeehCounts[today] ?? 0) + 1 } }))} />
-          <SulyButton title={store.tasbeehGoal ? `الهدف ${store.tasbeehGoal}` : "هدف اختياري"} secondary onPress={() => updateStore((current) => ({ ...current, tasbeehGoal: current.tasbeehGoal ? null : 33 }))} />
+        {localNotice ? <Text style={{ color: colors.gold, textAlign: "right" }}>{local      <Pressable onPress={() => router.push("/tasbeeh" as any)} accessibilityRole="button">
+        <SulyCard style={{ backgroundColor: colors.card, flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+          <View style={{ alignItems: "flex-end", flex: 1, gap: 5 }}>
+            <Text style={{ color: colors.text, fontWeight: "800", fontSize: 17 }}>مساحة التسبيح</Text>
+            <Text style={{ color: colors.muted, textAlign: "right" }}>عداد تفاعلي وأهداف وتذكير لطيف يساعدك على الاستمرار.</Text>
+            <Text style={{ color: colors.gold, fontWeight: "800" }}>افتح المسبحة ←</Text>
+          </View>
+          <MaterialCommunityIcons name="counter" size={40} color={colors.gold} />
+        </SulyCard>
+      </Pressable> }))} />
         </View>
       </SulyCard>
 
