@@ -58,7 +58,7 @@ export const ISLAMIC_STORIES: IslamicStory[] = [
       { label: "القرآن الكريم – سورة يوسف كاملة", url: "https://quran.com/12" },
       { label: "تفسير ابن كثير – سورة يوسف", url: "https://quran.ksu.edu.sa/tafseer/katheer/sura12-aya1.html" },
     ],
-    videoUrl: VIDEO_CHANNEL,
+    videoUrl: "https://www.youtube.com/results?search_query=%D9%82%D8%B5%D8%A9+%D9%8A%D9%88%D8%B3%D9%81+%D8%B9%D9%84%D9%8A%D9%87+%D8%A7%D9%84%D8%B3%D9%84%D8%A7%D9%85+%D9%83%D8%A7%D9%85%D9%84%D8%A9",
   },
   {
     id: "nuh",
@@ -92,7 +92,7 @@ export const ISLAMIC_STORIES: IslamicStory[] = [
       { label: "القرآن الكريم – سورة هود", url: "https://quran.com/11" },
       { label: "تفسير ابن كثير – سورة نوح", url: "https://quran.ksu.edu.sa/tafseer/katheer/sura71-aya1.html" },
     ],
-    videoUrl: VIDEO_CHANNEL,
+    videoUrl: "https://www.youtube.com/results?search_query=%D9%82%D8%B5%D8%A9+%D9%86%D9%88%D8%AD+%D8%B9%D9%84%D9%8A%D9%87+%D8%A7%D9%84%D8%B3%D9%84%D8%A7%D9%85+%D9%83%D8%A7%D9%85%D9%84%D8%A9",
   },
   {
     id: "hijrah",
@@ -126,7 +126,7 @@ export const ISLAMIC_STORIES: IslamicStory[] = [
       { label: "صحيح البخاري – حديث 3653", url: "https://sunnah.com/bukhari:3653" },
       { label: "الرحيق المختوم – صفوة أحداث السيرة", url: "https://shamela.ws/book/1681" },
     ],
-    videoUrl: VIDEO_CHANNEL,
+    videoUrl: "https://www.youtube.com/results?search_query=%D8%A7%D9%84%D9%87%D8%AC%D8%B1%D8%A9+%D8%A7%D9%84%D9%86%D8%A8%D9%88%D9%8A%D8%A9+%D9%82%D8%B5%D8%A9+%D9%83%D8%A7%D9%85%D9%84%D8%A9",
   },
   {
     id: "abu-bakr",
@@ -148,7 +148,7 @@ export const ISLAMIC_STORIES: IslamicStory[] = [
       { label: "صحيح البخاري – حديث 3654", url: "https://sunnah.com/bukhari:3654" },
       { label: "صحيح البخاري – حديث 683", url: "https://sunnah.com/bukhari:683" },
     ],
-    videoUrl: VIDEO_CHANNEL,
+    videoUrl: "https://www.youtube.com/results?search_query=%D9%82%D8%B5%D8%A9+%D8%A3%D8%A8%D9%88+%D8%A8%D9%83%D8%B1+%D8%A7%D9%84%D8%B5%D8%AF%D9%8A%D9%82",
   },
   {
     id: "cave-men",
@@ -181,7 +181,7 @@ export const ISLAMIC_STORIES: IslamicStory[] = [
       { label: "صحيح البخاري – حديث أصحاب الغار", url: "https://sunnah.com/bukhari:2272" },
       { label: "صحيح مسلم – حديث أصحاب الغار", url: "https://sunnah.com/muslim:2743" },
     ],
-    videoUrl: VIDEO_CHANNEL,
+    videoUrl: "https://www.youtube.com/results?search_query=%D9%82%D8%B5%D8%A9+%D8%A3%D8%B5%D8%AD%D8%A7%D8%A8+%D8%A7%D9%84%D8%BA%D8%A7%D8%B1+%D8%A7%D9%84%D8%AB%D9%84%D8%A7%D8%AB%D8%A9",
   },
 ];
 
@@ -204,7 +204,7 @@ export const ISLAMIC_STORIES: IslamicStory[] = [
       { label: "القرآن الكريم – سورة الأنفال", url: "https://quran.com/8" },
       { label: "القرآن الكريم – سورة آل عمران، الآية 123", url: "https://quran.com/3/123" },
     ],
-    videoUrl: VIDEO_CHANNEL,
+    videoUrl: "https://www.youtube.com/results?search_query=%D9%82%D8%B5%D8%A9+%D8%BA%D8%B2%D9%88%D8%A9+%D8%A8%D8%AF%D8%B1+%D9%83%D8%A7%D9%85%D9%84%D8%A9",
   },
   {
     id: "cave-youth",
@@ -225,7 +225,7 @@ export const ISLAMIC_STORIES: IslamicStory[] = [
       { label: "القرآن الكريم – سورة الكهف", url: "https://quran.com/18" },
       { label: "تفسير ابن كثير – سورة الكهف", url: "https://quran.ksu.edu.sa/tafseer/katheer/sura18-aya1.html" },
     ],
-    videoUrl: VIDEO_CHANNEL,
+    videoUrl: "https://www.youtube.com/results?search_query=%D9%82%D8%B5%D8%A9+%D8%A3%D8%B5%D8%AD%D8%A7%D8%A8+%D8%A7%D9%84%D9%83%D9%87%D9%81",
   },
   {
     id: "bilal",
@@ -247,7 +247,7 @@ export const ISLAMIC_STORIES: IslamicStory[] = [
       { label: "صحيح مسلم – حديث 2458", url: "https://sunnah.com/muslim:2458" },
       { label: "سيرة ابن هشام", url: "https://shamela.ws/book/23833" },
     ],
-    videoUrl: VIDEO_CHANNEL,
+    videoUrl: "https://www.youtube.com/results?search_query=%D9%82%D8%B5%D8%A9+%D8%A8%D9%84%D8%A7%D9%84+%D8%A8%D9%86+%D8%B1%D8%A8%D8%A7%D8%AD",
   },
 export function getIslamicStory(id: string) {
   return ISLAMIC_STORIES.find((story) => story.id === id);
