@@ -130,7 +130,7 @@ export default function SettingsScreen() {
       }
     }
     updateStore((current) => ({ ...current, adhanPrefs: { ...current.adhanPrefs, enabled: enabling } }));
-    setNotice(enabling ? "تم تفعيل جدولة الأذان حسب الصوت والصلوات المختارة." : "تم إيقاف الأذان التلقائي.");
+    setNotice(enabling ? "تم تفعيل جدولة الأذان حسب الصوت والصلوات المختارة. على أندرويد 12 فأحدث، تأكد من السماح للتطبيق بإذن «المنبهات والتذكيرات»؛ وإلا قد يتأخر التنبيه." : "تم إيقاف الأذان التلقائي.");
   };
 
   const toggleGentleMessages = async () => {
