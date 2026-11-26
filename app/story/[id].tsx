@@ -68,8 +68,8 @@ export default function StoryReaderScreen() {
             <Text style={{ color: colors.gold, textAlign: "right", fontWeight: "700" }}>{source.label} ↗</Text>
           </Pressable>
         ))}
-        <Text style={{ color: colors.muted, textAlign: "right", fontSize: 12, lineHeight: 21 }}>للمشاهدة المرئية: رابط القناة يفتح محتوى قصصيًا إسلاميًا خارجيًا. اختر الحلقة المناسبة للقصة، ولا يُعد الرابط توثيقًا لمتنها.</Text>
-        <SulyButton title="مشاهدة قصص إسلامية على يوتيوب" secondary onPress={() => openLink(story.videoUrl)} />
+        <Text style={{ color: colors.muted, textAlign: "right", fontSize: 12, lineHeight: 21 }}>للمشاهدة المرئية: يفتح الرابط نتائج بحث عن فيديو القصة على يوتيوب. راجع مصدر الحلقة ومحتواها؛ فالرابط ليس توثيقًا علميًا لمتن القصة.</Text>
+        <SulyButton title="ابحث عن فيديو القصة على يوتيوب" secondary onPress={() => openLink(story.videoUrl)} />
       </SulyCard>
       <Text style={{ color: colors.muted, textAlign: "center", fontSize: 11, lineHeight: 18 }}>هذه صياغة مبسطة وليست بديلًا عن النص القرآني أو الحديث الأصلي. عند اختلاف الروايات، يُرجع إلى المصادر المذكورة.</Text>
     </AppScreen>
