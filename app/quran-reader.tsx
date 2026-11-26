@@ -161,7 +161,7 @@ export default function QuranReaderScreen() {
 
   const goToPage = (target: number) => {
     const nextPage = clampPage(target);
-    setPageDraft(null);
+    setCurrentPosition(null);
     setNotice("");
     updateStore((current) => ({
       ...current,
