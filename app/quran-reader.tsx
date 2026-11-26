@@ -38,6 +38,49 @@ export default function QuranReaderScreen() {
   const [surahPickerVisible, setSurahPickerVisible] = useState(false);
   const fontSize = store.quranReader.fontSize ?? 27;
   const [notice, setNotice] = useState("");
+  const [selectedTafsir, setSelectedTafsir] = useState<{ surah: number; ayah: number } | null>(null);
+  const [tafsirText, setTafsirText] = useState("");
+  const [tafsirFootnotes, setTafsirFootnotes] = useState("");
+  const [tafsirLoading, setTafsirLoading] = useState(false);
+  const [tafsirError, setTafsirError] = useState("");
+  useEffect(() => {
+    if (!selectedTafsir) return;
+    let active = true;
+    setTafsirLoading(true);
+    setTafsirError("");
+    setTafsirText("");
+    setTafsirFootnotes("");
+    fetch(`https://quranenc.com/api/v1/translation/aya/arabic_moyassar/${selectedTafsir.surah}/${selectedTafsir.ayah}`)
+      .then(async (response) => {
+        if (!response.ok) throw new Error("تعذر جلب التفسير من المصدر.");
+        return response.json();
+      })
+      .then((payload) => {
+        const result = payload?.result;
+        if (!result || typeof result.translation !== "string" || !result.translation.trim()) {
+          throw new Error("لا يتوفر تفسير لهذه الآية في المصدر حاليًا.");
+        }
+        const plainText = (value: string) => value
+          .replace(/<br\s*\\/?\s*>/gi, "\n")
+          .replace(/<\\/(p|div|li)>/gi, "\n")
+          .replace(/<[^>]*>/g, "")
+          .replace(/&nbsp;/g, " ")
+          .replace(/&amp;/g, "&")
+          .replace(/&quot;/g, '"')
+          .replace(/&#39;/g, "'")
+          .replace(/&lt;/g, "<")
+          .replace(/&gt;/g, ">");
+        if (active) {
+          setTafsirText(plainText(result.translation));
+          setTafsirFootnotes(typeof result.footnotes === "string" ? plainText(result.footnotes) : "");
+        }
+      })
+      .catch((error) => {
+        if (active) setTafsirError(error instanceof Error ? error.message : "حدث خطأ أثناء تحميل التفسير.");
+      })
+      .finally(() => { if (active) setTafsirLoading(false); });
+    return () => { active = false; };
+  }, [selectedTafsir?.surah, selectedTafsir?.ayah]);
   const today = localDateKey(new Date(), store.location?.timeZone);
   const verses = useMemo(() => getQuranPage(page), [page]);
   const currentSurah = QURAN_SURAHS.find((surah) => surah.id === verses[0]?.surah);
@@ -154,7 +197,7 @@ export default function QuranReaderScreen() {
           }}
         >
           {verses.map((verse) => (
-            <Text key={`${verse.surah}:${verse.ayah}`}>
+            <Text key={`${verse.surah}:${verse.ayah}`} onPress={() => setSelectedTafsir({ surah: verse.surah, ayah: verse.ayah })} accessibilityRole="button">
               {verse.text}{" "}
               <Text style={{ color: colors.gold, fontSize: Math.round(fontSize * 0.72) }}>
                 ﴿{arabicNumber(verse.ayah)}﴾
@@ -200,6 +243,31 @@ export default function QuranReaderScreen() {
           </View>
         </View>
       </Modal>
+      <Modal visible={Boolean(selectedTafsir)} transparent animationType="slide" onRequestClose={() => setSelectedTafsir(null)}>
+        <View style={{ flex: 1, justifyContent: "flex-end", backgroundColor: "rgba(0,0,0,0.65)" }}>
+          <View style={{ backgroundColor: colors.surface, borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 20, maxHeight: "78%", gap: 12 }}>
+            <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+              <Pressable onPress={() => setSelectedTafsir(null)}><Text style={{ color: colors.muted }}>إغلاق ✕</Text></Pressable>
+              <Text style={{ color: colors.gold, fontWeight: "900", fontSize: 18 }}>تفسير الآية</Text>
+            </View>
+            <Text style={{ color: colors.text, textAlign: "right", fontWeight: "700" }}>
+              {selectedTafsir ? `${QURAN_SURAHS.find((item) => item.id === selectedTafsir.surah)?.name ?? "السورة"} · الآية ${arabicNumber(selectedTafsir.ayah)}` : ""}
+            </Text>
+            <ScrollView contentContainerStyle={{ gap: 10 }}>
+              <Text style={{ color: colors.gold, textAlign: "right", fontWeight: "900" }}>التفسير الميسّر</Text>
+              {tafsirLoading ? <Text style={{ color: colors.muted, textAlign: "right" }}>جاري تحميل التفسير…</Text> : null}
+              {tafsirError ? <Text style={{ color: colors.muted, textAlign: "right", lineHeight: 24 }}>{tafsirError} تأكد من اتصال الإنترنت ثم أعد الضغط على الآية.</Text> : null}
+              {tafsirText ? <Text style={{ color: colors.text, textAlign: "right", lineHeight: 30, fontSize: 16 }}>{tafsirText}</Text> : null}
+              {tafsirFootnotes ? <Text style={{ color: colors.muted, textAlign: "right", lineHeight: 24, fontSize: 12 }}>{tafsirFootnotes}</Text> : null}
+              <View style={{ borderTopWidth: 1, borderTopColor: colors.border, paddingTop: 9, gap: 4 }}>
+                <Text style={{ color: colors.gold, textAlign: "right", fontWeight: "800", fontSize: 12 }}>المصدر: التفسير الميسّر</Text>
+                <Text style={{ color: colors.muted, textAlign: "right", fontSize: 11, lineHeight: 19 }}>إعداد لجنة علمية بمجمع الملك فهد لطباعة المصحف الشريف · النسخة 1.0.0 · QuranEnc.com</Text>
+              </View>
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
+
     </AppScreen>
   );
 }
