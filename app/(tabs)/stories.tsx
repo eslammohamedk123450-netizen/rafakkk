@@ -37,7 +37,7 @@ export default function StoriesScreen() {
           const percent = hasProgress ? Math.round(((saved + 1) / story.chapters.length) * 100) : 0;
           return (
             <Pressable key={story.id} onPress={() => router.push((Platform.OS === "web"
-                ? { pathname: "/story", params: { id: story.id } }
+                ? { pathname: "/read-story", params: { id: story.id } }
                 : { pathname: "/story/[id]", params: { id: story.id } }) as Href)} accessibilityRole="button">
               <SulyCard style={{ padding: 0, overflow: "hidden", gap: 0 }}>
                 <View style={{ width: "100%", height: 150, backgroundColor: colors.surface, alignItems: "center", justifyContent: "center", gap: 8, borderBottomWidth: 1, borderBottomColor: colors.border }}>
