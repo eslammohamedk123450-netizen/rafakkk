@@ -1,4 +1,5 @@
 name: Build and Deploy Web Preview
+# Triggered from the existing feature branch for the web preview.
 
 on:
   push:
