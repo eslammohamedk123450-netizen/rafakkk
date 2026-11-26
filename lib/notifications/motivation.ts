@@ -101,8 +101,8 @@ export async function rescheduleMotivationNotifications(store: AppStore) {
       const message = personalizedMessage(category, store, key, currentDayKey, firstDayOffset + occurrence);
       seenByCategory.set(category, occurrence + 1);
       jobs.push(Notifications.scheduleNotificationAsync({
-        content: { title: "رفيقك بيفكّرك ❤️", body: message, data: { kind: "suly-gentle", category, dateKey: key } },
-        trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: scheduledAt, ...(Platform.OS === "android" ? { channelId: "suly-prayer" } : {}) },
+        content: { title: "رفيقك بيفكّرك ❤️", body: message, sound: false, data: { kind: "suly-gentle", category, dateKey: key } },
+        trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: scheduledAt, ...(Platform.OS === "android" ? { channelId: "suly-gentle" } : {}) },
       }));
     });
   });

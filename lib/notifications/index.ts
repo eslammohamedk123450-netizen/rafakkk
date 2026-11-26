@@ -35,6 +35,12 @@ export async function prepareNotificationChannel() {
       vibrationPattern: [],
       sound: null,
     }),
+    Notifications.setNotificationChannelAsync("suly-gentle", {
+      name: "رسائل رفيقك الهادئة",
+      importance: Notifications.AndroidImportance.DEFAULT,
+      vibrationPattern: [],
+      sound: null,
+    }),
     Notifications.setNotificationChannelAsync("suly-adhan-1", {
       name: "الأذان 1",
       importance: Notifications.AndroidImportance.MAX,

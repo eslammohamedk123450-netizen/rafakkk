@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
-import { Image, Pressable, Text, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRouter, type Href } from "expo-router";
 import { AppScreen, ScreenHeading, SulyCard, TinyTag, ProgressBar, useSulyTheme } from "@/components/suly-ui";
 import { ISLAMIC_STORIES, STORY_CATEGORIES } from "@/lib/content/stories";
@@ -37,7 +38,10 @@ export default function StoriesScreen() {
           return (
             <Pressable key={story.id} onPress={() => router.push(`/story/${story.id}` as Href)} accessibilityRole="button">
               <SulyCard style={{ padding: 0, overflow: "hidden", gap: 0 }}>
-                <Image source={{ uri: story.imageUrl }} resizeMode="cover" style={{ width: "100%", height: 178, backgroundColor: colors.card }} />
+                <View style={{ width: "100%", height: 150, backgroundColor: colors.surface, alignItems: "center", justifyContent: "center", gap: 8, borderBottomWidth: 1, borderBottomColor: colors.border }}>
+                  <MaterialCommunityIcons name="book-open-page-variant" size={48} color={colors.gold} />
+                  <Text style={{ color: colors.muted, fontSize: 12 }}>من مكتبة رفيقك · محتوى محفوظ على الجهاز</Text>
+                </View>
                 <View style={{ padding: 15, gap: 8 }}>
                   <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
                     <Text style={{ color: colors.gold, fontSize: 12, fontWeight: "700" }}>{story.categoryLabel}</Text>

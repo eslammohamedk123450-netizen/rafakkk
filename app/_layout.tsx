@@ -39,6 +39,7 @@ export default function RootLayout() {
 
   // Initialize Manus runtime for cookie injection from parent container
   useEffect(() => {
+    if (Platform.OS !== "web") return;
     initManusRuntime();
   }, []);
 
@@ -90,7 +91,7 @@ export default function RootLayout() {
         },
       }),
   );
-  const [trpcClient] = useState(() => createTRPCClient());
+  const [trpcClient] = useState(() => Platform.OS === "web" ? createTRPCClient() : null);
 
   // Ensure minimum 8px padding for top and bottom on mobile
   const providerInitialMetrics = useMemo(() => {
@@ -105,29 +106,32 @@ export default function RootLayout() {
     };
   }, [initialInsets, initialFrame]);
 
+  const appContent = (
+    <>
+      <AppStoreProvider>
+        <AutomaticLocationSetup />
+        <NotificationReconciler />
+        <Stack screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="(tabs)" />
+          <Stack.Screen name="settings" />
+          <Stack.Screen name="quran-reader" />
+          <Stack.Screen name="story/[id]" />
+          <Stack.Screen name="audio" />
+          <Stack.Screen name="admin" />
+        </Stack>
+      </AppStoreProvider>
+      <StatusBar style="auto" />
+    </>
+  );
+
+  // Android runs locally; API clients are created only for the optional web admin preview.
   const content = (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <trpc.Provider client={trpcClient} queryClient={queryClient}>
-        <QueryClientProvider client={queryClient}>
-          {/* Default to hiding native headers so raw route segments don't appear (e.g. "(tabs)", "products/[id]"). */}
-          {/* If a screen needs the native header, explicitly enable it and set a human title via Stack.Screen options. */}
-          {/* in order for ios apps tab switching to work properly, use presentation: "fullScreenModal" for login page, whenever you decide to use presentation: "modal*/}
-          <AppStoreProvider>
-            <AutomaticLocationSetup />
-            <NotificationReconciler />
-            <Stack screenOptions={{ headerShown: false }}>
-              <Stack.Screen name="(tabs)" />
-              <Stack.Screen name="settings" />
-              <Stack.Screen name="quran-reader" />
-              <Stack.Screen name="story/[id]" />
-              <Stack.Screen name="audio" />
-              <Stack.Screen name="admin" />
-              <Stack.Screen name="oauth/callback" />
-            </Stack>
-          </AppStoreProvider>
-          <StatusBar style="auto" />
-        </QueryClientProvider>
-      </trpc.Provider>
+      {Platform.OS === "web" ? (
+        <trpc.Provider client={trpcClient!} queryClient={queryClient}>
+          <QueryClientProvider client={queryClient}>{appContent}</QueryClientProvider>
+        </trpc.Provider>
+      ) : appContent}
     </GestureHandlerRootView>
   );
 

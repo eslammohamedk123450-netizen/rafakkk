@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
-import { Image, Linking, Pressable, Text, View } from "react-native";
+import { Linking, Pressable, Text, View } from "react-native";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { AppScreen, ScreenHeading, SulyButton, SulyCard, ProgressBar, useSulyTheme } from "@/components/suly-ui";
 import { getIslamicStory } from "@/lib/content/stories";
@@ -38,7 +39,10 @@ export default function StoryReaderScreen() {
     <AppScreen>
       <ScreenHeading title={story.title} subtitle={story.subtitle} action={<Pressable onPress={() => router.back()}><Text style={{ color: colors.gold, fontWeight: "700" }}>رجوع</Text></Pressable>} />
       <SulyCard style={{ padding: 0, overflow: "hidden", gap: 0 }}>
-        <Image source={{ uri: story.imageUrl }} resizeMode="cover" style={{ width: "100%", height: 205, backgroundColor: colors.card }} />
+        <View style={{ width: "100%", height: 175, backgroundColor: colors.surface, alignItems: "center", justifyContent: "center", gap: 8 }}>
+          <MaterialCommunityIcons name="book-open-page-variant" size={54} color={colors.gold} />
+          <Text style={{ color: colors.muted, fontSize: 12 }}>اقرأ على مهل، وارجع وقتما تحب</Text>
+        </View>
         <View style={{ padding: 14, gap: 8 }}>
           <Text style={{ color: colors.muted, fontSize: 11, textAlign: "right" }}>{story.imageCredit}</Text>
           <Text style={{ color: colors.gold, fontWeight: "700", textAlign: "right" }}>{story.categoryLabel} · {story.readingMinutes} دقائق تقريبًا</Text>
