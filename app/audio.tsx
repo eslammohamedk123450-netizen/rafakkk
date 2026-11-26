@@ -9,11 +9,15 @@ import { QURAN_SURAHS } from "@/lib/quran";
 
 type Moshaf = { id: number; name: string; server: string; surah_total: number; surah_list?: string };
 type Reciter = { id: number; name: string; moshaf?: Moshaf[] };
-type RadioStation = { id: number; name?: string; url?: string };
+type RadioStation = { id: string; name: string; country: string; flag: string; city: string; description: string; url: string; sourceLabel: string };
 type SavedTrack = { key: string; reciterId: number; reciterName: string; surahId: number; surahName: string; uri: string; remoteUrl: string; savedAt: number };
 
 const API = "https://mp3quran.net/api/v3";
 const DOWNLOADS_KEY = "@rafik_audio_downloads_v1";
+const OFFICIAL_RADIO_STATIONS: RadioStation[] = [
+  { id: "egypt-cairo", name: "إذاعة القرآن الكريم من القاهرة", country: "جمهورية مصر العربية", flag: "🇪🇬", city: "القاهرة • ماسبيرو", description: "تلاوات كبار القراء المصريين، وبرامج التفسير والفتاوى والأسرة والمجتمع على مدار اليوم.", url: "https://stream.radiojar.com/8s5u5tpdtwzuv", sourceLabel: "بث إذاعة القاهرة" },
+  { id: "saudi-mecca", name: "إذاعة القرآن الكريم السعودية", country: "المملكة العربية السعودية", flag: "🇸🇦", city: "مكة المكرمة", description: "بث إذاعي قرآني سعودي متواصل، مع تلاوات وبرامج دينية من الإذاعة السعودية.", url: "https://n12.radiojar.com/0tpy1h0kxtzuv", sourceLabel: "بث إذاعة السعودية" },
+];
 const SURAH_NAMES = QURAN_SURAHS.map((surah) => surah.name);
 const RECITER_PHOTOS: Array<{ match: string[]; uri: string; credit: string }> = [
   { match: ["الحصري", "الحصرى", "Husary", "Hussary"], uri: "https://commons.wikimedia.org/wiki/Special:FilePath/Hussary.jpg?width=480", credit: "Wikimedia Commons • Public domain" },
@@ -51,7 +55,7 @@ export default function AudioScreen() {
   const status = useAudioPlayerStatus(player);
   const [section, setSection] = useState<"reciters" | "radio" | "downloads">("reciters");
   const [reciters, setReciters] = useState<Reciter[]>([]);
-  const [stations, setStations] = useState<RadioStation[]>([]);
+  const [stations] = useState<RadioStation[]>(OFFICIAL_RADIO_STATIONS);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [selectedReciter, setSelectedReciter] = useState<number | null>(null);
@@ -77,16 +81,12 @@ export default function AudioScreen() {
     let active = true;
     setLoading(true);
     setError("");
-    Promise.all([
-      fetch(`${API}/reciters?language=ar`).then((r) => { if (!r.ok) throw new Error("reciters"); return r.json(); }),
-      fetch(`${API}/radios?language=ar`).then((r) => { if (!r.ok) throw new Error("radios"); return r.json(); }),
-    ]).then(([reciterData, radioData]) => {
-      if (!active) return;
-      const list: Reciter[] = Array.isArray(reciterData?.reciters) ? reciterData.reciters : [];
-      const radioList: RadioStation[] = Array.isArray(radioData?.radios) ? radioData.radios : Array.isArray(radioData?.radio) ? radioData.radio : [];
-      setReciters(list);
-      setStations(radioList);
-    }).catch(() => { if (active) setError("تعذر تحميل المكتبة الصوتية. تحقق من الإنترنت وحاول مرة أخرى."); })
+    fetch(`${API}/reciters?language=ar`).then((r) => { if (!r.ok) throw new Error("reciters"); return r.json(); })
+      .then((reciterData) => {
+        if (!active) return;
+        const list: Reciter[] = Array.isArray(reciterData?.reciters) ? reciterData.reciters : [];
+        setReciters(list);
+      }).catch(() => { if (active) setError("تعذر تحميل مكتبة القراء. تحقق من الإنترنت وحاول مرة أخرى."); })
       .finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
   }, []);
@@ -299,17 +299,40 @@ export default function AudioScreen() {
         </View>) : <Text style={{ color: colors.muted, textAlign: "center", paddingVertical: 20 }}>لسه مفيش سور محفوظة. افتح قارئ واضغط تنزيل بجانب السورة.</Text>}
       </SulyCard> : null}
 
-      {!loading && !error && section === "radio" ? <SulyCard>
-        <Text style={{ color: colors.text, fontWeight: "900", fontSize: 18, textAlign: "right" }}>إذاعات القرآن الكريم المباشرة</Text>
-        <Text style={{ color: colors.muted, fontSize: 12, textAlign: "right" }}>اضغط على اسم الإذاعة وسيبدأ البث داخل التطبيق. البث المباشر لا يمكن حفظه كسورة كاملة.</Text>
-        {stations.length ? stations.map((station) => {
-          const title = station.name || `إذاعة ${station.id}`;
-          const selected = trackTitle === title;
-          return <Pressable key={station.id} onPress={() => void playUrl(station.url, title, "إذاعة القرآن الكريم", true)} style={{ borderTopWidth: 1, borderTopColor: colors.border, paddingVertical: 13, paddingHorizontal: 8, flexDirection: "row-reverse", alignItems: "center", justifyContent: "space-between" }}>
-            <Text style={{ color: selected ? colors.gold : colors.text, textAlign: "right", fontWeight: "700", flex: 1 }}>{title}</Text><Text style={{ color: selected ? colors.gold : colors.muted, fontSize: 12 }}>{selected && status.playing ? "يعمل الآن ◉" : "▶ استمع"}</Text>
+      {!loading && !error && section === "radio" ? <>
+        <SulyCard>
+          <Text style={{ color: colors.text, fontWeight: "900", fontSize: 19, textAlign: "right" }}>إذاعات القرآن الكريم الرسمية</Text>
+          <Text style={{ color: colors.muted, fontSize: 12, textAlign: "right", lineHeight: 20, marginTop: 5 }}>هنا هتسمع الإذاعة ببرامجها وفقراتها المباشرة، مش قناة قارئ واحد. اختار الدولة واضغط على الإذاعة للتشغيل داخل التطبيق.</Text>
+          <View style={{ flexDirection: "row-reverse", alignItems: "center", gap: 7, marginTop: 12 }}>
+            <View style={{ width: 7, height: 7, borderRadius: 4, backgroundColor: colors.gold }} />
+            <Text style={{ color: colors.muted, fontSize: 11 }}>بث مباشر • يحتاج اتصال بالإنترنت</Text>
+          </View>
+        </SulyCard>
+        {stations.map((station) => {
+          const selected = trackTitle === station.name;
+          return <Pressable key={station.id} onPress={() => void playUrl(station.url, station.name, station.country, true)} style={{ backgroundColor: colors.surface, borderWidth: 1, borderColor: selected ? colors.gold : colors.border, borderRadius: 18, padding: 15, marginBottom: 10 }}>
+            <View style={{ flexDirection: "row-reverse", alignItems: "center", gap: 12 }}>
+              <View style={{ width: 58, height: 58, borderRadius: 15, backgroundColor: colors.gold + "18", alignItems: "center", justifyContent: "center", borderWidth: 1, borderColor: colors.gold + "55" }}>
+                <Text style={{ fontSize: 31 }}>{station.flag}</Text>
+              </View>
+              <View style={{ flex: 1, alignItems: "flex-end" }}>
+                <Text style={{ color: selected ? colors.gold : colors.text, fontSize: 16, fontWeight: "900", textAlign: "right" }}>{station.name}</Text>
+                <Text style={{ color: colors.muted, fontSize: 11, marginTop: 4, textAlign: "right" }}>{station.country}</Text>
+                <Text style={{ color: colors.muted, fontSize: 10, marginTop: 3, textAlign: "right" }}>{station.city}</Text>
+              </View>
+              <View style={{ width: 38, height: 38, borderRadius: 20, backgroundColor: selected && status.playing ? colors.gold : colors.gold + "20", alignItems: "center", justifyContent: "center" }>
+                <Text style={{ color: selected && status.playing ? "#111111" : colors.gold, fontWeight: "900", fontSize: 15 }}>{selected && status.playing ? "Ⅱ" : "▶"}</Text>
+              </View>
+            </View>
+            <Text style={{ color: colors.muted, textAlign: "right", fontSize: 12, lineHeight: 19, marginTop: 12 }}>{station.description}</Text>
+            <View style={{ flexDirection: "row-reverse", alignItems: "center", justifyContent: "space-between", borderTopWidth: 1, borderTopColor: colors.border, marginTop: 12, paddingTop: 10 }}>
+              <Text style={{ color: selected ? colors.gold : colors.muted, fontSize: 11, fontWeight: "700" }}>{selected && status.playing ? "يُبث الآن على المشغل" : "اضغط للاستماع مباشرة"}</Text>
+              <Text style={{ color: colors.muted, fontSize: 10 }}>{station.sourceLabel}</Text>
+            </View>
           </Pressable>;
-        }) : <Text style={{ color: colors.muted, textAlign: "right" }}>لم تصل قائمة الإذاعات من المصدر.</Text>}
-      </SulyCard> : null}
+        })}
+        <Text style={{ color: colors.muted, fontSize: 10, textAlign: "center", lineHeight: 17 }}>قد تتوقف روابط البث مؤقتًا إذا غيّر مزود الإذاعة عنوان البث. نعرض الإذاعات الوطنية فقط في هذا القسم، وتظل إذاعات القراء المنفردة خارج هذه القائمة.</Text>
+      </> : null}
       <Text style={{ color: colors.muted, fontSize: 11, textAlign: "center" }}>مصادر التلاوات: MP3Quran.net • صور القراء المتاحة من Wikimedia Commons. الملفات المحفوظة تبقى داخل التطبيق حتى تحذفها.</Text>
     </AppScreen>
   );
