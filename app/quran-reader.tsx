@@ -5,8 +5,8 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useEffect } from "react";
 import { ActivityIndicator } from "react-native";
 import { setAudioModeAsync, useAudioPlayer, useAudioPlayerStatus } from "expo-audio";
-import { AppScreen, ScreenHeading, SulyButton, SulyCard, SulyInput, useSulyTheme } from "@/components/suly-ui";
-import { localDateKey, useAppStore } from "@/lib/app-store";
+import { AppScreen, ScreenHeading, SulyButton, SulyCard, useSulyTheme } from "@/components/suly-ui";
+import { useAppStore } from "@/lib/app-store";
 import {
   getQuranPage,
   getSurahStartPage,
@@ -122,13 +122,12 @@ export default function QuranReaderScreen() {
   const requestedPage = Number.isInteger(requestedSurah) && requestedSurah > 0 ? (Number.isInteger(requestedAyah) && requestedAyah > 0 ? getQuranPageForVerse(requestedSurah, requestedAyah) : getSurahStartPage(requestedSurah)) : null;
   const page = clampPage(requestedPage ?? store.quranReader.lastPage ?? 1);
   useEffect(() => { if (requestedPage) goToPage(requestedPage); }, [params.surah, params.ayah]);
-  const [pageDraft, setPageDraft] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const searchResults = useMemo(() => searchQuran(searchQuery, 10), [searchQuery]);
   const [surahPickerVisible, setSurahPickerVisible] = useState(false);
   const [pagePickerVisible, setPagePickerVisible] = useState(false);
   const [readerMenuVisible, setReaderMenuVisible] = useState(false);
-  const [currentPosition, setCurrentPosition] = useState<{ surah: number; ayah: number } | null>(null);
+  const [currentPosition, setCurrentPosition] = useState<{ surah: number; ayah: number } | null>(() => store.quranReader.bookmarkPage === page && store.quranReader.bookmarkSurah && store.quranReader.bookmarkAyah ? { surah: store.quranReader.bookmarkSurah, ayah: store.quranReader.bookmarkAyah } : null);
   const fontSize = store.quranReader.fontSize ?? 27;
   const [notice, setNotice] = useState("");
   const [selectedTafsir, setSelectedTafsir] = useState<{ surah: number; ayah: number } | null>(null);
@@ -156,11 +155,8 @@ export default function QuranReaderScreen() {
       .finally(() => { if (active) setTafsirLoading(false); });
     return () => { active = false; };
   }, [selectedTafsir?.surah, selectedTafsir?.ayah]);
-  const today = localDateKey(new Date(), store.location?.timeZone);
   const verses = useMemo(() => getQuranPage(page), [page]);
   const currentSurah = QURAN_SURAHS.find((surah) => surah.id === verses[0]?.surah);
-  const pagesReadToday = store.quranReader.pagesReadByDate[today] ?? [];
-  const pageIsRead = pagesReadToday.includes(page);
   const pageIsBookmarked = store.quranReader.bookmarkPage === page;
 
   const goToPage = (target: number) => {
@@ -171,46 +167,6 @@ export default function QuranReaderScreen() {
       ...current,
       quranReader: { ...current.quranReader, lastPage: nextPage },
     }));
-  };
-
-  const submitPage = () => {
-    const parsed = Number.parseInt(pageDraft ?? `${page}`, 10);
-    if (!Number.isInteger(parsed) || parsed < 1 || parsed > QURAN_PAGE_COUNT) {
-      setNotice(`أدخل رقم صفحة من ١ إلى ${arabicNumber(QURAN_PAGE_COUNT)}.`);
-      return;
-    }
-    goToPage(parsed);
-  };
-
-  const togglePageRead = () => {
-    const nextPages = new Set(pagesReadToday);
-    if (pageIsRead) nextPages.delete(page);
-    else nextPages.add(page);
-    updateStore((current) => ({
-      ...current,
-      quranReader: {
-        ...current.quranReader,
-        lastPage: page,
-        khatmaPages: pageIsRead ? current.quranReader.khatmaPages : [...new Set([...current.quranReader.khatmaPages, page])].sort((a, b) => a - b),
-        pagesReadByDate: {
-          ...current.quranReader.pagesReadByDate,
-          [today]: [...nextPages].sort((a, b) => a - b),
-        },
-      },
-    }));
-    setNotice(pageIsRead ? "أُزيل تسجيل قراءة الصفحة لهذا اليوم." : "سُجلت الصفحة ضمن قراءة اليوم.");
-  };
-
-  const toggleBookmark = () => {
-    updateStore((current) => ({
-      ...current,
-      quranReader: {
-        ...current.quranReader,
-        lastPage: page,
-        bookmarkPage: current.quranReader.bookmarkPage === page ? null : page,
-      },
-    }));
-    setNotice(pageIsBookmarked ? "أُزيلت العلامة المرجعية." : "حُفظت هذه الصفحة كعلامة مرجعية.");
   };
 
   const openSurah = (surahNumber: number) => {
