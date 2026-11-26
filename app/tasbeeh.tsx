@@ -174,7 +174,7 @@ export default function TasbeehScreen() {
             <Text style={{ color: colors.muted, fontSize: 12 }}>تسبيحة اليوم</Text>
           </View>
         </Pressable>
-        {store.tasbeehGoal ? (
+        {challengeMode || store.tasbeehGoal ? (
           <View style={{ alignSelf: "stretch", gap: 8 }}>
             <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
               <Text style={{ color: completed ? colors.gold : colors.muted, fontWeight: "800" }}>{completed ? "أحسنت، وصلت لهدفك!" : `متبقي ${remaining}`}</Text>
@@ -185,7 +185,9 @@ export default function TasbeehScreen() {
         ) : <Text style={{ color: colors.muted }}>حدد هدفًا يوميًا يناسب وقتك، أو سبّح بلا هدف محدد.</Text>}
         <View style={{ flexDirection: "row", gap: 10, alignSelf: "stretch" }}>
           <SulyButton title="تسبيحة" onPress={increment} />
-          <SulyButton title="تراجع مرة" secondary disabled={count === 0} onPress={() => updateStore((current) => ({ ...current, tasbeehCounts: { ...current.tasbeehCounts, [today]: Math.max(0, (current.tasbeehCounts[today] ?? 0) - 1) } }))} />
+          <SulyButton title="تراجع مرة" secondary disabled={count === 0} onPress={() => challengeMode
+            ? updateStore((current) => ({ ...current, tasbeehChallengeCounts: { ...current.tasbeehChallengeCounts, [challengeKey]: Math.max(0, (current.tasbeehChallengeCounts[challengeKey] ?? 0) - 1) } }))
+            : updateStore((current) => ({ ...current, tasbeehCounts: { ...current.tasbeehCounts, [today]: Math.max(0, (current.tasbeehCounts[today] ?? 0) - 1) } }))} />
         </View>
       </SulyCard>
 
