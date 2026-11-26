@@ -114,8 +114,9 @@ export default function HomeScreen() {
           <View style={{ borderTopWidth: 1, borderTopColor: colors.border, paddingTop: 13, marginTop: 6, flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
             <View style={{ alignItems: "flex-end" }}>
               <Text style={{ color: colors.muted, fontSize: 13 }}>{nextPrayerToday ? "الصلاة التالية" : "أول صلاة غدًا"}</Text>
-              <Text style={{ color: colors.text, fontSize: 20, fontWeight: "800", marginTop: 2 }}>{nextPrayer.name} · {formatPrayerTime(nextPrayer.time, store.location?.timeZone)}</Text>
-              <Text accessibilityLiveRegion="polite" style={{ color: colors.gold, fontSize: 13, fontWeight: "700", marginTop: 5 }}>{formatRemaining(nextPrayer.time, now)}</Text>
+              <Text style={{ color: colors.text, fontSize: 25, fontWeight: "900", marginTop: 3 }}>{nextPrayer.name}</Text>
+              <Text style={{ color: colors.muted, fontSize: 13, fontWeight: "700", marginTop: 2 }}>{formatPrayerTime(nextPrayer.time, store.location?.timeZone)}</Text>
+              <Text accessibilityLiveRegion="polite" style={{ color: colors.gold, fontSize: 21, fontWeight: "900", marginTop: 7, fontVariant: ["tabular-nums"] }}>{formatRemaining(nextPrayer.time, now)}</Text>
             </View>
             <MaterialCommunityIcons name="clock-time-four-outline" size={25} color={colors.gold} />
           </View>
@@ -143,6 +144,15 @@ export default function HomeScreen() {
           <Text style={{ color: colors.text }}>{formatPrayerTime(tomorrowTimes[id], store.location?.timeZone)}</Text><Text style={{ color: colors.muted }}>{PRAYER_LABELS[id]}</Text>
         </View>) : null}
       </SulyCard> : null}
+
+      <Pressable onPress={() => router.push("/audio")} accessibilityRole="button" style={{ backgroundColor: colors.card, borderColor: colors.gold + "77", borderWidth: 1, borderRadius: 19, padding: 16, flexDirection: "row-reverse", alignItems: "center", gap: 13 }}>
+        <View style={{ width: 54, height: 54, borderRadius: 17, backgroundColor: colors.gold + "22", alignItems: "center", justifyContent: "center" }}><MaterialCommunityIcons name="radio" size={29} color={colors.gold} /></View>
+        <View style={{ flex: 1, alignItems: "flex-end", gap: 4 }}>
+          <Text style={{ color: colors.text, fontWeight: "900", fontSize: 17 }}>إذاعة القرآن الكريم</Text>
+          <Text style={{ color: colors.muted, textAlign: "right", fontSize: 12 }}>استمع للقراء والتلاوات والإذاعات المفضلة</Text>
+        </View>
+        <MaterialCommunityIcons name="chevron-left" size={23} color={colors.gold} />
+      </Pressable>
 
       <SulyCard style={{ backgroundColor: colors.surface, borderColor: colors.border }}>
         <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "flex-end", gap: 8 }}>
