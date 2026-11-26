@@ -76,7 +76,7 @@ export function StoryReaderContent({ storyId, onBack, onOpenQuran }: { storyId: 
   const lessonsChapter = story?.chapters.find((item) => item.title.includes("الدروس المستفادة"));
   const readingChapters = story ? story.chapters.filter((item) => item !== lessonsChapter) : [];
   const [chapterIndex, setChapterIndex] = useState(0);
-  const [showContext, setShowContext] = useState(false);
+  const [showContext] = useState(false);
   const [showLessons, setShowLessons] = useState(false);
   const [notice, setNotice] = useState("");
   const [selectedReference, setSelectedReference] = useState<{ label: string; surahId: number; startAyah: number; endAyah: number } | null>(null);
@@ -90,7 +90,6 @@ export function StoryReaderContent({ storyId, onBack, onOpenQuran }: { storyId: 
     if (!story) return;
     const saved = store.storyProgress[story.id] ?? 0;
     setChapterIndex(Math.min(Math.max(0, saved), Math.max(0, readingChapters.length - 1)));
-    setShowContext(false);
     setShowLessons(false);
     setSelectedReference(null);
     setSelectedAyah(1);
@@ -131,7 +130,6 @@ export function StoryReaderContent({ storyId, onBack, onOpenQuran }: { storyId: 
     setNotice("اتحفظ مكانك في القصة على هذا الجهاز.");
   };
   const referenceItems = parseStoryReferences(chapter?.reference ?? "");
-  const contextReferenceItems = parseStoryReferences(contextChapter?.reference ?? "");
   const selectedPage = selectedReference ? getQuranPage(getQuranPageForVerse(selectedReference.surahId, selectedAyah) ?? 0) : [];
   const selectedVerse = selectedPage.find((verse) => verse.surah === selectedReference?.surahId && verse.ayah === selectedAyah);
 
@@ -157,18 +155,6 @@ export function StoryReaderContent({ storyId, onBack, onOpenQuran }: { storyId: 
           <Text style={{ color: colors.text, textAlign: "right", fontSize: 14, lineHeight: 23 }}>{story.summary}</Text>
         </View>
       </SulyCard>
-
-      {contextChapter && showContext ? <SulyCard style={{ gap: 10 }}>
-        <Text style={{ color: colors.gold, fontSize: 19, fontWeight: "900", textAlign: "right" }}>المقدمة التاريخية: قبل بداية القصة</Text>
-        <Text style={{ color: colors.text, fontSize: 16, lineHeight: 31, textAlign: "right" }}>{contextChapter.body}</Text>
-        {contextReferenceItems.length ? <View style={{ gap: 7 }}>
-          <Text style={{ color: colors.muted, fontSize: 12, textAlign: "right" }}>مراجع المقدمة — اضغط على المرجع لعرض التفسير أو فتح المصحف:</Text>
-          {contextReferenceItems.map((reference) => <Pressable key={`context-${reference.label}`} onPress={() => { setSelectedReference(reference); setSelectedAyah(reference.startAyah); }} style={{ padding: 9, borderRadius: 10, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border }}>
-            <Text style={{ color: colors.gold, fontSize: 13, textAlign: "right", fontWeight: "700" }}>{reference.label}</Text>
-          </Pressable>)}
-        </View> : <Text style={{ color: colors.muted, fontSize: 12, textAlign: "right" }}>{contextChapter.reference}</Text>}
-        <SulyButton title="تخطي المقدمة وابدأ القصة" onPress={() => { setShowContext(false); setShowLessons(false); }} />
-      </SulyCard> : null}
 
       {!showContext ? <SulyCard style={{ gap: 12 }}>
         <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
