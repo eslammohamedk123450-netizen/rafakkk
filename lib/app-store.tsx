@@ -119,7 +119,26 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
       .then(() => readLocalState<AppStore>("app", defaultStore))
       .then((saved) => {
         if (!active) return;
-        const merged = { ...defaultStore, ...saved };
+        // Merge nested settings too, so older saved versions remain compatible.
+        const merged: AppStore = {
+          ...defaultStore,
+          ...saved,
+          quranPlan: { ...defaultStore.quranPlan, ...(saved.quranPlan ?? {}) },
+          quranReader: { ...defaultStore.quranReader, ...(saved.quranReader ?? {}) },
+          notificationPrefs: {
+            ...defaultStore.notificationPrefs,
+            ...(saved.notificationPrefs ?? {}),
+            prayers: {
+              ...defaultStore.notificationPrefs.prayers,
+              ...(saved.notificationPrefs?.prayers ?? {}),
+            },
+            messageCategories: {
+              ...defaultStore.notificationPrefs.messageCategories,
+              ...(saved.notificationPrefs?.messageCategories ?? {}),
+            },
+            messageTimes: saved.notificationPrefs?.messageTimes ?? defaultStore.notificationPrefs.messageTimes,
+          },
+        };
         currentRef.current = merged;
         setStore(merged);
       })
