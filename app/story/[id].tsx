@@ -34,6 +34,45 @@ export default function StoryReaderScreen() {
     setChapterIndex(Math.min(Math.max(0, saved - offset), Math.max(0, readingChapters.length - 1)));
   }, [story?.id]);
 
+  useEffect(() => {
+    if (!selectedReference) return;
+    let active = true;
+    setTafsirLoading(true);
+    setTafsirError("");
+    setTafsirText("");
+    setTafsirFootnotes("");
+    fetch(`https://quranenc.com/api/v1/translation/aya/arabic_moyassar/${selectedReference.surahId}/${selectedAyah}`)
+      .then(async (response) => {
+        if (!response.ok) throw new Error("تعذر جلب التفسير من المصدر.");
+        return response.json();
+      })
+      .then((payload) => {
+        const result = payload?.result;
+        if (!result || typeof result.translation !== "string" || !result.translation.trim()) {
+          throw new Error("لا يتوفر نص تفسير لهذه الآية في المصدر حاليًا.");
+        }
+        const plainText = (value: string) => value
+          .replace(/<br\s*\\/?\s*>/gi, "\n")
+          .replace(/<\\/(p|div|li)>/gi, "\n")
+          .replace(/<[^>]*>/g, "")
+          .replace(/&nbsp;/g, " ")
+          .replace(/&amp;/g, "&")
+          .replace(/&quot;/g, '"')
+          .replace(/&#39;/g, "'")
+          .replace(/&lt;/g, "<")
+          .replace(/&gt;/g, ">");
+        if (active) {
+          setTafsirText(plainText(result.translation));
+          setTafsirFootnotes(typeof result.footnotes === "string" ? plainText(result.footnotes) : "");
+        }
+      })
+      .catch((error) => {
+        if (active) setTafsirError(error instanceof Error ? error.message : "حدث خطأ أثناء تحميل التفسير.");
+      })
+      .finally(() => { if (active) setTafsirLoading(false); });
+    return () => { active = false; };
+  }, [selectedReference?.surahId, selectedAyah]);
+
   if (!story) {
     return <AppScreen><ScreenHeading title="القصة غير موجودة" subtitle="ارجع إلى مكتبة القصص واختر قصة أخرى." /><SulyButton title="العودة للقصص" onPress={() => router.replace("/stories")} /></AppScreen>;
   }
@@ -58,44 +97,6 @@ export default function StoryReaderScreen() {
   }).filter((item): item is { label: string; surahId: number; startAyah: number; endAyah: number } => Boolean(item));
   const selectedPage = selectedReference ? getQuranPage(getQuranPageForVerse(selectedReference.surahId, selectedAyah) ?? 0) : [];
   const selectedVerse = selectedPage.find((verse) => verse.surah === selectedReference?.surahId && verse.ayah === selectedAyah);
-  useEffect(() => {
-    if (!selectedReference) return;
-    let active = true;
-    setTafsirLoading(true);
-    setTafsirError("");
-    setTafsirText("");
-    setTafsirFootnotes("");
-    fetch(`https://quranenc.com/api/v1/translation/aya/arabic_moyassar/${selectedReference.surahId}/${selectedAyah}`)
-      .then(async (response) => {
-        if (!response.ok) throw new Error("تعذر جلب التفسير من المصدر.");
-        return response.json();
-      })
-      .then((payload) => {
-        const result = payload?.result;
-        if (!result || typeof result.translation !== "string" || !result.translation.trim()) {
-          throw new Error("لا يتوفر نص تفسير لهذه الآية في المصدر حاليًا.");
-        }
-        const plainText = (value: string) => value
-          .replace(/<br\\s*\\/?\\s*>/gi, "\\n")
-          .replace(/<\\/(p|div|li)>/gi, "\\n")
-          .replace(/<[^>]*>/g, "")
-          .replace(/&nbsp;/g, " ")
-          .replace(/&amp;/g, "&")
-          .replace(/&quot;/g, '"')
-          .replace(/&#39;/g, "'")
-          .replace(/&lt;/g, "<")
-          .replace(/&gt;/g, ">");
-        if (active) {
-          setTafsirText(plainText(result.translation));
-          setTafsirFootnotes(typeof result.footnotes === "string" ? plainText(result.footnotes) : "");
-        }
-      })
-      .catch((error) => {
-        if (active) setTafsirError(error instanceof Error ? error.message : "حدث خطأ أثناء تحميل التفسير.");
-      })
-      .finally(() => { if (active) setTafsirLoading(false); });
-    return () => { active = false; };
-  }, [selectedReference?.surahId, selectedAyah]);
   const openSelectedReferenceInQuran = () => {
     if (!selectedReference) return;
     router.push(`/quran-reader?surah=${selectedReference.surahId}&ayah=${selectedReference.startAyah}` as any);
