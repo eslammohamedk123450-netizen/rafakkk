@@ -4,10 +4,10 @@ import type { PrayerId } from "@/lib/app-store";
 import { PRAYER_LABELS, type DailyPrayerTimes } from "@/lib/prayer/calculations";
 
 Notifications.setNotificationHandler({
-  handleNotification: async () => ({
+  handleNotification: async (notification) => ({
     shouldShowBanner: true,
     shouldShowList: true,
-    shouldPlaySound: true,
+    shouldPlaySound: notification.request.content.sound !== false && notification.request.content.data?.kind !== "suly-gentle",
     shouldSetBadge: false,
   }),
 });
@@ -31,7 +31,7 @@ export async function prepareNotificationChannel() {
     }),
     Notifications.setNotificationChannelAsync("suly-prayer-silent", {
       name: "تذكيرات الصلاة الصامتة",
-      importance: Notifications.AndroidImportance.DEFAULT,
+      importance: Notifications.AndroidImportance.LOW,
       vibrationPattern: [],
       sound: null,
     }),

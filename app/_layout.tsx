@@ -48,14 +48,14 @@ export default function RootLayout() {
   useEffect(() => {
     if (Platform.OS !== "android") return;
     let active = true;
-    AsyncStorage.getItem("suly.battery-guidance.v1")
+    AsyncStorage.getItem("suly.battery-guidance.v2")
       .then(async (shown) => {
         if (!active || shown) return;
         await AsyncStorage.setItem("suly.battery-guidance.v1", "shown");
         if (!active) return;
         Alert.alert(
-          "إعداد البطارية للأذان",
-          "لزيادة فرصة وصول الأذان في موعده، افتح إعدادات التطبيق ثم البطارية واختر «غير مقيّد» إن كان الخيار متاحًا، وتأكد من السماح بـ«المنبهات والتذكيرات» إذا ظهرت. هذا لتحسين وصول الأذان؛ التطبيق لا يشغّل خدمة دائمة ولا يظل مستيقظًا، ونظام أندرويد هو الذي يطلق صوت الأذان المجدول فقط.",
+          "إعداد الإشعارات والأذان",
+          "للحفاظ على البطارية، اترك تحسين البطارية على الإعداد الافتراضي في البداية، واسمح بإشعارات التطبيق وبإذن «المنبهات والتذكيرات» إذا ظهر. إذا لاحظت تأخر الأذان رغم السماح بالأذونات، يمكنك تجربة خيار «غير مقيّد» كحل اختياري؛ قد يزيد استهلاك البطارية قليلًا. التطبيق لا يشغّل خدمة دائمة ولا يظل مستيقظًا؛ أندرويد هو الذي ينفذ التنبيهات المجدولة.",
           [
             { text: "ليس الآن", style: "cancel" },
             { text: "فتح إعدادات التطبيق", onPress: () => { void Linking.openSettings(); } },
