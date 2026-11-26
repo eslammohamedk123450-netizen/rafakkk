@@ -25,6 +25,8 @@ export default function QuranScreen() {
     pagesReadToday,
   });
   const lastPage = store.quranReader.lastPage || 1;
+  const khatmaPages = store.quranReader.khatmaPages?.length ?? 0;
+  const khatmaPercent = Math.min(100, Math.round((khatmaPages / 604) * 100));
   const [mode, setMode] = useState(store.quranPlan.mode);
   const [target, setTarget] = useState(`${store.quranPlan.target}`);
   const [sessions, setSessions] = useState(`${store.quranPlan.sessionsPerDay}`);
@@ -75,12 +77,17 @@ export default function QuranScreen() {
       <ScreenHeading title="الورد القرآني" subtitle="خطة تناسب وقتك، وخطوة في كل مرة" action={<Pressable onPress={() => router.push("/settings")}><Text style={{ color: colors.gold, fontWeight: "700" }}>الإعدادات</Text></Pressable>} />
       <SulyButton title="القراء والتلاوات · إذاعة القرآن" secondary onPress={() => router.push("/audio")} />
       <SulyCard style={{ backgroundColor: colors.card, gap: 14 }}>
+        <Text style={{ color: colors.text, textAlign: "right", fontSize: 17, fontWeight: "800" }}>رحلتك مع القرآن</Text>
+        <Text style={{ color: colors.muted, textAlign: "right", fontSize: 13 }}>كل صفحة تقرؤها وتسجلها تقرّبك خطوة من إتمام المصحف.</Text>
+        <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}><Text style={{ color: colors.muted }}>إنجاز الختمة الحالية</Text><Text style={{ color: colors.text, fontWeight: "800" }}>{khatmaPages} / 604 صفحة</Text></View>
+        <ProgressBar value={khatmaPages} max={604} color={colors.gold} />
+        <Text style={{ color: colors.muted, textAlign: "right", fontSize: 12 }}>{khatmaPercent}% من صفحات المصحف سُجلت في ختمتك الحالية. تكرار الصفحة لا يزيد العدد مرتين.</Text>
         <Text style={{ color: colors.muted, textAlign: "right" }}>ورد اليوم</Text>
         <Text style={{ color: colors.text, textAlign: "right", fontSize: 19, fontWeight: "700" }}>{goalCaption}</Text>
         <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}><Text style={{ color: colors.muted }}>متبقي {remaining} {selectedMode.unit}</Text><Text style={{ color: colors.text, fontSize: 27, fontWeight: "800" }}>{progress} / {store.quranPlan.target}</Text></View>
         <ProgressBar value={progress} max={store.quranPlan.target} color={colors.gold} />
         <SulyButton title={`افتح المصحف · الصفحة ${lastPage}`} secondary onPress={() => router.push("/quran-reader" as Href)} />
-        <Text style={{ color: colors.muted, textAlign: "right", fontSize: 12 }}>الصفحات التي سجّلت قراءتها اليوم: {pagesReadToday}</Text>
+        <Text style={{ color: colors.muted, textAlign: "right", fontSize: 12 }}>الصفحات التي سجّلت قراءتها اليوم: {pagesReadToday} · وإجمالي صفحات الختمة: {khatmaPages}</Text>
         {store.quranPlan.targetEndDate ? <Text style={{ color: colors.muted, textAlign: "right" }}>موعد هدف الختم: {store.quranPlan.targetEndDate}{endDateDays !== null ? endDateDays >= 0 ? ` · متبقٍ ${endDateDays} يومًا` : " · تجاوز الموعد المحدد" : ""}</Text> : null}
         {store.quranPlan.mode === "pages" ? <Text style={{ color: colors.muted, textAlign: "right", fontSize: 12 }}>يُحدّث تقدم الصفحات تلقائيًا عند تسجيل قراءة الصفحة في المصحف.</Text> : <View style={{ flexDirection: "row", gap: 10 }}><SulyButton title={`أتممت ${store.quranPlan.mode === "minutes" ? "10 دقائق" : "وحدة واحدة"}`} onPress={() => addProgress(store.quranPlan.mode === "minutes" ? 10 : 1)} /><View style={{ width: 92 }}><SulyButton title="تراجع" secondary onPress={() => addProgress(store.quranPlan.mode === "minutes" ? -10 : -1)} /></View></View>}
         <Text style={{ color: colors.muted, textAlign: "right", fontSize: 12 }}>التقدم محفوظ على هذا الجهاز، ويمكن تعديله في أي وقت.</Text>
