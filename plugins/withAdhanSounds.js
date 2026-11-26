@@ -14,6 +14,7 @@ module.exports = function withAdhanSounds(config) {
       const sounds = [
         ["adhan-1.mp3", "adhan_1.mp3"],
         ["adhan-2.mp3", "adhan_2.mp3"],
+        ["adhan-3.mp3", "adhan_3.mp3"],
       ];
       for (const [sourceName, targetName] of sounds) {
         const source = path.join(sourceDir, sourceName);
