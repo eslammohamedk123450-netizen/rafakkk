@@ -68,10 +68,8 @@ export function generateStaticParams() {
   return ISLAMIC_STORIES.map((story) => ({ id: story.id }));
 }
 
-export default function StoryReaderScreen({ storyId, onBack }: { storyId?: string; onBack?: () => void } = {}) {
-  const routeParams = useLocalSearchParams<{ id: string }>();
-  const id = storyId ?? routeParams.id;
-  const router = useRouter();
+export function StoryReaderContent({ storyId, onBack, onOpenQuran }: { storyId: string; onBack: () => void; onOpenQuran: (surahId: number, ayah: number) => void }) {
+  const id = storyId;
   const { store, updateStore } = useAppStore();
   const { colors } = useSulyTheme();
   const story = useMemo(() => getIslamicStory(String(id ?? "")), [id]);
@@ -122,7 +120,7 @@ export default function StoryReaderScreen({ storyId, onBack }: { storyId?: strin
     return () => { active = false; };
   }, [selectedReference?.surahId, selectedAyah]);
   if (!story) {
-    return <AppScreen><ScreenHeading title="القصة غير موجودة" subtitle="ارجع إلى مكتبة القصص واختر قصة أخرى." /><SulyButton title="العودة للقصص" onPress={() => router.replace("/stories")} /></AppScreen>;
+    return <AppScreen><ScreenHeading title="القصة غير موجودة" subtitle="ارجع إلى مكتبة القصص واختر قصة أخرى." /><SulyButton title="العودة للقصص" onPress={onBack} /></AppScreen>;
   }
 
   const activeIndex = Math.max(0, Math.min(chapterIndex, readingChapters.length - 1));
@@ -141,7 +139,7 @@ export default function StoryReaderScreen({ storyId, onBack }: { storyId?: strin
 
   const openSelectedReferenceInQuran = () => {
     if (!selectedReference) return;
-    router.push(`/quran-reader?surah=${selectedReference.surahId}&ayah=${selectedAyah}` as any);
+    onOpenQuran(selectedReference.surahId, selectedAyah);
     setSelectedReference(null);
   };
   const openLink = async (url: string) => {
@@ -150,7 +148,7 @@ export default function StoryReaderScreen({ storyId, onBack }: { storyId?: strin
 
   return (
     <AppScreen>
-      <ScreenHeading title={story.title} subtitle={story.subtitle} action={<Pressable onPress={() => onBack ? onBack() : router.back()}><Text style={{ color: colors.gold, fontWeight: "700" }}>رجوع</Text></Pressable>} />
+      <ScreenHeading title={story.title} subtitle={story.subtitle} action={<Pressable onPress={onBack}><Text style={{ color: colors.gold, fontWeight: "700" }}>رجوع</Text></Pressable>} />
       <SulyCard style={{ padding: 0, overflow: "hidden", gap: 0 }}>
         <View style={{ width: "100%", height: 150, backgroundColor: colors.surface, alignItems: "center", justifyContent: "center", gap: 8 }}>
           <MaterialCommunityIcons name="book-open-page-variant" size={50} color={colors.gold} />
@@ -259,5 +257,20 @@ export default function StoryReaderScreen({ storyId, onBack }: { storyId?: strin
       </Modal>
       <Text style={{ color: colors.muted, textAlign: "center", fontSize: 11, lineHeight: 18 }}>هذه صياغة مبسطة وليست بديلًا عن النص القرآني أو الحديث الأصلي. عند اختلاف الروايات، يُرجع إلى المصادر المذكورة.</Text>
     </AppScreen>
+  );
+}
+
+
+// Route adapter: navigation hooks stay in the actual Expo Router route only.
+export default function StoryReaderRoute() {
+  const routeParams = useLocalSearchParams<{ id: string }>();
+  const router = useRouter();
+  const storyId = String(routeParams.id ?? "");
+  return (
+    <StoryReaderContent
+      storyId={storyId}
+      onBack={() => router.back()}
+      onOpenQuran={(surahId, ayah) => router.push(`/quran-reader?surah=${surahId}&ayah=${ayah}` as any)}
+    />
   );
 }
