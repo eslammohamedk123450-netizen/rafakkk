@@ -92,7 +92,9 @@ export default function AdhkarScreen() {
       <SulyCard style={{ backgroundColor: colors.card }}>
         <Text style={{ color: colors.text, textAlign: "right", fontWeight: "700" }}>مكتبتك معاك في كل وقت</Text>
         <Text style={{ color: colors.muted, textAlign: "right", lineHeight: 21 }}>الأذكار والمحتوى الأساسي محفوظان داخل التطبيق ويعملان دون إنترنت. سجلاتك ومفضلاتك تظل على جهازك.</Text>
-        {localNotice ? <Text style={{ color: colors.gold, textAlign: "right" }}>{local      <Pressable onPress={() => router.push("/tasbeeh" as any)} accessibilityRole="button">
+        {localNotice ? <Text style={{ color: colors.gold, textAlign: "right" }}>{localNotice}</Text> : null}
+      </SulyCard>
+      <Pressable onPress={() => router.push("/tasbeeh" as any)} accessibilityRole="button">
         <SulyCard style={{ backgroundColor: colors.card, flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
           <View style={{ alignItems: "flex-end", flex: 1, gap: 5 }}>
             <Text style={{ color: colors.text, fontWeight: "800", fontSize: 17 }}>مساحة التسبيح</Text>
@@ -101,9 +103,7 @@ export default function AdhkarScreen() {
           </View>
           <MaterialCommunityIcons name="counter" size={40} color={colors.gold} />
         </SulyCard>
-      </Pressable> }))} />
-        </View>
-      </SulyCard>
+      </Pressable>>
 
       <View style={{ flexDirection: "row-reverse", flexWrap: "wrap", gap: 8 }}>{categories.map((item) => <TinyTag key={item.id} title={item.label} selected={category === item.id} onPress={() => setCategory(item.id)} />)}</View>
 
