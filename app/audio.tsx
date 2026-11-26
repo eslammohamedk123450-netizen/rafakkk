@@ -1,12 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
-import { ActivityIndicator, Linking, Pressable, ScrollView, Text, View } from "react-native";
+import { ActivityIndicator, Linking, Pressable, Text, View } from "react-native";
 import { useRouter } from "expo-router";
 import { AppScreen, ScreenHeading, SulyCard, SulyButton, TinyTag, useSulyTheme } from "@/components/suly-ui";
 import { QURAN_SURAHS } from "@/lib/quran";
 
 type Moshaf = { id: number; name: string; server: string; surah_total: number; surah_list?: string };
 type Reciter = { id: number; name: string; moshaf?: Moshaf[] };
-type RadioStation = { id: number; name?: string; radio_name?: string; url?: string; radio_url?: string };
+type RadioStation = { id: number; name?: string; url?: string };
 
 const API = "https://mp3quran.net/api/v3";
 const SURAH_NAMES = QURAN_SURAHS.map((surah) => surah.name);
@@ -106,10 +106,10 @@ export default function AudioScreen() {
       {!loading && !error && section === "radio" ? <SulyCard>
         <Text style={{ color: colors.text, fontWeight: "800", fontSize: 18, textAlign: "right" }}>إذاعات القرآن الكريم المباشرة</Text>
         {stations.length ? stations.map((station) => {
-          const title = station.radio_name || station.name || `إذاعة ${station.id}`;
+          const title = station.name || `إذاعة ${station.id}`;
           return <View key={station.id} style={{ borderTopWidth: 1, borderTopColor: colors.border, paddingTop: 10, gap: 8 }}>
             <Text style={{ color: colors.text, textAlign: "right", fontWeight: "700" }}>{title}</Text>
-            <SulyButton title="استمع إلى الإذاعة" secondary onPress={() => openAudio(station.radio_url || station.url)} />
+            <SulyButton title="استمع إلى الإذاعة" secondary onPress={() => openAudio(station.url)} />
           </View>;
         }) : <Text style={{ color: colors.muted, textAlign: "right" }}>لم تصل قائمة الإذاعات من المصدر.</Text>}
       </SulyCard> : null}
