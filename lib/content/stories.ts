@@ -181,8 +181,6 @@ export const ISLAMIC_STORIES: IslamicStory[] = [
     ],
     videoUrl: "https://www.youtube.com/results?search_query=%D9%82%D8%B5%D8%A9+%D8%A3%D8%B5%D8%AD%D8%A7%D8%A8+%D8%A7%D9%84%D8%BA%D8%A7%D8%B1+%D8%A7%D9%84%D8%AB%D9%84%D8%A7%D8%AB%D8%A9",
   },
-];
-
   {
     id: "battle-badr",
     title: "يوم بدر",
@@ -247,6 +245,8 @@ export const ISLAMIC_STORIES: IslamicStory[] = [
     ],
     videoUrl: "https://www.youtube.com/results?search_query=%D9%82%D8%B5%D8%A9+%D8%A8%D9%84%D8%A7%D9%84+%D8%A8%D9%86+%D8%B1%D8%A8%D8%A7%D8%AD",
   },
+];
+
 export function getIslamicStory(id: string) {
   return ISLAMIC_STORIES.find((story) => story.id === id);
 }
