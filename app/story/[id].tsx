@@ -222,7 +222,7 @@ export function StoryReaderContent({ storyId, onBack, onOpenQuran }: { storyId: 
         <Text style={{ color: colors.muted, textAlign: "right", fontSize: 12, lineHeight: 21 }}>روابط المصادر الخارجية اختيارية للمراجعة فقط؛ أما آيات القصة فتُفتح داخل مصحف رفيقك.</Text>
         <SulyButton title="ابحث عن فيديو القصة على يوتيوب" secondary onPress={() => openLink(story.videoUrl)} />
       </SulyCard> : null}
-      <Modal visible={Boolean(selectedReference)} transparent animationType="slide" onRequestClose={() => setSelectedReference(null)}>
+      {selectedReference ? <Modal visible transparent animationType="slide" onRequestClose={() => setSelectedReference(null)}>
         <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.68)", justifyContent: "flex-end" }}>
           <View style={{ backgroundColor: colors.surface, borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 20, gap: 13, maxHeight: "82%" }}>
             <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
@@ -254,7 +254,7 @@ export function StoryReaderContent({ storyId, onBack, onOpenQuran }: { storyId: 
             <Text style={{ color: colors.muted, textAlign: "center", fontSize: 11 }}>لن يتم فتح أي تطبيق أو موقع خارجي.</Text>
           </View>
         </View>
-      </Modal>
+      </Modal> : null}
       <Text style={{ color: colors.muted, textAlign: "center", fontSize: 11, lineHeight: 18 }}>هذه صياغة مبسطة وليست بديلًا عن النص القرآني أو الحديث الأصلي. عند اختلاف الروايات، يُرجع إلى المصادر المذكورة.</Text>
     </AppScreen>
   );
