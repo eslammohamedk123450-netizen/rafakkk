@@ -114,7 +114,7 @@ const config: ExpoConfig = {
     [
       "expo-audio",
       {
-        enableBackgroundPlayback: true,
+        enableBackgroundPlayback: false,
       },
     ],
     "expo-router",
