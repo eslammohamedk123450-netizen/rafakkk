@@ -52,8 +52,8 @@ export default function StoryReaderScreen() {
           throw new Error("لا يتوفر نص تفسير لهذه الآية في المصدر حاليًا.");
         }
         const plainText = (value: string) => value
-          .replace(/<br\s*\\/?\s*>/gi, "\n")
-          .replace(/<\\/(p|div|li)>/gi, "\n")
+          .replace(/<br\s*\/?\s*>/gi, "\n")
+          .replace(/<\/(p|div|li)>/gi, "\n")
           .replace(/<[^>]*>/g, "")
           .replace(/&nbsp;/g, " ")
           .replace(/&amp;/g, "&")
