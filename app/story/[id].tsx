@@ -21,7 +21,11 @@ export default function StoryReaderScreen() {
   const [showLessons, setShowLessons] = useState(false);
   const [notice, setNotice] = useState("");
   const [selectedReference, setSelectedReference] = useState<{ label: string; surahId: number; startAyah: number; endAyah: number } | null>(null);
-  const [showVerseExplanation, setShowVerseExplanation] = useState(false);
+  const [selectedAyah, setSelectedAyah] = useState(1);
+  const [tafsirText, setTafsirText] = useState("");
+  const [tafsirFootnotes, setTafsirFootnotes] = useState("");
+  const [tafsirLoading, setTafsirLoading] = useState(false);
+  const [tafsirError, setTafsirError] = useState("");
 
   useEffect(() => {
     if (!story) return;
@@ -52,8 +56,46 @@ export default function StoryReaderScreen() {
     if (!surah) return null;
     return { label: raw.trim(), surahId: surah.id, startAyah: Number(match[2]), endAyah: Number(match[3] ?? match[2]) };
   }).filter((item): item is { label: string; surahId: number; startAyah: number; endAyah: number } => Boolean(item));
-  const selectedPage = selectedReference ? getQuranPage(getQuranPageForVerse(selectedReference.surahId, selectedReference.startAyah) ?? 0) : [];
-  const selectedVerse = selectedPage.find((verse) => verse.surah === selectedReference?.surahId && verse.ayah === selectedReference?.startAyah);
+  const selectedPage = selectedReference ? getQuranPage(getQuranPageForVerse(selectedReference.surahId, selectedAyah) ?? 0) : [];
+  const selectedVerse = selectedPage.find((verse) => verse.surah === selectedReference?.surahId && verse.ayah === selectedAyah);
+  useEffect(() => {
+    if (!selectedReference) return;
+    let active = true;
+    setTafsirLoading(true);
+    setTafsirError("");
+    setTafsirText("");
+    setTafsirFootnotes("");
+    fetch(`https://quranenc.com/api/v1/translation/aya/arabic_moyassar/${selectedReference.surahId}/${selectedAyah}`)
+      .then(async (response) => {
+        if (!response.ok) throw new Error("تعذر جلب التفسير من المصدر.");
+        return response.json();
+      })
+      .then((payload) => {
+        const result = payload?.result;
+        if (!result || typeof result.translation !== "string" || !result.translation.trim()) {
+          throw new Error("لا يتوفر نص تفسير لهذه الآية في المصدر حاليًا.");
+        }
+        const plainText = (value: string) => value
+          .replace(/<br\\s*\\/?\\s*>/gi, "\\n")
+          .replace(/<\\/(p|div|li)>/gi, "\\n")
+          .replace(/<[^>]*>/g, "")
+          .replace(/&nbsp;/g, " ")
+          .replace(/&amp;/g, "&")
+          .replace(/&quot;/g, '"')
+          .replace(/&#39;/g, "'")
+          .replace(/&lt;/g, "<")
+          .replace(/&gt;/g, ">");
+        if (active) {
+          setTafsirText(plainText(result.translation));
+          setTafsirFootnotes(typeof result.footnotes === "string" ? plainText(result.footnotes) : "");
+        }
+      })
+      .catch((error) => {
+        if (active) setTafsirError(error instanceof Error ? error.message : "حدث خطأ أثناء تحميل التفسير.");
+      })
+      .finally(() => { if (active) setTafsirLoading(false); });
+    return () => { active = false; };
+  }, [selectedReference?.surahId, selectedAyah]);
   const openSelectedReferenceInQuran = () => {
     if (!selectedReference) return;
     router.push(`/quran-reader?surah=${selectedReference.surahId}&ayah=${selectedReference.startAyah}` as any);
@@ -102,10 +144,16 @@ export default function StoryReaderScreen() {
         {showLessons && lessonsText ? <View style={{ backgroundColor: colors.surface, borderRadius: 14, padding: 13, gap: 8 }}>
           <Text style={{ color: colors.gold, fontWeight: "900", fontSize: 17, textAlign: "right" }}>نتعلم من هذا الجزء</Text>
           <Text style={{ color: colors.text, fontSize: 15, lineHeight: 29, textAlign: "right" }}>{lessonsText}</Text>
+          {referenceItems.length ? <View style={{ gap: 7, marginTop: 5 }}>
+            <Text style={{ color: colors.muted, textAlign: "right", fontSize: 12 }}>آيات وردت في هذا الدرس — اضغط على المرجع لعرض تفسير كل آية:</Text>
+            {referenceItems.map((reference) => <Pressable key={`lesson-${reference.label}`} onPress={() => { setSelectedReference(reference); setSelectedAyah(reference.startAyah); }} style={{ padding: 9, borderRadius: 10, backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border }}>
+              <Text style={{ color: colors.gold, textAlign: "right", fontWeight: "700" }}>{reference.label}</Text>
+            </Pressable>)}
+          </View> : null}
         </View> : null}
         <View style={{ borderTopWidth: 1, borderTopColor: colors.border, paddingTop: 12, gap: 8 }}>
           <Text style={{ color: colors.gold, fontWeight: "800", textAlign: "right" }}>الآيات المرتبطة بهذا الفصل</Text>
-          {referenceItems.length ? referenceItems.map((reference) => <Pressable key={reference.label} onPress={() => { setSelectedReference(reference); setShowVerseExplanation(false); }} style={{ padding: 12, borderRadius: 12, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border }}>
+          {referenceItems.length ? referenceItems.map((reference) => <Pressable key={reference.label} onPress={() => { setSelectedReference(reference); setSelectedAyah(reference.startAyah); }} style={{ padding: 12, borderRadius: 12, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border }}>
             <Text style={{ color: colors.gold, textAlign: "right", fontWeight: "800" }}>{reference.label} · اضغط للاختيارات</Text>
           </Pressable>) : <Text style={{ color: colors.muted, textAlign: "right", lineHeight: 22 }}>{chapter?.reference}</Text>}
           <Text style={{ color: colors.muted, textAlign: "right", fontSize: 12 }}>اضغط على المرجع لتختار شرح الآيات أو فتح موضعها في مصحف رفيقك.</Text>
@@ -134,13 +182,27 @@ export default function StoryReaderScreen() {
               <Pressable onPress={() => setSelectedReference(null)}><Text style={{ color: colors.muted, fontSize: 16 }}>إغلاق ✕</Text></Pressable>
               <Text style={{ color: colors.gold, fontWeight: "900", fontSize: 18 }}>ماذا تريد أن تفعل؟</Text>
             </View>
-            <Text style={{ color: colors.text, textAlign: "right", fontWeight: "700" }}>{selectedReference?.label}</Text>
-            <SulyButton title="شرح مبسط للآيات وعلاقتها بالقصة" secondary onPress={() => setShowVerseExplanation((value) => !value)} />
-            {showVerseExplanation ? <ScrollView style={{ maxHeight: 210 }}>
-              <Text style={{ color: colors.text, textAlign: "right", lineHeight: 29, fontSize: 15 }}>{chapter?.body}</Text>
-              {selectedVerse ? <Text style={{ color: colors.gold, textAlign: "right", lineHeight: 29, marginTop: 10 }}>{selectedVerse.text}</Text> : null}
-              <Text style={{ color: colors.muted, textAlign: "right", lineHeight: 23, fontSize: 12, marginTop: 8 }}>هذا شرح لسياق الآيات داخل القصة، وليس نقلًا عن كتاب تفسير معتمد.</Text>
-            </ScrollView> : null}
+            <Text style={{ color: colors.text, textAlign: "right", fontWeight: "700" }}>اختر الآية التي تريد تفسيرها من هذا المرجع:</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ flexDirection: "row-reverse", gap: 7 }}>
+              {Array.from({ length: Math.max(1, selectedReference!.endAyah - selectedReference!.startAyah + 1) }, (_, index) => selectedReference!.startAyah + index).map((ayah) => <Pressable key={ayah} onPress={() => setSelectedAyah(ayah)} style={{ minWidth: 42, paddingVertical: 9, paddingHorizontal: 12, borderRadius: 10, backgroundColor: selectedAyah === ayah ? colors.gold : colors.card, borderWidth: 1, borderColor: colors.border }}>
+                <Text style={{ color: selectedAyah === ayah ? "#111111" : colors.text, textAlign: "center", fontWeight: "800" }}>{ayah}</Text>
+              </Pressable>)}
+            </ScrollView>
+            <ScrollView style={{ maxHeight: 300 }} contentContainerStyle={{ gap: 10 }}>
+              {selectedVerse ? <View style={{ padding: 12, borderRadius: 12, backgroundColor: colors.card }}>
+                <Text style={{ color: colors.gold, textAlign: "right", fontWeight: "800", marginBottom: 7 }}>نص الآية · {selectedAyah}</Text>
+                <Text style={{ color: colors.text, textAlign: "right", lineHeight: 32, fontSize: 18 }}>{selectedVerse.text}</Text>
+              </View> : null}
+              <Text style={{ color: colors.gold, textAlign: "right", fontWeight: "900", fontSize: 16 }}>التفسير الميسّر</Text>
+              {tafsirLoading ? <Text style={{ color: colors.muted, textAlign: "right" }}>جاري تحميل التفسير الموثّق…</Text> : null}
+              {tafsirError ? <Text style={{ color: colors.muted, textAlign: "right", lineHeight: 24 }}>{tafsirError} تأكد من اتصال الإنترنت ثم اختر الآية مرة أخرى.</Text> : null}
+              {tafsirText ? <Text style={{ color: colors.text, textAlign: "right", lineHeight: 29, fontSize: 15 }}>{tafsirText}</Text> : null}
+              {tafsirFootnotes ? <Text style={{ color: colors.muted, textAlign: "right", lineHeight: 24, fontSize: 12 }}>{tafsirFootnotes}</Text> : null}
+              <View style={{ borderTopWidth: 1, borderTopColor: colors.border, paddingTop: 9, gap: 4 }}>
+                <Text style={{ color: colors.gold, textAlign: "right", fontWeight: "800", fontSize: 12 }}>المصدر: التفسير الميسّر</Text>
+                <Text style={{ color: colors.muted, textAlign: "right", fontSize: 11, lineHeight: 19 }}>إعداد لجنة علمية بمجمع الملك فهد لطباعة المصحف الشريف · النسخة 1.0.0 · الناشر الرقمي: QuranEnc.com</Text>
+              </View>
+            </ScrollView>
             <SulyButton title="الذهاب إلى الآية في المصحف الداخلي" onPress={openSelectedReferenceInQuran} />
             <Text style={{ color: colors.muted, textAlign: "center", fontSize: 11 }}>لن يتم فتح أي تطبيق أو موقع خارجي.</Text>
           </View>
