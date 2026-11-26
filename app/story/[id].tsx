@@ -45,7 +45,7 @@ export default function StoryReaderScreen() {
     setNotice("اتحفظ مكانك في القصة على هذا الجهاز.");
   };
   const referenceItems = (chapter?.reference ?? "").split(/[؛;]/).map((raw) => {
-    const match = raw.trim().match(/سورة\\s+(.+?)،?\\s*الآيات?\\s*(\\d+)(?:\\s*[–-]\\s*(\\d+))?/);
+    const match = raw.trim().match(/سورة\s+(.+?)،?\s*الآيات?\s*(\\d+)(?:\s*[–-]\s*(\\d+))?/);
     if (!match) return null;
     const surahName = match[1].replace(/[،.]/g, "").trim();
     const surah = QURAN_SURAHS.find((item) => item.name === surahName || item.name.replace(/^ال/, "") === surahName.replace(/^ال/, ""));
@@ -129,7 +129,7 @@ export default function StoryReaderScreen() {
       </SulyCard>
       <Modal visible={Boolean(selectedReference)} transparent animationType="slide" onRequestClose={() => setSelectedReference(null)}>
         <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.68)", justifyContent: "flex-end" }}>
-          <View style={{ backgroundColor: colors.card, borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 20, gap: 13, maxHeight: "82%" }}>
+          <View style={{ backgroundColor: colors.surface, borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 20, gap: 13, maxHeight: "82%" }}>
             <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
               <Pressable onPress={() => setSelectedReference(null)}><Text style={{ color: colors.muted, fontSize: 16 }}>إغلاق ✕</Text></Pressable>
               <Text style={{ color: colors.gold, fontWeight: "900", fontSize: 18 }}>ماذا تريد أن تفعل؟</Text>
