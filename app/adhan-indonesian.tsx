@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { ActivityIndicator, Platform, Pressable, Text, View } from "react-native";
+import { ActivityIndicator, Linking, Pressable, Text, View } from "react-native";
 import { useAudioPlayer, useAudioPlayerStatus, setAudioModeAsync } from "expo-audio";
 import { useRouter } from "expo-router";
 import { AppScreen, ScreenHeading, SulyCard, SulyButton, useSulyTheme } from "@/components/suly-ui";
@@ -73,7 +73,7 @@ export default function IndonesianAdhanScreen() {
             <View style={{ flex: 1 }}><SulyButton title="إيقاف" secondary onPress={() => { player.pause(); void player.seekTo(0); setLoading(false); }} /></View>
           </View>
           {loading ? <ActivityIndicator color={colors.gold} /> : null}
-          {error ? <Text style={{ color: colors.danger, textAlign: "center" }}>{error}</Text> : null}
+          {error ? <Text style={{ color: colors.gold, textAlign: "center" }}>{error}</Text> : null}
         </View>
       </SulyCard>
       <SulyCard>
@@ -81,7 +81,7 @@ export default function IndonesianAdhanScreen() {
         <Text style={{ color: colors.muted, textAlign: "right", lineHeight: 22 }}>سيُحفظ كاختيارك الإندونيسي للأذان الكامل. التشغيل التلقائي عند الصلاة وربطه بإشعارات أندرويد خطوة منفصلة قيد التنفيذ.</Text>
         <SulyButton title={store.adhanPrefs.region === "indonesian" && store.adhanPrefs.voiceId === "indo-regional" ? "الصوت الإندونيسي محدد بالفعل" : "اختيار الأذان الإندونيسي"} onPress={selectIndonesian} />
         <Text style={{ color: colors.muted, fontSize: 12, textAlign: "right" }}>المصدر: مجموعة Kiwifu Adhan MP3. يُعرض التسجيل عبر البث المباشر ولا يُضمّن داخل التطبيق حاليًا. راجع صفحة المصدر وشروط استخدام التسجيل قبل إعادة توزيعه ضمن نسخة منشورة.</Text>
-        <SulyButton title="عرض مصدر التسجيل" secondary onPress={() => { if (Platform.OS === "web") window.open(SOURCE_PAGE, "_blank"); }} />
+        <SulyButton title="عرض مصدر التسجيل" secondary onPress={() => { void Linking.openURL(SOURCE_PAGE); }} />
       </SulyCard>
     </AppScreen>
   );
