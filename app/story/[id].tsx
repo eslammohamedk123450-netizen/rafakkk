@@ -88,6 +88,11 @@ export default function StoryReaderScreen() {
     const saved = store.storyProgress[story.id] ?? 0;
     const offset = contextChapter ? 1 : 0;
     setChapterIndex(Math.min(Math.max(0, saved - offset), Math.max(0, readingChapters.length - 1)));
+    setShowContext(true);
+    setShowLessons(false);
+    setSelectedReference(null);
+    setSelectedAyah(1);
+    setNotice("");
   }, [story?.id]);
 
   useEffect(() => {
