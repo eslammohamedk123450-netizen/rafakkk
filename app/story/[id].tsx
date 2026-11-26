@@ -13,7 +13,7 @@ export default function StoryReaderScreen() {
   const { store, updateStore } = useAppStore();
   const { colors } = useSulyTheme();
   const story = useMemo(() => getIslamicStory(String(id ?? "")), [id]);
-  const contextChapter = story?.chapters.find((item) => item.title.includes("الخلفية والأهل والسياق"));
+  const contextChapter = story?.chapters.find((item) => item.title.includes("الخلفية"));
   const lessonsChapter = story?.chapters.find((item) => item.title.includes("الدروس المستفادة"));
   const readingChapters = story ? story.chapters.filter((item) => item !== contextChapter && item !== lessonsChapter) : [];
   const [chapterIndex, setChapterIndex] = useState(0);
