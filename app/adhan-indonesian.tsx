@@ -1,12 +1,14 @@
 import { useEffect, useState } from "react";
-import { ActivityIndicator, Linking, Pressable, Text, View } from "react-native";
+import { ActivityIndicator, Pressable, Text, View } from "react-native";
 import { useAudioPlayer, useAudioPlayerStatus, setAudioModeAsync } from "expo-audio";
 import { useRouter } from "expo-router";
-import { AppScreen, ScreenHeading, SulyCard, SulyButton, useSulyTheme } from "@/components/suly-ui";
+import { AppScreen, ScreenHeading, SulyCard, SulyButton, TinyTag, useSulyTheme } from "@/components/suly-ui";
 import { useAppStore } from "@/lib/app-store";
 
-const INDONESIAN_ADHAN_URL = "https://cdn.jsdelivr.net/gh/Kiwifu/adhan-mp3@main/Adhan_Indonesia_(%D8%A3%D8%B0%D8%A7%D9%86_%D8%A5%D9%86%D8%AF%D9%88%D9%86%D9%8A%D8%B3%D9%8A%D8%A7).mp3";
-const SOURCE_PAGE = "https://github.com/Kiwifu/adhan-mp3";
+const ADHAN_OPTIONS = [
+  { id: "adhan-1", label: "الأذان 1" },
+  { id: "adhan-2", label: "الأذان 2" },
+] as const;
 
 function formatTime(seconds: number) {
   if (!Number.isFinite(seconds) || seconds < 0) return "00:00";
@@ -19,8 +21,13 @@ export default function IndonesianAdhanScreen() {
   const router = useRouter();
   const { colors } = useSulyTheme();
   const { store, updateStore } = useAppStore();
-  const player = useAudioPlayer(INDONESIAN_ADHAN_URL, { updateInterval: 500 });
-  const status = useAudioPlayerStatus(player);
+  const player1 = useAudioPlayer(require("../assets/adhan/adhan-1.mp3"), { updateInterval: 500 });
+  const player2 = useAudioPlayer(require("../assets/adhan/adhan-2.mp3"), { updateInterval: 500 });
+  const status1 = useAudioPlayerStatus(player1);
+  const status2 = useAudioPlayerStatus(player2);
+  const selectedSecond = store.adhanPrefs.voiceId === "adhan-2";
+  const player = selectedSecond ? player2 : player1;
+  const status = selectedSecond ? status2 : status1;
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -31,57 +38,86 @@ export default function IndonesianAdhanScreen() {
       interruptionMode: "doNotMix",
     }).catch(() => setError("تعذر تهيئة مشغل الصوت على هذا الجهاز."));
     return () => {
-      player.pause();
+      player1.pause();
+      player2.pause();
     };
-  }, [player]);
+  }, [player1, player2]);
 
   useEffect(() => {
-    if (status.playing) setLoading(false);
-  }, [status.playing]);
+    if (status1.playing || status2.playing) setLoading(false);
+  }, [status1.playing, status2.playing]);
 
-  const play = async () => {
+  const preview = async (id: (typeof ADHAN_OPTIONS)[number]["id"]) => {
     setError("");
     setLoading(true);
+    player1.pause();
+    player2.pause();
+    updateStore((current) => ({
+      ...current,
+      adhanPrefs: { ...current.adhanPrefs, region: "indonesian", voiceId: id, mode: "full" },
+    }));
+    const selectedPlayer = id === "adhan-2" ? player2 : player1;
     try {
-      await player.seekTo(0);
-      player.play();
+      await selectedPlayer.seekTo(0);
+      selectedPlayer.play();
     } catch {
       setLoading(false);
-      setError("تعذر تشغيل التسجيل. تحقق من اتصال الإنترنت ثم حاول مرة أخرى.");
+      setError("تعذر تشغيل التسجيل. حاول مرة أخرى.");
     }
   };
 
-  const selectIndonesian = () => updateStore((current) => ({
-    ...current,
-    adhanPrefs: { ...current.adhanPrefs, region: "indonesian", voiceId: "indo-regional", mode: "full" },
-  }));
+  const selectVoice = (id: (typeof ADHAN_OPTIONS)[number]["id"]) => {
+    player1.pause();
+    player2.pause();
+    setLoading(false);
+    setError("");
+    updateStore((current) => ({
+      ...current,
+      adhanPrefs: { ...current.adhanPrefs, region: "indonesian", voiceId: id, mode: "full" },
+    }));
+  };
+
+  const stop = () => {
+    player1.pause();
+    player2.pause();
+    void player1.seekTo(0);
+    void player2.seekTo(0);
+    setLoading(false);
+  };
 
   return (
     <AppScreen>
-      <ScreenHeading title="الأذان الإندونيسي" subtitle="استمع للتسجيل واختره لصوت الأذان" action={<Pressable onPress={() => router.back()} style={{ padding: 8 }}><Text style={{ color: colors.gold, fontSize: 16 }}>رجوع</Text></Pressable>} />
+      <ScreenHeading title="اختيار صوت الأذان" subtitle="استمع للتسجيلين واختر الصوت المناسب لك" action={<Pressable onPress={() => router.back()} style={{ padding: 8 }}><Text style={{ color: colors.gold, fontSize: 16 }}>رجوع</Text></Pressable>} />
+      {ADHAN_OPTIONS.map((option) => {
+        const isSelected = store.adhanPrefs.voiceId === option.id;
+        const optionStatus = option.id === "adhan-2" ? status2 : status1;
+        return (
+          <SulyCard key={option.id}>
+            <View style={{ gap: 12 }}>
+              <View style={{ flexDirection: "row-reverse", alignItems: "center", justifyContent: "space-between" }}>
+                <Text style={{ color: colors.text, fontSize: 20, fontWeight: "800" }}>{option.label}</Text>
+                <TinyTag title={isSelected ? "محدد" : "اختيار"} selected={isSelected} onPress={() => selectVoice(option.id)} />
+              </View>
+              <Text style={{ color: colors.gold, fontSize: 16, fontWeight: "700", textAlign: "center" }}>
+                {formatTime(optionStatus.currentTime)} / {formatTime(optionStatus.duration)}
+              </Text>
+              <View style={{ height: 5, width: "100%", backgroundColor: colors.border, borderRadius: 5, overflow: "hidden" }}>
+                <View style={{ height: 5, width: `${optionStatus.duration > 0 ? Math.min(100, optionStatus.currentTime / optionStatus.duration * 100) : 0}%`, backgroundColor: colors.gold }} />
+              </View>
+              <SulyButton title={optionStatus.playing ? "إيقاف مؤقت" : loading && isSelected ? "جارٍ التحميل..." : `استمع إلى ${option.label}`} onPress={() => optionStatus.playing ? (option.id === "adhan-2" ? player2 : player1).pause() : void preview(option.id)} disabled={loading && !optionStatus.playing} />
+              <SulyButton title={isSelected ? "الصوت المعتمد حاليًا" : `اعتماد ${option.label}`} secondary onPress={() => selectVoice(option.id)} />
+            </View>
+          </SulyCard>
+        );
+      })}
+      {loading ? <ActivityIndicator color={colors.gold} /> : null}
+      {error ? <Text style={{ color: colors.gold, textAlign: "center" }}>{error}</Text> : null}
       <SulyCard>
-        <View style={{ alignItems: "center", gap: 12, paddingVertical: 12 }}>
-          <Text style={{ fontSize: 48 }}>🇮🇩</Text>
-          <Text style={{ color: colors.text, fontSize: 22, fontWeight: "800" }}>أذان إندونيسيا</Text>
-          <Text style={{ color: colors.muted, textAlign: "center", lineHeight: 22 }}>تسجيل أذان من إندونيسيا. اضغط استمع للتجربة قبل اعتماده في إعداداتك.</Text>
-          <Text style={{ color: colors.gold, fontSize: 17, fontWeight: "700" }}>{formatTime(status.currentTime)} / {formatTime(status.duration)}</Text>
-          <View style={{ height: 5, width: "100%", backgroundColor: colors.border, borderRadius: 5, overflow: "hidden" }}>
-            <View style={{ height: 5, width: `${status.duration > 0 ? Math.min(100, status.currentTime / status.duration * 100) : 0}%`, backgroundColor: colors.gold }} />
-          </View>
-          <View style={{ flexDirection: "row", gap: 10, width: "100%" }}>
-            <View style={{ flex: 1 }}><SulyButton title={status.playing ? "إيقاف مؤقت" : loading ? "جارٍ التحميل..." : "استمع للأذان"} onPress={() => status.playing ? player.pause() : void play()} disabled={loading} /></View>
-            <View style={{ flex: 1 }}><SulyButton title="إيقاف" secondary onPress={() => { player.pause(); void player.seekTo(0); setLoading(false); }} /></View>
-          </View>
-          {loading ? <ActivityIndicator color={colors.gold} /> : null}
-          {error ? <Text style={{ color: colors.gold, textAlign: "center" }}>{error}</Text> : null}
-        </View>
-      </SulyCard>
-      <SulyCard>
-        <Text style={{ color: colors.text, fontWeight: "800", fontSize: 17, textAlign: "right" }}>اعتماد هذا الصوت</Text>
-        <Text style={{ color: colors.muted, textAlign: "right", lineHeight: 22 }}>سيُحفظ كاختيارك الإندونيسي للأذان الكامل. التشغيل التلقائي عند الصلاة وربطه بإشعارات أندرويد خطوة منفصلة قيد التنفيذ.</Text>
-        <SulyButton title={store.adhanPrefs.region === "indonesian" && store.adhanPrefs.voiceId === "indo-regional" ? "الصوت الإندونيسي محدد بالفعل" : "اختيار الأذان الإندونيسي"} onPress={selectIndonesian} />
-        <Text style={{ color: colors.muted, fontSize: 12, textAlign: "right" }}>المصدر: مجموعة Kiwifu Adhan MP3. يُعرض التسجيل عبر البث المباشر ولا يُضمّن داخل التطبيق حاليًا. راجع صفحة المصدر وشروط استخدام التسجيل قبل إعادة توزيعه ضمن نسخة منشورة.</Text>
-        <SulyButton title="عرض مصدر التسجيل" secondary onPress={() => { void Linking.openURL(SOURCE_PAGE); }} />
+        <Text style={{ color: colors.muted, textAlign: "right", lineHeight: 22 }}>
+          التسجيلان محفوظان داخل ملفات التطبيق، ويمكن تشغيلهما دون اتصال بالإنترنت. تظهر التسجيلات بأرقام فقط دون أسماء المؤذنين أو البلدان.
+        </Text>
+        <SulyButton title="إيقاف جميع التسجيلات" secondary onPress={stop} />
+        <SulyButton title="العودة إلى الإعدادات" onPress={() => router.back()} />
       </SulyCard>
     </AppScreen>
   );
