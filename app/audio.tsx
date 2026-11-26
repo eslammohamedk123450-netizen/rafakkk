@@ -48,6 +48,15 @@ function getReciterPhoto(name: string) {
   return RECITER_PHOTOS.find((item) => item.match.some((part) => normalized.includes(part.toLocaleLowerCase())));
 }
 
+function normalizeArabicName(value: string) {
+  return value.toLocaleLowerCase("ar")
+    .normalize("NFD")
+    .replace(/[\\u064B-\\u065F\\u0670\\u0640]/g, "")
+    .replace(/[أإآٱ]/g, "ا")
+    .replace(/ى/g, "ي")
+    .replace(/ة/g, "ه");
+}
+
 export default function AudioScreen() {
   const router = useRouter();
   const { colors } = useSulyTheme();
@@ -109,9 +118,28 @@ export default function AudioScreen() {
     return ids?.length ? ids : Array.from({ length: Math.min(114, moshaf?.surah_total ?? 114) }, (_, index) => index + 1);
   }, [moshaf]);
   const filteredReciters = useMemo(() => {
-    const term = search.trim().toLocaleLowerCase();
-    return reciters.filter((item) => !term || item.name.toLocaleLowerCase().includes(term));
+    const term = normalizeArabicName(search.trim());
+    if (!term) return reciters;
+    return reciters
+      .filter((item) => normalizeArabicName(item.name).includes(term))
+      .sort((a, b) => {
+        const aName = normalizeArabicName(a.name);
+        const bName = normalizeArabicName(b.name);
+        const aPrefix = aName.startsWith(term) ? 0 : aName.split(/\\s+/).some((word) => word.startsWith(term)) ? 1 : 2;
+        const bPrefix = bName.startsWith(term) ? 0 : bName.split(/\\s+/).some((word) => word.startsWith(term)) ? 1 : 2;
+        return aPrefix - bPrefix || a.name.localeCompare(b.name, "ar");
+      });
   }, [reciters, search]);
+
+  const matchingLetters = useMemo(() => {
+    const term = normalizeArabicName(search.trim());
+    if (!term) return [];
+    const letters = new Set<string>();
+    filteredReciters.forEach((item) => normalizeArabicName(item.name).split(/\\s+/).forEach((word) => {
+      if (word.includes(term) && word.length) letters.add(word.charAt(0));
+    }));
+    return [...letters].slice(0, 12);
+  }, [filteredReciters, search]);
 
   const persistTracks = async (items: SavedTrack[]) => {
     setSavedTracks(items);
@@ -238,7 +266,14 @@ export default function AudioScreen() {
         <SulyCard>
           <Text style={{ color: colors.text, fontWeight: "800", fontSize: 18, textAlign: "right" }}>اختر القارئ</Text>
           <Text style={{ color: colors.muted, textAlign: "right", fontSize: 12 }}>صور متاحة لبعض القراء، وباقي القراء يظهر لهم رمز تعريفي بدل صورة غير مؤكدة.</Text>
-          <TextInput value={search} onChangeText={setSearch} placeholder="ابحث باسم القارئ..." placeholderTextColor={colors.muted} style={{ color: colors.text, borderWidth: 1, borderColor: colors.border, borderRadius: 12, paddingHorizontal: 13, paddingVertical: 10, textAlign: "right", marginTop: 10 }} />
+          <TextInput value={search} onChangeText={setSearch} placeholder="اكتب أي جزء من اسم القارئ أو اسم عائلته..." placeholderTextColor={colors.muted} autoCorrect={false} style={{ color: colors.text, borderWidth: 1, borderColor: colors.border, borderRadius: 12, paddingHorizontal: 13, paddingVertical: 10, textAlign: "right", marginTop: 10 }} />
+          {matchingLetters.length ? <View style={{ gap: 7, marginTop: 10 }}>
+            <Text style={{ color: colors.muted, textAlign: "right", fontSize: 11 }}>حروف الأسماء المطابقة — اضغط لتصفية النتائج</Text>
+            <View style={{ flexDirection: "row-reverse", flexWrap: "wrap", gap: 7 }}>
+              {matchingLetters.map((letter) => <Pressable key={letter} onPress={() => setSearch(letter)} style={{ minWidth: 34, paddingHorizontal: 10, paddingVertical: 7, borderRadius: 10, backgroundColor: colors.gold + "20", borderWidth: 1, borderColor: colors.gold + "66", alignItems: "center" }}><Text style={{ color: colors.gold, fontWeight: "900" }}>{letter}</Text></Pressable>)}
+            </View>
+          </View> : null}
+          {search.trim() ? <Pressable onPress={() => setSearch("")} style={{ alignSelf: "flex-end", paddingVertical: 6 }}><Text style={{ color: colors.gold, fontSize: 12 }}>مسح البحث</Text></Pressable> : null}
         </SulyCard>
         <View style={{ flexDirection: "row-reverse", flexWrap: "wrap", justifyContent: "space-between", gap: 10 }}>
           {filteredReciters.map((item) => {
