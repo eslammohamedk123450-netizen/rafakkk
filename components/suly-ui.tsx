@@ -2,6 +2,8 @@ import { useColorScheme, View, Text, Pressable, ScrollView, TextInput, type View
 import { SafeAreaView } from "react-native-safe-area-context";
 import type { ReactNode } from "react";
 import { useAppStore } from "@/lib/app-store";
+import { useRouter, useSegments } from "expo-router";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 
 export function useSulyTheme() {
   const deviceScheme = useColorScheme();
@@ -26,13 +28,26 @@ export function AppScreen({ children, noBottomSpace = false }: { children: React
 
 export function ScreenHeading({ title, subtitle, action }: { title: string; subtitle?: string; action?: ReactNode }) {
   const { colors } = useSulyTheme();
+  const router = useRouter();
+  const segments = useSegments();
+  const isTabPage = segments[0] === "(tabs)";
   return (
-    <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingTop: 4, paddingBottom: 8 }}>
+    <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingTop: 4, paddingBottom: 8, gap: 8 }}>
+      <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+        {!isTabPage ? <>
+          <Pressable onPress={() => router.canGoBack() ? router.back() : router.replace("/")} accessibilityRole="button" accessibilityLabel="رجوع للصفحة السابقة" style={{ width: 40, height: 40, borderRadius: 13, backgroundColor: colors.card, alignItems: "center", justifyContent: "center" }}>
+            <MaterialCommunityIcons name="arrow-left" size={22} color={colors.gold} />
+          </Pressable>
+          <Pressable onPress={() => router.replace("/")} accessibilityRole="button" accessibilityLabel="العودة للرئيسية" style={{ width: 40, height: 40, borderRadius: 13, backgroundColor: colors.card, alignItems: "center", justifyContent: "center" }}>
+            <MaterialCommunityIcons name="home-outline" size={21} color={colors.gold} />
+          </Pressable>
+        </> : null}
+        {action}
+      </View>
       <View style={{ flex: 1, alignItems: "flex-end" }}>
         <Text style={{ color: colors.text, fontSize: 28, fontWeight: "800", textAlign: "right" }}>{title}</Text>
         {subtitle ? <Text style={{ color: colors.muted, fontSize: 14, marginTop: 4, textAlign: "right" }}>{subtitle}</Text> : null}
       </View>
-      {action}
     </View>
   );
 }
