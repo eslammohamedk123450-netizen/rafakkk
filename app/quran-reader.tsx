@@ -29,7 +29,7 @@ export default function QuranReaderScreen() {
   const page = clampPage(store.quranReader.lastPage || 1);
   const [pageDraft, setPageDraft] = useState<string | null>(null);
   const [surahPickerVisible, setSurahPickerVisible] = useState(false);
-  const [fontSize, setFontSize] = useState(27);
+  const fontSize = store.quranReader.fontSize ?? 27;
   const [notice, setNotice] = useState("");
   const today = localDateKey(new Date(), store.location?.timeZone);
   const verses = useMemo(() => getQuranPage(page), [page]);
@@ -156,9 +156,9 @@ export default function QuranReaderScreen() {
         </Text>
         {verses.length === 0 ? <Text style={{ color: colors.muted, textAlign: "center" }}>تعذر تحميل هذه الصفحة من البيانات المحلية.</Text> : null}
         <View style={{ flexDirection: "row-reverse", justifyContent: "center", alignItems: "center", gap: 12, marginTop: 18 }}>
-          <Pressable onPress={() => setFontSize((size) => Math.max(20, size - 2))} accessibilityRole="button" style={{ padding: 8 }}><Text style={{ color: colors.gold, fontWeight: "700" }}>أصغر</Text></Pressable>
+          <Pressable onPress={() => updateStore((current) => ({ ...current, quranReader: { ...current.quranReader, fontSize: Math.max(20, (current.quranReader.fontSize ?? 27) - 2) } }))} accessibilityRole="button" style={{ padding: 8 }}><Text style={{ color: colors.gold, fontWeight: "700" }}>أصغر</Text></Pressable>
           <Text style={{ color: colors.muted }}>حجم الخط</Text>
-          <Pressable onPress={() => setFontSize((size) => Math.min(36, size + 2))} accessibilityRole="button" style={{ padding: 8 }}><Text style={{ color: colors.gold, fontWeight: "700" }}>أكبر</Text></Pressable>
+          <Pressable onPress={() => updateStore((current) => ({ ...current, quranReader: { ...current.quranReader, fontSize: Math.min(36, (current.quranReader.fontSize ?? 27) + 2) } }))} accessibilityRole="button" style={{ padding: 8 }}><Text style={{ color: colors.gold, fontWeight: "700" }}>أكبر</Text></Pressable>
         </View>
       </SulyCard>
 
