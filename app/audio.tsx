@@ -17,8 +17,26 @@ const DOWNLOADS_KEY = "@rafik_audio_downloads_v1";
 const SURAH_NAMES = QURAN_SURAHS.map((surah) => surah.name);
 const RECITER_PHOTOS: Array<{ match: string[]; uri: string; credit: string }> = [
   { match: ["الحصري", "الحصرى", "Husary", "Hussary"], uri: "https://commons.wikimedia.org/wiki/Special:FilePath/Hussary.jpg?width=480", credit: "Wikimedia Commons • Public domain" },
-  { match: ["المنشاوي", "المنشاوى", "Minshawi", "Minshawy"], uri: "https://commons.wikimedia.org/wiki/Special:FilePath/Minshawy.jpg?width=480", credit: "Wikimedia Commons • Public domain" },
-  { match: ["عبد الباسط", "عبدالباسط", "Abdul Basit", "Abdel Basit"], uri: "https://commons.wikimedia.org/wiki/Special:FilePath/Abdel%20Basit%20Abdel%20Samad%201955.png?width=480", credit: "Wikimedia Commons" },
+  { match: ["المنشاوي", "المنشاوى", "Minshawi", "Minshawy"], uri: "https://commons.wikimedia.org/wiki/Special:FilePath/Elminshwey.jpg?width=480", credit: "Wikimedia Commons • Public domain" },
+  { match: ["عبد الباسط", "عبدالباسط", "Abdul Basit", "Abdel Basit"], uri: "https://commons.wikimedia.org/wiki/Special:FilePath/Abdul_Basit_Abd_us-Samad_in_South_Africa_in_1966_%283%29_%28cropped%29.jpg?width=480", credit: "Wikimedia Commons • Public domain" },
+  { match: ["السديس", "Sudais"], uri: "https://commons.wikimedia.org/wiki/Special:FilePath/Abdul-Rahman_Al-Sudais_%28Cropped%2C_2011%29.jpg?width=480", credit: "Wikimedia Commons • GODL-India" },
+  { match: ["ماهر المعيقلي", "المعيقلي", "Mueaqly", "Muaiqly"], uri: "https://commons.wikimedia.org/wiki/Special:FilePath/Maher_Al_Mueaqly.png?width=480", credit: "Wikimedia Commons • CC BY-SA 3.0" },
+  { match: ["العفاسي", "Alafasy", "Afasy"], uri: "https://commons.wikimedia.org/wiki/Special:FilePath/%D0%9C%D0%B8%D1%88%D0%B0%D1%80%D0%B8_%D0%A0%D0%B0%D1%88%D0%B8%D0%B4.jpg?width=480", credit: "Wikimedia Commons" },
+  { match: ["المطرود", "Matrood", "Matroud"], uri: "https://commons.wikimedia.org/wiki/Special:FilePath/Abdullah_Al_Matroud.jpg?width=480", credit: "Wikimedia Commons • CC BY-SA 4.0" },
+  { match: ["الجهني", "الجُهني", "Juhany"], uri: "https://commons.wikimedia.org/wiki/Special:FilePath/Abdullah_Al_Juhany_%28Cropped%29.png?width=480", credit: "Wikimedia Commons • CC BY-SA 4.0" },
+  { match: ["الكلباني", "Kalbani"], uri: "https://commons.wikimedia.org/wiki/Special:FilePath/Kalbani.jpg?width=480", credit: "Wikimedia Commons • CC BY-SA 3.0" },
+  { match: ["العجمي", "Al-Ajmi", "Ajmi"], uri: "https://commons.wikimedia.org/wiki/Special:FilePath/Ahmad_bin_Ali_Al-Ajmi.png?width=480", credit: "Wikimedia Commons • CC BY-SA 3.0" },
+  { match: ["الحذيفي", "Hudhaify", "Huthaify"], uri: "https://commons.wikimedia.org/wiki/Special:FilePath/Huthaify.jpg?width=480", credit: "Wikimedia Commons • CC BY-SA 4.0" },
+  { match: ["علي جابر", "Ali Jaber"], uri: "https://commons.wikimedia.org/wiki/Special:FilePath/%D8%A7%D9%84%D8%B4%D9%8A%D8%AE_%D8%B9%D9%84%D9%8A_%D8%AC%D8%A7%D8%A8%D8%B1.png?width=480", credit: "Wikimedia Commons • CC0" },
+  { match: ["بندر بليلة", "Bandar Baleela"], uri: "https://commons.wikimedia.org/wiki/Special:FilePath/Bandar_Baleela.jpg?width=480", credit: "Wikimedia Commons • CC BY-SA 3.0" },
+  { match: ["محمد جبريل", "Muhammad Jibreel", "Jebril"], uri: "https://commons.wikimedia.org/wiki/Special:FilePath/Qari_Muhammad_Jebril%2C_Ramadan_2019.png?width=480", credit: "Wikimedia Commons • CC BY 3.0" },
+  { match: ["ناصر القطامي", "Nasser Al Qatami", "Al-Qatami"], uri: "https://commons.wikimedia.org/wiki/Special:FilePath/%D8%B5%D9%88%D8%B1%D8%A9_%D8%B4%D8%AE%D8%B5%D9%8A%D8%A9_%D8%A7%D9%84%D8%B4%D9%8A%D8%AE_%D9%86%D8%A7%D8%B5%D8%B1_%D8%A7%D9%84%D9%82%D8%B7%D8%A7%D9%85%D9%8A.jpg?width=480", credit: "Wikimedia Commons • CC BY-SA 4.0" },
+  { match: ["رعد الكردي", "Raad Al-Kurdi", "Raad Mohammad"], uri: "https://commons.wikimedia.org/wiki/Special:FilePath/Raad_Mohammad_Al_Kurdi.png?width=480", credit: "Wikimedia Commons • CC BY-SA 4.0" },
+  { match: ["سعد الغامدي", "Saad Al-Ghamdi", "Saad al Ghamdi"], uri: "https://commons.wikimedia.org/wiki/Special:FilePath/Saad_al_Ghamdi.jpg?width=480", credit: "Wikimedia Commons • CC BY-SA 4.0" },
+  { match: ["سعود الشريم", "Saud Ash-Shuraim", "Saud Shuraim"], uri: "https://commons.wikimedia.org/wiki/Special:FilePath/Saud_Shuraim_doing_the_Khutbah.png?width=480", credit: "Wikimedia Commons • CC BY-SA 4.0" },
+  { match: ["مصطفى إسماعيل", "مصطفى اسماعيل", "Mustafa Ismail", "Mostafa Ismaeel"], uri: "https://commons.wikimedia.org/wiki/Special:FilePath/Mostafa_Ismaeel.jpg?width=480", credit: "Wikimedia Commons • Public domain" },
+  { match: ["صالح البدير", "Salah Al-Budair"], uri: "https://commons.wikimedia.org/wiki/Special:FilePath/Salah_Ibn_Mohammed_Al_Budair.jpg?width=480", credit: "Wikimedia Commons • CC BY-SA 4.0" },
+  { match: ["ياسر الدوسري", "Yasser Al-Dossari", "Yasser Al-Dosari"], uri: "https://commons.wikimedia.org/wiki/Special:FilePath/Yasser_Al-Dosari_%28cropped%29.jpg?width=480", credit: "Wikimedia Commons • CC BY-SA 4.0" },
 ];
 
 function getReciterPhoto(name: string) {
