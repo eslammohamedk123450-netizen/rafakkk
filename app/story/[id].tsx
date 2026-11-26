@@ -68,7 +68,7 @@ export function generateStaticParams() {
   return ISLAMIC_STORIES.map((story) => ({ id: story.id }));
 }
 
-export default function StoryReaderScreen({ storyId }: { storyId?: string } = {}) {
+export default function StoryReaderScreen({ storyId, onBack }: { storyId?: string; onBack?: () => void } = {}) {
   const routeParams = useLocalSearchParams<{ id: string }>();
   const id = storyId ?? routeParams.id;
   const router = useRouter();
@@ -150,7 +150,7 @@ export default function StoryReaderScreen({ storyId }: { storyId?: string } = {}
 
   return (
     <AppScreen>
-      <ScreenHeading title={story.title} subtitle={story.subtitle} action={<Pressable onPress={() => router.back()}><Text style={{ color: colors.gold, fontWeight: "700" }}>رجوع</Text></Pressable>} />
+      <ScreenHeading title={story.title} subtitle={story.subtitle} action={<Pressable onPress={() => onBack ? onBack() : router.back()}><Text style={{ color: colors.gold, fontWeight: "700" }}>رجوع</Text></Pressable>} />
       <SulyCard style={{ padding: 0, overflow: "hidden", gap: 0 }}>
         <View style={{ width: "100%", height: 150, backgroundColor: colors.surface, alignItems: "center", justifyContent: "center", gap: 8 }}>
           <MaterialCommunityIcons name="book-open-page-variant" size={50} color={colors.gold} />
