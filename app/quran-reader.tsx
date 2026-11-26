@@ -7,6 +7,7 @@ import { localDateKey, useAppStore } from "@/lib/app-store";
 import {
   getQuranPage,
   getSurahStartPage,
+  getQuranPageForVerse,
   QURAN_LICENSE_URL,
   QURAN_PAGE_COUNT,
   QURAN_SOURCE_URL,
@@ -25,13 +26,14 @@ function clampPage(value: number) {
 
 export default function QuranReaderScreen() {
   const router = useRouter();
-  const params = useLocalSearchParams<{ surah?: string }>();
+  const params = useLocalSearchParams<{ surah?: string; ayah?: string }>();
   const requestedSurah = Number(params.surah);
+  const requestedAyah = Number(params.ayah);
   const { store, updateStore } = useAppStore();
   const { colors } = useSulyTheme();
-  const requestedPage = Number.isInteger(requestedSurah) && requestedSurah > 0 ? getSurahStartPage(requestedSurah) : null;
+  const requestedPage = Number.isInteger(requestedSurah) && requestedSurah > 0 ? (Number.isInteger(requestedAyah) && requestedAyah > 0 ? getQuranPageForVerse(requestedSurah, requestedAyah) : getSurahStartPage(requestedSurah)) : null;
   const page = clampPage(requestedPage ?? store.quranReader.lastPage ?? 1);
-  useEffect(() => { if (requestedPage) goToPage(requestedPage); }, [params.surah]);
+  useEffect(() => { if (requestedPage) goToPage(requestedPage); }, [params.surah, params.ayah]);
   const [pageDraft, setPageDraft] = useState<string | null>(null);
   const [surahPickerVisible, setSurahPickerVisible] = useState(false);
   const fontSize = store.quranReader.fontSize ?? 27;
