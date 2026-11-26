@@ -1,4 +1,4 @@
-import { Linking, Platform } from "react-native";
+import { Platform } from "react-native";
 import * as Notifications from "expo-notifications";
 import type { PrayerId } from "@/lib/app-store";
 import { PRAYER_LABELS, type DailyPrayerTimes } from "@/lib/prayer/calculations";
@@ -61,18 +61,7 @@ export async function prepareNotificationChannel() {
 
 export async function requestAdhanPermissions() {
   if (Platform.OS === "web") return false;
-  const notificationsGranted = await requestNotificationPermission();
-  if (!notificationsGranted) return false;
-  if (Platform.OS === "android") {
-    if (Number(Platform.Version) >= 31) {
-      try {
-        await Linking.openSettings();
-      } catch {
-        return false;
-      }
-    }
-  }
-  return true;
+  return requestNotificationPermission();
 }
 
 export async function requestNotificationPermission() {
