@@ -240,13 +240,11 @@ export default function HomeScreen() {
         <MaterialCommunityIcons name="hand-heart-outline" size={25} color={colors.gold} />
       </SulyCard>
 
-      <SectionTitle>مساحتك في رفيقك</SectionTitle>
+      <SectionTitle>اختصارات إضافية</SectionTitle>
       <View style={{ flexDirection: "row", flexWrap: "wrap", justifyContent: "space-between", gap: 9 }}>
         {[
           { label: "القصص", icon: "book-open-variant" as const, route: "/stories" },
           { label: "إنجازاتي", icon: "chart-box-outline" as const, route: "/achievements" },
-          { label: "الأذكار", icon: "hands-pray" as const, route: "/adhkar" },
-          { label: "التسبيح", icon: "counter" as const, route: "/tasbeeh" },
           { label: "القبلة", icon: "compass-outline" as const, route: "/qibla" },
         ].map((item) => <Pressable key={item.route} onPress={() => router.push(item.route as any)} style={{ width: "31%", minHeight: 100, borderRadius: 18, backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border, alignItems: "center", justifyContent: "center", gap: 9 }}>
           <MaterialCommunityIcons name={item.icon} size={29} color={colors.gold} />
