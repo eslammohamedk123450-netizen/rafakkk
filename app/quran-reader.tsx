@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { Modal, Platform, Pressable, ScrollView, Text, TextInput, View } from "react-native";
-import { useRouter, useLocalSearchParams } from "expo-router";
+import { useLocalSearchParams } from "expo-router";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useEffect } from "react";
 import { ActivityIndicator } from "react-native";
@@ -123,7 +123,6 @@ function clampPage(value: number) {
 }
 
 export default function QuranReaderScreen() {
-  const router = useRouter();
   const params = useLocalSearchParams<{ surah?: string; ayah?: string }>();
   const requestedSurah = Number(params.surah);
   const requestedAyah = Number(params.ayah);
@@ -192,11 +191,7 @@ export default function QuranReaderScreen() {
 
   return (
     <AppScreen>
-      <ScreenHeading
-        title="المصحف الشريف"
-        subtitle="قراءة محلية محفوظة على هذا الجهاز"
-        action={<Pressable onPress={() => router.back()} style={{ padding: 8 }}><Text style={{ color: colors.gold, fontWeight: "700" }}>الورد</Text></Pressable>}
-      />
+      <ScreenHeading title="المصحف الشريف" subtitle="قراءة محلية محفوظة على هذا الجهاز" />
 
       <View style={{ gap: 6 }}>
         <View style={{ minHeight: 44, borderWidth: 1, borderColor: colors.border, borderRadius: 13, backgroundColor: colors.surface, flexDirection: "row-reverse", alignItems: "center", paddingHorizontal: 11, gap: 8 }}>
@@ -227,11 +222,12 @@ export default function QuranReaderScreen() {
         <View style={{ alignItems: "flex-end", gap: 2 }}><Text style={{ color: colors.text, fontWeight: "800", fontSize: 16 }}>{currentSurah?.name ?? "المصحف"}</Text><Text style={{ color: colors.muted, fontSize: 11 }}>صفحة {arabicNumber(page)} من {arabicNumber(QURAN_PAGE_COUNT)}</Text></View>
       </View>
       {notice ? <Text style={{ color: colors.gold, textAlign: "right", fontSize: 12 }}>{notice}</Text> : null}
-      <View style={{ marginHorizontal: -10, backgroundColor: colors.surface, borderColor: colors.gold + "99", borderWidth: 2, borderRadius: 9, paddingHorizontal: 10, paddingVertical: 14, gap: 10 }}>
+      <View style={{ marginHorizontal: -10, backgroundColor: colors.surface, borderColor: colors.gold + "88", borderWidth: 1.5, borderRadius: 14, paddingHorizontal: 14, paddingVertical: 18, gap: 12 }}>
         <View style={{ alignItems: "center", marginBottom: 4, gap: 6, paddingBottom: 12, borderBottomWidth: 1, borderBottomColor: colors.gold + "66" }}>
           <Text style={{ color: colors.gold, fontSize: 12, fontWeight: "700" }}>۞ ۞ ۞</Text>
           <Text style={{ color: colors.text, fontWeight: "800", fontSize: 21, letterSpacing: 0.2 }}>{currentSurah?.name ?? ""}</Text>
-          <Text style={{ color: colors.muted, fontSize: 12 }}>الجزء من المصحف · صفحة {arabicNumber(page)}</Text>
+          <Text style={{ color: colors.muted, fontSize: 12 }}>صفحة {arabicNumber(page)} من المصحف الشريف</Text>
+          <Text style={{ color: colors.muted, fontSize: 10 }}>اضغط على أي آية لعرض تفسيرها</Text>
         </View>
         <View style={{ paddingHorizontal: 2, paddingVertical: 6, width: "100%" }}>
         <Text
