@@ -11,12 +11,11 @@ import {
   getQuranPage,
   getSurahStartPage,
   getQuranPageForVerse,
-  QURAN_ATTRIBUTION,
   QURAN_PAGE_COUNT,
   QURAN_SURAHS,
   searchQuran,
 } from "@/lib/quran";
-import { getTafsirAyah, tafsirDisplayText, TAFSIR_SOURCE } from "@/lib/quran/tafsir";
+import { getTafsirAyah, tafsirDisplayText } from "@/lib/quran/tafsir";
 
 const ARABIC_DIGITS = "٠١٢٣٤٥٦٧٨٩";
 const RECITERS_API = "https://mp3quran.net/api/v3/reciters?language=ar";
@@ -249,10 +248,6 @@ export default function QuranReaderScreen() {
 
 
 
-      <View style={{ alignItems: "center", gap: 4, paddingHorizontal: 8, paddingBottom: 12 }}>
-        <Text style={{ color: colors.muted, textAlign: "center", fontSize: 11, lineHeight: 18 }}>{QURAN_ATTRIBUTION}</Text>
-        <Text style={{ color: colors.muted, textAlign: "center", fontSize: 10 }}>النص بالرسم العثماني · محفوظ للقراءة دون إنترنت</Text>
-      </View>
 
       <Modal visible={readerMenuVisible} transparent animationType="fade" onRequestClose={() => setReaderMenuVisible(false)}>
         <Pressable onPress={() => setReaderMenuVisible(false)} style={{ flex: 1, justifyContent: "flex-start", backgroundColor: "rgba(0,0,0,0.55)", padding: 18, paddingTop: 95 }}>
@@ -322,10 +317,6 @@ export default function QuranReaderScreen() {
               {tafsirError ? <Text style={{ color: colors.muted, textAlign: "right", lineHeight: 24 }}>{tafsirError} تأكد من اتصال الإنترنت ثم أعد الضغط على الآية.</Text> : null}
               {tafsirText ? <Text style={{ color: colors.text, textAlign: "right", lineHeight: 30, fontSize: 16 }}>{tafsirText}</Text> : null}
               {tafsirFootnotes ? <Text style={{ color: colors.muted, textAlign: "right", lineHeight: 24, fontSize: 12 }}>{tafsirFootnotes}</Text> : null}
-              <View style={{ borderTopWidth: 1, borderTopColor: colors.border, paddingTop: 9, gap: 4 }}>
-                <Text style={{ color: colors.gold, textAlign: "right", fontWeight: "800", fontSize: 12 }}>المصدر: التفسير الميسّر</Text>
-                <Text style={{ color: colors.muted, textAlign: "right", fontSize: 11, lineHeight: 19 }}>{TAFSIR_SOURCE.credit} · النسخة {TAFSIR_SOURCE.version} · {TAFSIR_SOURCE.publisher}</Text>
-              </View>
             </ScrollView>
           </View>
         </View>
