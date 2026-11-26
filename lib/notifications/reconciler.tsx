@@ -76,10 +76,11 @@ export function NotificationReconciler() {
         store.notificationPrefs.prayers,
         days,
         store.prayerLogs,
+        store.adhanPrefs,
       );
       await rescheduleMotivationNotifications(store);
     });
-  }, [hydrated, foregroundCycle, dayCycle, systemTimeZone, store.location?.latitude, store.location?.longitude, store.location?.timeZone, store.location?.source, store.calculationMethod, store.asrSchool, store.notificationPrefs, store.prayerLogs]);
+  }, [hydrated, foregroundCycle, dayCycle, systemTimeZone, store.location?.latitude, store.location?.longitude, store.location?.timeZone, store.location?.source, store.calculationMethod, store.asrSchool, store.notificationPrefs, store.adhanPrefs, store.prayerLogs]);
 
   return null;
 }
