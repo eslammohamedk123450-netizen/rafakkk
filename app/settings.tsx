@@ -20,6 +20,13 @@ const CITIES = [
   { name: "إسطنبول", latitude: "41.0082", longitude: "28.9784", timeZone: "Europe/Istanbul" },
   { name: "الدار البيضاء", latitude: "33.5731", longitude: "-7.5898", timeZone: "Africa/Casablanca" },
 ];
+const ADHAN_VOICES = {
+  egyptian: [{ id: "egypt-classic", label: "مصري كلاسيكي" }, { id: "egypt-calm", label: "مصري هادئ" }, { id: "egypt-strong", label: "مصري جهوري" }],
+  turkish: [{ id: "turkish-traditional", label: "تركي تقليدي" }, { id: "turkish-soft", label: "تركي هادئ" }, { id: "turkish-maqam", label: "تركي بالمقامات" }],
+  indonesian: [{ id: "indo-masjid", label: "إندونيسي مسجد" }, { id: "indo-calm", label: "إندونيسي هادئ" }, { id: "indo-clear", label: "إندونيسي واضح" }],
+} as const;
+const ADHAN_REGIONS = [{ id: "egyptian", label: "🇪🇬 مصري" }, { id: "turkish", label: "🇹🇷 تركي" }, { id: "indonesian", label: "🇮🇩 إندونيسي" }] as const;
+
 const MESSAGE_CATEGORIES = [
   { id: "prayer", label: "الصلاة" },
   { id: "repentance", label: "التوبة" },
@@ -173,6 +180,26 @@ export default function SettingsScreen() {
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ flexDirection: "row-reverse", gap: 8 }}>{CALCULATION_METHODS.map((method) => <TinyTag key={method.id} title={method.label} selected={store.calculationMethod === method.id} onPress={() => updateStore({ calculationMethod: method.id })} />)}</ScrollView>
         <Text style={{ color: colors.text, textAlign: "right", fontWeight: "600" }}>طريقة حساب العصر</Text>
         <View style={{ flexDirection: "row-reverse", gap: 8 }}><TinyTag title="الشافعي / المالكي / الحنبلي" selected={store.asrSchool === "shafi"} onPress={() => updateStore({ asrSchool: "shafi" })} /><TinyTag title="الحنفي" selected={store.asrSchool === "hanafi"} onPress={() => updateStore({ asrSchool: "hanafi" })} /></View>
+      </SulyCard>
+
+      <SulyCard>
+        <Text style={{ color: colors.text, fontSize: 18, fontWeight: "700", textAlign: "right" }}>المؤذنون والأذان</Text>
+        <Text style={{ color: colors.muted, textAlign: "right", lineHeight: 21 }}>اختار الطابع والمؤذن المفضل ونوع الأذان. الاختيارات تُحفظ على جهازك. توصيل الملفات الصوتية والتشغيل التلقائي وقت الصلاة واختبار الخلفية على أندرويد ما زال قيد التنفيذ.</Text>
+        <View style={{ flexDirection: "row-reverse", flexWrap: "wrap", gap: 7 }}>
+          <TinyTag title={store.adhanPrefs.enabled ? "الأذان الصوتي مفعّل" : "الأذان الصوتي متوقف"} selected={store.adhanPrefs.enabled} onPress={() => updateStore((current) => ({ ...current, adhanPrefs: { ...current.adhanPrefs, enabled: !current.adhanPrefs.enabled } }))} />
+        </View>
+        <Text style={{ color: colors.text, fontWeight: "700", textAlign: "right" }}>الطابع / البلد</Text>
+        <View style={{ flexDirection: "row-reverse", flexWrap: "wrap", gap: 7 }}>{ADHAN_REGIONS.map((region) => <TinyTag key={region.id} title={region.label} selected={store.adhanPrefs.region === region.id} onPress={() => updateStore((current) => ({ ...current, adhanPrefs: { ...current.adhanPrefs, region: region.id, voiceId: ADHAN_VOICES[region.id][0].id } }))} />)}</View>
+        <Text style={{ color: colors.text, fontWeight: "700", textAlign: "right" }}>اختيار الصوت</Text>
+        <View style={{ flexDirection: "row-reverse", flexWrap: "wrap", gap: 7 }}>{ADHAN_VOICES[store.adhanPrefs.region].map((voice) => <TinyTag key={voice.id} title={voice.label} selected={store.adhanPrefs.voiceId === voice.id} onPress={() => updateStore((current) => ({ ...current, adhanPrefs: { ...current.adhanPrefs, voiceId: voice.id } }))} />)}</View>
+        <Text style={{ color: colors.text, fontWeight: "700", textAlign: "right" }}>نوع الأذان</Text>
+        <View style={{ flexDirection: "row-reverse", flexWrap: "wrap", gap: 7 }}>
+          <TinyTag title="الأذان كامل" selected={store.adhanPrefs.mode === "full"} onPress={() => updateStore((current) => ({ ...current, adhanPrefs: { ...current.adhanPrefs, mode: "full" } }))} />
+          <TinyTag title="تكبيرات مختصرة" selected={store.adhanPrefs.mode === "takbir"} onPress={() => updateStore((current) => ({ ...current, adhanPrefs: { ...current.adhanPrefs, mode: "takbir" } }))} />
+        </View>
+        <Text style={{ color: colors.text, fontWeight: "700", textAlign: "right" }}>الصلاة التي يشغّل عندها الأذان</Text>
+        <View style={{ flexDirection: "row-reverse", flexWrap: "wrap", gap: 7 }}>{(Object.keys(PRAYER_LABELS) as PrayerId[]).map((id) => <TinyTag key={id} title={PRAYER_LABELS[id]} selected={store.adhanPrefs.prayers[id]} onPress={() => updateStore((current) => ({ ...current, adhanPrefs: { ...current.adhanPrefs, prayers: { ...current.adhanPrefs.prayers, [id]: !current.adhanPrefs.prayers[id] } } }))} />)}</View>
+        <Text style={{ color: colors.muted, textAlign: "right", fontSize: 12 }}>ملحوظة: أسماء الطوابع حاليًا اختيارات إعداد، وليست ملفات تسجيل لمؤذنين حقيقيين. لن نربط تسجيلًا غير موثوق أو ندّعي تشغيله قبل إضافة الصوت واختباره.</Text>
       </SulyCard>
 
       <SulyCard>
