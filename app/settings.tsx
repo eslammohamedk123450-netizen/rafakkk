@@ -143,7 +143,19 @@ export default function SettingsScreen() {
         return;
       }
     }
-    updateStore((current) => ({ ...current, notificationPrefs: { ...current.notificationPrefs, gentleMessages: enabling } }));
+    updateStore((current) => {
+      const selected = Object.values(current.notificationPrefs.messageCategories).some(Boolean);
+      return {
+        ...current,
+        notificationPrefs: {
+          ...current.notificationPrefs,
+          gentleMessages: enabling,
+          messageCategories: enabling && !selected
+            ? { prayer: true, repentance: true, istighfar: true, quran: true, dhikr: true, encouragement: true }
+            : current.notificationPrefs.messageCategories,
+        },
+      };
+    });
   };
 
   const saveMessageSettings = () => {
@@ -205,9 +217,9 @@ export default function SettingsScreen() {
           <TinyTag title={store.adhanPrefs.enabled ? "الأذان الصوتي مفعّل" : "الأذان الصوتي متوقف"} selected={store.adhanPrefs.enabled} onPress={toggleAdhan} />
         </View>
         <Text style={{ color: colors.text, fontWeight: "700", textAlign: "right" }}>اختيار صوت الأذان</Text>
-        <Text style={{ color: colors.muted, textAlign: "right", lineHeight: 21 }}>اختر أحد التسجيلين واستمع إليه قبل اعتماده. أسماء التسجيلات معروضة بأرقام فقط.</Text>
+        <Text style={{ color: colors.muted, textAlign: "right", lineHeight: 21 }}>اختر أحد التسجيلات الثلاثة واستمع إليه قبل اعتماده. أسماء التسجيلات معروضة بأرقام فقط.</Text>
         <View style={{ flexDirection: "row-reverse", flexWrap: "wrap", gap: 7 }}>{ADHAN_VOICES.map((voice) => <TinyTag key={voice.id} title={voice.label} selected={store.adhanPrefs.voiceId === voice.id} onPress={() => updateStore((current) => ({ ...current, adhanPrefs: { ...current.adhanPrefs, region: "indonesian", voiceId: voice.id } }))} />)}</View>
-        <SulyButton title="استمع للتسجيلين واختر الأذان" secondary onPress={() => router.push("/adhan-indonesian")} />
+        <SulyButton title="استمع للتسجيلات الثلاثة واختر الأذان" secondary onPress={() => router.push("/adhan-indonesian")} />
         <Text style={{ color: colors.text, fontWeight: "700", textAlign: "right" }}>نوع الأذان</Text>
         <View style={{ flexDirection: "row-reverse", flexWrap: "wrap", gap: 7 }}>
           <TinyTag title="الأذان كامل" selected={store.adhanPrefs.mode === "full"} onPress={() => updateStore((current) => ({ ...current, adhanPrefs: { ...current.adhanPrefs, mode: "full" } }))} />
@@ -239,7 +251,7 @@ export default function SettingsScreen() {
 
       <SulyCard>
         <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}><Pressable onPress={toggleGentleMessages}><Text style={{ color: store.notificationPrefs.gentleMessages ? colors.gold : colors.muted, fontWeight: "700" }}>{store.notificationPrefs.gentleMessages ? "مفعّلة" : "متوقفة"}</Text></Pressable><Text style={{ color: colors.text, fontSize: 18, fontWeight: "700" }}>رسائل لطيفة</Text></View>
-        <Text style={{ color: colors.muted, textAlign: "right" }}>رسائل عربية محلية من التطبيق، وليست أحاديث أو آيات. يمكنك اختيار تصنيفاتها والحد الأقصى وأوقات الهدوء.</Text>
+        <Text style={{ color: colors.muted, textAlign: "right" }}>رسائل محلية محفوظة داخل التطبيق: آيات وأحاديث مع مراجعها، ورسائل تشجيعية لا ننسبها للنبي ﷺ. لا تعمل إلا بعد تفعيلك لها، ويمكنك تحديد تصنيفاتها وأوقاتها وفترة الهدوء.</Text>
         <View style={{ flexDirection: "row-reverse", flexWrap: "wrap", gap: 7 }}>{MESSAGE_CATEGORIES.map((item) => <TinyTag key={item.id} title={item.label} selected={store.notificationPrefs.messageCategories[item.id]} onPress={() => toggleMessageCategory(item.id)} />)}</View>
         <SulyInput label="أوقات الرسائل (HH:MM، افصل بفاصلة)" value={timesDraft} onChangeText={setTimesDraft} placeholder="09:00، 14:00، 19:00" />
         <SulyInput label="الحد الأقصى يوميًا (1–8)" value={dailyLimitDraft} onChangeText={setDailyLimitDraft} keyboardType="number-pad" />

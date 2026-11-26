@@ -32,6 +32,15 @@ export default function HomeScreen() {
   const tasbeehCount = store.tasbeehCounts[today] ?? 0;
   const dhikrCount = Object.values(store.dhikrCounts[today] ?? {}).reduce((sum, count) => sum + count, 0);
   const totalDhikr = tasbeehCount + dhikrCount;
+  const yesterdayKey = shiftDateKey(today, -1);
+  const readYesterday = (store.quranReader.pagesReadByDate[yesterdayKey]?.length ?? 0) > 0 || (store.quranHistory[yesterdayKey] ?? 0) > 0;
+  const companionMessage = quranDone > 0
+    ? "ما شاء الله، لك اليوم نصيب من القرآن. خذ يومك بهدوء، وربنا يثبتك ويجعل القرآن نورًا لقلبك."
+    : readYesterday
+      ? "كان لك أمس نصيب من القرآن. لو ما بدأتش وردك النهارده، افتح المصحف ولو بصفحة؛ رفيقك بيفكّرك بمحبة، من غير استعجال."
+      : completedPrayers > 0
+        ? "خطوة خير جميلة إنك بدأت تسجل صلاتك. كمّل يومك على مهل، وربنا يعينك ويثبت قلبك."
+        : "مش مطلوب تغيّر كل حاجة مرة واحدة. ابدأ بخطوة صغيرة تقرّبك من ربنا، وربنا كريم.";
   const prayerTimes = store.location
     ? calculatePrayerTimes(store.location.latitude, store.location.longitude, dateFromKey(today), store.calculationMethod, store.asrSchool)
     : null;
@@ -107,6 +116,14 @@ export default function HomeScreen() {
             <SulyButton title="إعداد مواقيت الصلاة" secondary onPress={() => router.push("/settings")} />
           </View>
         )}
+      </SulyCard>
+
+      <SulyCard style={{ backgroundColor: colors.surface, borderColor: colors.border }}>
+        <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "flex-end", gap: 8 }}>
+          <Text style={{ color: colors.gold, fontSize: 15, fontWeight: "800" }}>رسالة من رفيقك</Text>
+          <MaterialCommunityIcons name="heart-multiple-outline" size={21} color={colors.gold} />
+        </View>
+        <Text style={{ color: colors.text, textAlign: "right", lineHeight: 25, fontSize: 14 }}>{companionMessage}</Text>
       </SulyCard>
 
       <SectionTitle trailing={<Text style={{ color: colors.muted, fontSize: 13 }}>{completedPrayers} من 5 مسجلة</Text>}>صلوات اليوم</SectionTitle>
