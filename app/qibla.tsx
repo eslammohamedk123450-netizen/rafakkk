@@ -51,7 +51,7 @@ export default function QiblaScreen() {
         <View style={{ alignItems: "center", justifyContent: "center", transform: [{ rotate: relative + "deg" }] }}>
           <MaterialCommunityIcons name="navigation" size={142} color={colors.gold} />
         </View>
-        <MaterialCommunityIcons name="kaaba" size={32} color={colors.text} style={{ position: "absolute", bottom: 110 }} />
+        <MaterialCommunityIcons name="cube-outline" size={32} color={colors.text} style={{ position: "absolute", bottom: 110 }} />
       </View>
       {heading === null ? <Text style={{ color: colors.muted, textAlign: "center" }}>جارٍ قراءة اتجاه الهاتف…</Text> : <Text style={{ color: colors.text, fontSize: 16, fontWeight: "700" }}>اتجاه الهاتف: {Math.round(heading)}° · اتجاه القبلة: {Math.round(qibla ?? 0)}°</Text>}
       {qibla !== null ? <Text style={{ color: colors.gold, fontSize: 15, fontWeight: "700" }}>القبلة بالنسبة لاتجاهك: {Math.round(relative)}°</Text> : <Text style={{ color: colors.muted, textAlign: "center" }}>حدد موقعك من إعدادات التطبيق لحساب اتجاه القبلة بدقة.</Text>}
