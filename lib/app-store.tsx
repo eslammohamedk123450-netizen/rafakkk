@@ -30,6 +30,8 @@ export type AppStore = {
     lastPage: number;
     bookmarkPage: number | null;
     pagesReadByDate: Record<string, number[]>;
+    khatmaPages: number[];
+    fontSize: number;
   };
   dhikrCounts: Record<string, Record<string, number>>;
   tasbeehCounts: Record<string, number>;
@@ -74,7 +76,7 @@ const defaultStore: AppStore = {
   },
   quranHistory: {},
   quranHistoryModes: {},
-  quranReader: { lastPage: 1, bookmarkPage: null, pagesReadByDate: {} },
+  quranReader: { lastPage: 1, bookmarkPage: null, pagesReadByDate: {}, khatmaPages: [], fontSize: 27 },
   dhikrCounts: {},
   tasbeehCounts: {},
   favorites: [],
@@ -124,7 +126,7 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
           ...defaultStore,
           ...saved,
           quranPlan: { ...defaultStore.quranPlan, ...(saved.quranPlan ?? {}) },
-          quranReader: { ...defaultStore.quranReader, ...(saved.quranReader ?? {}) },
+          quranReader: { ...defaultStore.quranReader, ...(saved.quranReader ?? {}), khatmaPages: saved.quranReader?.khatmaPages ?? defaultStore.quranReader.khatmaPages, fontSize: saved.quranReader?.fontSize ?? defaultStore.quranReader.fontSize },
           notificationPrefs: {
             ...defaultStore.notificationPrefs,
             ...(saved.notificationPrefs ?? {}),
