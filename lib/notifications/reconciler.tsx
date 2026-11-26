@@ -48,8 +48,6 @@ export function NotificationReconciler() {
       : current);
   }, [hydrated, store.location, systemTimeZone, updateStore]);
 
-  const timeZone = store.location?.timeZone || systemTimeZone;
-
   useEffect(() => {
     if (!hydrated || Platform.OS === "web") return;
     enqueueSchedule(async () => {
