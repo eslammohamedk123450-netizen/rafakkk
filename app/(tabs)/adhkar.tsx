@@ -4,9 +4,7 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useFocusEffect } from "expo-router";
 import { AppScreen, ScreenHeading, SulyButton, SulyCard, SulyInput, TinyTag, useSulyTheme, ProgressBar } from "@/components/suly-ui";
 import { localDateKey, useAppStore } from "@/lib/app-store";
-import { applyPublishedContent, getContentEntries, getContentVersion, type StoredContentRecord } from "@/lib/local-db";
-import { trpc } from "@/lib/trpc";
-import { isNewerPublishedVersion, validateContentPack } from "@/lib/content/validation";
+import { getContentEntries, type StoredContentRecord } from "@/lib/local-db";
 
 const categories = [
   { id: "morning", label: "الصباح" },
@@ -32,19 +30,13 @@ export default function AdhkarScreen() {
   const [showComposer, setShowComposer] = useState(false);
   const [customTitle, setCustomTitle] = useState("");
   const [customBody, setCustomBody] = useState("");
-  const [localVersion, setLocalVersion] = useState("builtin-1");
-  const [updateBusy, setUpdateBusy] = useState(false);
-  const [updateNotice, setUpdateNotice] = useState("");
-  const latestPack = trpc.content.latestPack.useQuery(undefined, { retry: false, staleTime: 30_000 });
-  const refetchLatestPack = latestPack.refetch;
-  const updateAvailable = latestPack.data ? isNewerPublishedVersion(latestPack.data.version, localVersion) : false;
+  const [localNotice, setLocalNotice] = useState("");
 
   const refresh = useCallback(() => {
     let active = true;
-    Promise.all([getContentEntries(), getContentVersion()]).then(([items, version]) => { if (active) { setRecords(items); setLocalVersion(version); } }).catch((error) => console.warn("Unable to load local dhikr library", error));
-    void refetchLatestPack();
+    getContentEntries().then((items) => { if (active) setRecords(items); }).catch((error) => console.warn("Unable to load local dhikr library", error));
     return () => { active = false; };
-  }, [refetchLatestPack]);
+  }, []);
   useFocusEffect(refresh);
 
   const entries = useMemo<DisplayEntry[]>(() => {
@@ -83,38 +75,13 @@ export default function AdhkarScreen() {
     setCustomBody("");
     setShowComposer(false);
   };
-  const installUpdate = async () => {
-    setUpdateBusy(true);
-    setUpdateNotice("");
-    try {
-      const response = await latestPack.refetch();
-      if (!response.data) throw new Error("لا يوجد إصدار متاح الآن.");
-      const pack = validateContentPack(response.data);
-      const currentVersion = await getContentVersion();
-      if (!isNewerPublishedVersion(pack.version, currentVersion)) {
-        setLocalVersion(currentVersion);
-        setUpdateNotice(pack.version === currentVersion ? "مكتبتك المحلية محدثة بالفعل." : "الإصدار المتاح ليس أحدث من نسختك المحلية؛ لم يتغير المحتوى.");
-        return;
-      }
-      await applyPublishedContent(pack.entries, pack.version);
-      const updatedEntries = await getContentEntries();
-      setRecords(updatedEntries);
-      setLocalVersion(pack.version);
-      setUpdateNotice(`تم تثبيت حزمة المحتوى ${pack.version}. بقي سجلّك الشخصي كما هو.`);
-    } catch (error) {
-      setUpdateNotice(error instanceof Error ? error.message : "تعذر تثبيت الحزمة؛ بقي المحتوى المحلي دون تغيير.");
-    } finally {
-      setUpdateBusy(false);
-    }
-  };
-
   const openSource = (value: string) => {
     try {
       const url = new URL(value);
       if (url.protocol !== "https:" && url.protocol !== "http:") throw new Error("Unsupported protocol");
-      void Linking.openURL(url.toString()).catch(() => setUpdateNotice("تعذر فتح رابط المصدر على هذا الجهاز."));
+      void Linking.openURL(url.toString()).catch(() => setLocalNotice("تعذر فتح رابط المصدر على هذا الجهاز."));
     } catch {
-      setUpdateNotice("رابط المصدر غير صالح؛ بقي المحتوى المحلي كما هو.");
+      setLocalNotice("رابط المصدر غير صالح؛ بقي المحتوى المحلي كما هو.");
     }
   };
 
@@ -122,11 +89,9 @@ export default function AdhkarScreen() {
     <AppScreen>
       <ScreenHeading title="الأذكار" subtitle={`${totalCount} مرة مما سجلته اليوم`} action={<Pressable onPress={() => setShowComposer(true)} style={{ width: 42, height: 42, borderRadius: 14, backgroundColor: colors.card, alignItems: "center", justifyContent: "center" }} accessibilityLabel="إضافة ذكر مخصص"><MaterialCommunityIcons name="plus" size={24} color={colors.gold} /></Pressable>} />
       <SulyCard style={{ backgroundColor: colors.card }}>
-        <Text style={{ color: colors.text, textAlign: "right", fontWeight: "700" }}>تحديث مكتبة المحتوى</Text>
-        <Text style={{ color: colors.muted, textAlign: "right", lineHeight: 21 }}>{latestPack.error ? "تعذر الاتصال الآن؛ ستظل مكتبتك المحلية متاحة دون إنترنت." : latestPack.data === null ? "لم ينشر المشرف حزمة محتوى بعد؛ مكتبتك المحلية متاحة." : !latestPack.data ? "جارٍ التحقق من الإصدارات المنشورة…" : updateAvailable ? `يتوفر إصدار محتوى أحدث (${latestPack.data.version}). لا يُثبّت إلا بعد اختيارك.` : latestPack.data.version === localVersion ? "مكتبتك المحلية محدثة. يعمل المحتوى المحفوظ دون اتصال." : "الإصدار المنشور أقدم من نسختك المحلية؛ لن يُستبدل محتواك بإصدار أقدم."}</Text>
-        {updateAvailable ? <SulyButton title={updateBusy ? "جارٍ التحقق والتحديث…" : "تحديث الآن"} onPress={installUpdate} disabled={updateBusy} /> : null}
-        {latestPack.error ? <SulyButton title="إعادة التحقق" secondary onPress={() => latestPack.refetch()} disabled={updateBusy} /> : null}
-        {updateNotice ? <Text style={{ color: colors.gold, textAlign: "right" }}>{updateNotice}</Text> : null}
+        <Text style={{ color: colors.text, textAlign: "right", fontWeight: "700" }}>مكتبتك معاك في كل وقت</Text>
+        <Text style={{ color: colors.muted, textAlign: "right", lineHeight: 21 }}>الأذكار والمحتوى الأساسي محفوظان داخل التطبيق ويعملان دون إنترنت. سجلاتك ومفضلاتك تظل على جهازك.</Text>
+        {localNotice ? <Text style={{ color: colors.gold, textAlign: "right" }}>{localNotice}</Text> : null}
       </SulyCard>
       <SulyCard style={{ backgroundColor: colors.card }}>
         <Text style={{ color: colors.text, fontWeight: "700", textAlign: "right", fontSize: 17 }}>عداد التسبيح</Text>
@@ -141,7 +106,7 @@ export default function AdhkarScreen() {
       <View style={{ flexDirection: "row-reverse", flexWrap: "wrap", gap: 8 }}>{categories.map((item) => <TinyTag key={item.id} title={item.label} selected={category === item.id} onPress={() => setCategory(item.id)} />)}</View>
 
       {visibleEntries.length === 0 ? (
-        <SulyCard><Text style={{ color: colors.text, fontWeight: "700", textAlign: "right" }}>{category === "favorites" ? "لا توجد أذكار مفضلة بعد" : category === "custom" ? "لم تضف أذكارًا مخصصة بعد" : "لا يوجد محتوى في هذا القسم حاليًا"}</Text><Text style={{ color: colors.muted, textAlign: "right", lineHeight: 21 }}>يمكنك إضافة نصوصك الخاصة أو تحديث المكتبة عند توفر حزمة منشورة. المحتوى الأساسي المتوفر يعمل دون اتصال.</Text></SulyCard>
+        <SulyCard><Text style={{ color: colors.text, fontWeight: "700", textAlign: "right" }}>{category === "favorites" ? "لا توجد أذكار مفضلة بعد" : category === "custom" ? "لم تضف أذكارًا مخصصة بعد" : "لا يوجد محتوى في هذا القسم حاليًا"}</Text><Text style={{ color: colors.muted, textAlign: "right", lineHeight: 21 }}>يمكنك إضافة نصوصك الخاصة. مكتبتك الأساسية متاحة دون اتصال بالإنترنت.</Text></SulyCard>
       ) : visibleEntries.map((entry) => {
         const count = todayCounts[entry.id] ?? 0;
         const favorite = store.favorites.includes(entry.id);
