@@ -30,6 +30,8 @@ export type AppStore = {
   quranReader: {
     lastPage: number;
     bookmarkPage: number | null;
+    bookmarkSurah?: number | null;
+    bookmarkAyah?: number | null;
     pagesReadByDate: Record<string, number[]>;
     khatmaPages: number[];
     fontSize: number;
