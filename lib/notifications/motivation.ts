@@ -82,10 +82,10 @@ export async function rescheduleMotivationNotifications(store: AppStore) {
   if (!permission.granted) return;
 
   const categories = (Object.keys(MOTIVATION_MESSAGES) as MessageCategory[]).filter((key) => prefs.messageCategories[key]);
-  const times = prefs.messageTimes.filter((clock) => /^([01]\d|2[0-3]):[0-5]\d$/.test(clock)).slice(0, Math.max(1, Math.min(8, prefs.dailyLimit)));
+  const times = prefs.messageTimes.filter((clock) => /^([01]\d|2[0-3]):[0-5]\d$/.test(clock)).slice(0, Math.max(1, Math.min(3, prefs.dailyLimit)));
   if (!categories.length || !times.length) return;
   const timeZone = store.location?.timeZone || Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
-  const days = nextPrayerDates(new Date(), timeZone, 8);
+  const days = nextPrayerDates(new Date(), timeZone, 21);
   const currentDayKey = days[0]?.key ?? "";
   const firstDayOffset = Math.floor(Date.parse((days[0]?.key ?? "1970-01-01") + "T00:00:00Z") / 86_400_000);
   const now = Date.now();

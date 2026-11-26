@@ -159,7 +159,7 @@ export default function SettingsScreen() {
   };
 
   const saveMessageSettings = () => {
-    const parsedLimit = Math.max(1, Math.min(8, Number.parseInt(dailyLimitDraft, 10) || 1));
+    const parsedLimit = Math.max(1, Math.min(3, Number.parseInt(dailyLimitDraft, 10) || 1));
     const enteredTimes = timesDraft.split(/[،,]/).map((item) => item.trim()).filter(Boolean);
     const clockPattern = /^([01]\d|2[0-3]):[0-5]\d$/;
     const validTimes = [...new Set(enteredTimes.filter((item) => clockPattern.test(item)))].sort();
@@ -254,7 +254,7 @@ export default function SettingsScreen() {
         <Text style={{ color: colors.muted, textAlign: "right" }}>رسائل محلية محفوظة داخل التطبيق: آيات وأحاديث مع مراجعها، ورسائل تشجيعية لا ننسبها للنبي ﷺ. لا تعمل إلا بعد تفعيلك لها، ويمكنك تحديد تصنيفاتها وأوقاتها وفترة الهدوء.</Text>
         <View style={{ flexDirection: "row-reverse", flexWrap: "wrap", gap: 7 }}>{MESSAGE_CATEGORIES.map((item) => <TinyTag key={item.id} title={item.label} selected={store.notificationPrefs.messageCategories[item.id]} onPress={() => toggleMessageCategory(item.id)} />)}</View>
         <SulyInput label="أوقات الرسائل (HH:MM، افصل بفاصلة)" value={timesDraft} onChangeText={setTimesDraft} placeholder="09:00، 14:00، 19:00" />
-        <SulyInput label="الحد الأقصى يوميًا (1–8)" value={dailyLimitDraft} onChangeText={setDailyLimitDraft} keyboardType="number-pad" />
+        <SulyInput label="الحد الأقصى يوميًا (1–3)" value={dailyLimitDraft} onChangeText={setDailyLimitDraft} keyboardType="number-pad" />
         <View style={{ flexDirection: "row", gap: 8 }}><View style={{ flex: 1 }}><SulyInput label="بداية الهدوء" value={quietStartDraft} onChangeText={setQuietStartDraft} placeholder="22:00" /></View><View style={{ flex: 1 }}><SulyInput label="نهاية الهدوء" value={quietEndDraft} onChangeText={setQuietEndDraft} placeholder="07:00" /></View></View>
         <SulyButton title="حفظ تفضيلات الرسائل" onPress={saveMessageSettings} />
       </SulyCard>
