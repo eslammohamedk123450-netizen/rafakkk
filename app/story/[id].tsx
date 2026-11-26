@@ -45,7 +45,7 @@ export default function StoryReaderScreen() {
     setNotice("اتحفظ مكانك في القصة على هذا الجهاز.");
   };
   const referenceItems = (chapter?.reference ?? "").split(/[؛;]/).map((raw) => {
-    const match = raw.trim().match(/سورة\s+(.+?)،?\s*الآيات?\s*(\\d+)(?:\s*[–-]\s*(\\d+))?/);
+    const match = raw.trim().match(/سورة\s+(.+?)،?\s*الآي(?:ة|ات)\s*(\d+)(?:\s*[–-]\s*(\d+))?/);
     if (!match) return null;
     const surahName = match[1].replace(/[،.]/g, "").trim();
     const surah = QURAN_SURAHS.find((item) => item.name === surahName || item.name.replace(/^ال/, "") === surahName.replace(/^ال/, ""));
