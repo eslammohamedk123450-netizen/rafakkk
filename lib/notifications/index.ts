@@ -49,6 +49,13 @@ export async function prepareNotificationChannel() {
       sound: "adhan_2.mp3",
       audioAttributes: { usage: Notifications.AndroidAudioUsage.ALARM, contentType: Notifications.AndroidAudioContentType.MUSIC },
     }),
+    Notifications.setNotificationChannelAsync("suly-adhan-3", {
+      name: "الأذان 3",
+      importance: Notifications.AndroidImportance.MAX,
+      vibrationPattern: [0, 250, 150, 250],
+      sound: "adhan_3.mp3",
+      audioAttributes: { usage: Notifications.AndroidAudioUsage.ALARM, contentType: Notifications.AndroidAudioContentType.MUSIC },
+    }),
   ]);
 }
 
@@ -124,8 +131,8 @@ export async function reschedulePrayerNotifications(
       }
 
       if (adhanPrefs?.enabled && adhanPrefs.prayers[prayerId] && prayerTime.getTime() > now) {
-        const voiceId = adhanPrefs.voiceId === "adhan-2" ? "adhan-2" : "adhan-1";
-        const sound = voiceId === "adhan-2" ? "adhan_2.mp3" : "adhan_1.mp3";
+        const voiceId = adhanPrefs.voiceId === "adhan-3" ? "adhan-3" : adhanPrefs.voiceId === "adhan-2" ? "adhan-2" : "adhan-1";
+        const sound = voiceId === "adhan-3" ? "adhan_3.mp3" : voiceId === "adhan-2" ? "adhan_2.mp3" : "adhan_1.mp3";
         schedules.push(Notifications.scheduleNotificationAsync({
           content: {
             title: "حان الآن وقت صلاة " + PRAYER_LABELS[prayerId],
